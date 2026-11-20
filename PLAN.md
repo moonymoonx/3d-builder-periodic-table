@@ -2,6 +2,8 @@
 
 SPEC.md is authoritative. This file says *how* and *in what order*; LOG.md says what actually happened.
 
+> **21 Nov 2026:** the remaining work (old M6 quiz, M7 polish) is replaced by the redesign: see SPEC.md §0, STYLE.md and **REDESIGN-PLAN.md** for the order of work. The M6 quiz is parked on branch `wip-m6-quiz`.
+
 ## File layout
 ```
 data/raw/<source>/…        raw downloads, untouched (+ data/raw/MANIFEST.json: url, accessed, licence, sha256, bytes)

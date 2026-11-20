@@ -1,0 +1,221 @@
+# REDESIGN PLAN (21 Nov 2026)
+
+**Why:** moony's verdict on M5 was *"too technical, looks bad quality"* and *"why should I look at the trends?"*. The BEFORE screenshots (`/workspace/out/redesign/before/`) show a dashboard: a jargon dropdown ("First ionization energy"), a 12-item legend, a 25-row data sheet and six tabs.
+**What changes:** the *surface* and the *order of disclosure*. **What stays:** every value, every science model, every source link, the validator and the tests. We restructure; we do not delete facts.
+**Read with:** SPEC.md §0 (Feel), STYLE.md (look and motion), DESIGN-STUDY.md (hooks and sources), DESIGN-RULES.md (feel rules).
+
+## 1. Principles
+1. **One hero, one obvious action per place.** Home = the table (action: tap an element). Element = the card (action: open a door). Heat = the thermometer (action: drag).
+2. **Plain words first.** No unexplained jargon on any default surface. Jargon appears only as a secondary caption after a human phrase ("Grip on electrons · *ionization energy*").
+3. **Every technical layer sits behind one tap,** opened by a one-line *why it matters* hook with a source (§4).
+4. **Numbers get human anchors computed from our own data:** "a litre of gold would weigh 19.3 kg"; "3.5 million iron atoms side by side make one millimetre"; "melts in your hand: gallium, 29.8 °C". We never invent an anchor; a non-element landmark needs a source first (QUESTIONS.md).
+5. **Places, not tabs.** A back link is always visible; nothing is a dead end.
+6. **Smooth on a phone** before anything else (§8). We cut effects before we cut frame rate.
+
+## 2. The new surface, place by place
+**Home: the table.** Everything else is quiet around it.
+- Paper stage with low, equal porcelain tiles in the 18-column shape. The family glaze and the ink symbol are on each tile.
+- Family names are written on the table itself (region labels, see §3). They replace the legend.
+- Top bar: wordmark · "Find an element" · EN|VI · ≡.
+- Bottom prompt: *"Everything you have ever touched is built from these kinds of atom. Tap one to look inside."*
+- A **Lens** pill sits beside the prompt (`Families ▾`). Lenses re-colour or raise the tiles; each opens with a one-line question banner (§4) and has one control at most (the heat map gets a temperature slider).
+- Phone: thumb-scrub **loupe** to pick tiny tiles; the prompt and lens pill sit above the thumb zone.
+
+**Element (card).** Tapping a tile lifts it 3 mm and glides the camera to it. A card slides in (desktop: 380 px on the right; phone: a bottom sheet that peeks at 45 % and swipes up).
+- **Header:** big serif name, symbol · atomic number, Vietnamese name in VI.
+- **One human line:** e.g. "The metal of steel." Hand-written and sourced where available (Q14); until then a sentence generated from data ("A workhorse metal, solid at room temperature, melts at 1,538 °C").
+- **Three plain facts with anchors** (all from our data):
+  - Solid / liquid / gas at 20 °C;
+  - "Melts at 1,538 °C", shown on a mini thermometer with element landmarks;
+  - "A litre would weigh 7.9 kg", or for a gas "a litre weighs 0.18 g".
+- **Three doors** (big buttons): **Look inside the atom** · **Hold a piece · heat it** · **Side by side…**
+- **"All numbers & sources ▾":** the full data sheet as it is today: about 25 fields, every value tappable for its source, hatched estimates, "Other sources" disputes. Nothing is removed; it is only demoted.
+- Each fact has a small "↗ across the table" link that opens **Patterns** for that property.
+
+**Hold a piece · heat it** (the wow, STYLE.md §9).
+- The scale dive goes from the tile into the specimen. The thermometer is the one control, with element landmark flags (gallium 29.8 °C, lead 327 °C, iron 1,538 °C, tungsten 3,422 °C, from our data). There are also "Room temperature" and "Heat it ▶" buttons.
+- The room dims to the kiln colour when the metal starts to glow.
+- A caption appears at each event: "912 °C — the atoms re-stack: each now touches 12 neighbours".
+- **"About this crystal ▾"** holds today's details: pattern name, unit cell, neighbours, wobble (Lindemann, with its source), gas speeds and slow-down factor, and the honest cards (complex or never-made-in-bulk). Carbon keeps its visible graphite ↔ diamond switch.
+
+**Look inside the atom.**
+- **Default:** the whole atom as stippled clouds, with a plain caption: "Iron's 26 electrons fill 4 shells. The newest went into a 3d cloud, shaped like a cloverleaf." (The configuration is from NIST.)
+- **One visible control:** "+ proton / − proton" (the stepper).
+- **Behind taps:**
+  - "Show one cloud" (subshell picker, real ψ(n,l,m) lobes and phases);
+  - "Its light" (NIST lines, tap → wavelength, glow colour);
+  - "About this atom ▾" (configuration, exceptions, Slater/Clementi effective charge, nucleus enlargement factor, 90 % surfaces).
+
+**Side by side.**
+- Opens with **curated surprising pairs** (DESIGN-STUDY §4.7). Each takeaway sentence is checked against our data:
+  - gold 79 vs mercury 80: one more proton, solid → liquid;
+  - diamond vs graphite: same atom, different stacking;
+  - helium vs osmium: a gas of 0.18 g per litre vs the densest metal, 22.6 kg per litre;
+  - sodium vs chlorine;
+  - hydrogen vs oganesson.
+- "Pick any two" is also there.
+- The atoms are drawn to scale with plain sentences (today's), and the ratio bars move into details.
+
+**Patterns.**
+- Each chart opens with a question, not a property name: "Why do atoms get *smaller* as you go right?"
+- The selected element is highlighted, and its row is drawn bright (today's).
+- Two or three callouts per chart come from the data: e.g. "each row starts big and shrinks", "the little dips after beryllium and nitrogen" (source: Wikipedia *Ionization energy*).
+- Joining by row or by column stays as a secondary toggle; log scale is automatic, with a "each step = ×10" note.
+
+**Find and menu.**
+- **Find:** search (EN/VI, accent-insensitive, symbol, number) plus quick filter chips: family, row, column, natural or made-in-lab, state at a temperature. These are today's filters, moved here.
+- **Menu:**
+  - Lenses;
+  - Other shapes of the table (32-column; spiral/helix "the first periodic system was a spiral, de Chancourtois 1862");
+  - Sound (off by default);
+  - Quality;
+  - Colour-blind palette;
+  - Reduced motion;
+  - Keyboard;
+  - Sources & credits;
+  - Share link.
+
+## 3. Plain-language map (default surfaces)
+Family names are human first and are proposals for Gemini and moony (Q16). The Vietnamese drafts will be written at build time for moony's review.
+
+| Human (default) | Secondary caption |
+|---|---|
+| Soft, reactive metals | alkali metals |
+| Metals of chalk and stone | alkaline earth metals |
+| Workhorse metals | transition metals |
+| Soft, low-melting metals | post-transition metals |
+| In-betweeners | metalloids |
+| Nonmetals of life (C, H, N, O, P, S, Se) | reactive nonmetals |
+| Salt-makers | halogens (Greek: "salt-former") |
+| Loner gases | noble gases |
+| Rare earths | lanthanides |
+| Radioactive heavyweights | actinides |
+| Row · Column | period · group |
+| Number (protons) | atomic number |
+| Atom size | covalent radius (Cordero 2008); van der Waals in details |
+| Grip on electrons | first ionization energy |
+| Electron pull | electronegativity (Pauling) |
+| Electron appetite | electron affinity |
+| Heft (how heavy a litre is) | density |
+| Weight of one atom | standard atomic weight |
+| Melting / boiling (°C) | melting / boiling point (K in details) |
+| How common in Earth's crust | crustal abundance |
+| Electron clouds | orbitals; s, p, d, f subshells |
+| Atomic pattern | crystal lattice (bcc, fcc, hcp…) |
+| Wobble | Lindemann vibration amplitude |
+| Felt pull of the nucleus | effective nuclear charge |
+
+## 4. Technical layers: hidden behind a tap, opened by a hook
+Hooks are from DESIGN-STUDY.md §3. ⚠ marks wording we changed for accuracy (reasons in DECISIONS.md). "Verify" items are queued in Q15.
+
+| Layer | Opened from | Hook (one line) | Source |
+|---|---|---|---|
+| Electron clouds (orbitals) | Atom → "Show one cloud" | The shape of an atom's outer cloud decides how it joins other atoms, and why every element glows its own colours. | Wikipedia *Atomic orbital*; NIST ASD |
+| Atomic pattern (lattices) | Heat → "About this crystal" | Same carbon atoms, two stacking patterns: one is soft pencil graphite, the other is diamond, nature's hardest mineral. | Wikipedia *Allotropes of carbon*; RSC carbon |
+| Melting and boiling | Card fact, Heat view, heat-map lens | It decides what survives a light-bulb filament (tungsten, 3,422 °C), what melts in your hand (gallium, 29.8 °C) and what is liquid at room temperature (mercury, −38.8 °C). | RSC W, Ga, Hg; our data |
+| Heft (density) ⚠ | Card fact, lens | Why a helium balloon floats, while a 1-litre carton of gold would weigh 19.3 kg. | RSC He, Au; our density |
+| Atom size | Lens, Side by side | Small atoms slip into tight spaces. That is one reason tiny lithium ions power rechargeable batteries. *(verify)* | Nobel 2019 press release |
+| Grip on electrons ⚠ | Lens, Patterns | How tightly an atom holds its outer electron. A weak grip is why sodium explodes in water; a strong grip is why noble gases hardly react. | Wikipedia *Ionization energy*; Nature Chemistry 2015 (nchem.2161) |
+| Electron pull ⚠ | Lens, Patterns | How hard an atom pulls on electrons it shares. Fluorine pulls hardest of all (3.98), and oxygen's pull makes water molecules lopsided. *(verify)* | Wikipedia *Electronegativity*; our data |
+| Patterns (trends chart) ⚠ | Any fact "↗", lens menu | 118 numbers turn into one repeating wave: the pattern that let Mendeleev leave a gap for gallium and predict it before anyone had seen it. | Wikipedia *Periodic trends*; RSC gallium |
+| Side by side | Card door, menu | One more proton turns solid gold (79) into liquid mercury (80). | Chemistry World, *Relativity behind mercury's liquidity*; RSC Hg |
+| Its light (spectrum) | Atom → "Its light" | Heat or electricity makes every element glow its own colours: neon glows orange-red, sodium glows yellow (its 589 nm lines). | NIST ASD; RSC neon; compoundchem fireworks |
+| Nucleus and isotopes | Atom → "About this atom" | No hook until sourced (Q15). We show plain counts: "26 protons, and most iron atoms have 30 neutrons". | NUBASE2020 |
+
+## 5. Removed or demoted (and why)
+| Today | New place | Why |
+|---|---|---|
+| Six top tabs | Removed; places reached through the element card, back link, menu | Six equal choices with jargon names ("Trends") and no order; moony: "why should I look at the trends?" |
+| "Column height" jargon dropdown, columns of unexplained heights on load | Flat equal tiles by default; heights only inside a named **lens** with its question banner | Heights without a question are noise |
+| 12-item legend | Family names written on the table; family filter chips in Find | Saves space and reads like a map; colour is never the only cue |
+| 25-row data sheet on the right | "All numbers & sources" in the card, unchanged | A wall of data on first contact; all facts stay |
+| Log-scale checkbox | Automatic per lens, with an "each step = ×10" note | A choice nobody should have to make first |
+| Layout switch (32-column, helix) | Menu → "Other shapes of the table", told as history | Delightful for some, noise for most |
+| Colour mode (Family / State at T) | The **heat-map** lens (temperature slider on the table) | Same data, with a question |
+| Filters panel | Find panel chips | Search is where people look for narrowing |
+| Trends "What to plot" list and "Join the dots" control | Patterns opens from a fact or lens; joining by column is a secondary toggle | Question-led instead of list-led |
+| Compare picker first | Curated pairs first, "pick any two" second | An empty form is not an invitation |
+| Help modal | Teach-by-doing hints at the moment they are needed (first visit only); keys under menu → Keyboard | No walls of instructions |
+| Kelvin-first temperatures | °C first; K in details | Human scale |
+| Quiz tab | Parked on branch `wip-m6-quiz`; returns later as "Mysteries" | moony stopped it; Gemini §4.9 reframes it |
+| FPS meter, quality tier | Settings only (F key and `?stats` still work) | Developer tools |
+
+## 6. Facts kept (and where they live now)
+All 118 elements with every sourced field (PubChem, CIAAW, NIST ASD/CODATA, Wikipedia/Arblaster, mendeleev data, NUBASE2020, COD) are kept in the same `elements.json` → card details. The rest moves without loss:
+- orbital mathematics → Atom;
+- 84 measured lattices, Lindemann, Bain path, gases, honest cards → Heat;
+- emission lines → Its light;
+- trends → Patterns;
+- compare sentences and ratios → Side by side;
+- search and filters → Find;
+- three layouts → menu;
+- EN/VI, shareable URL (new place names), keyboard, colour-blind palette, reduced motion, quality tiers.
+
+`tools/validate.mjs` and the tests stay green at every step.
+
+## 7. New content and data (never invented; queued in QUESTIONS.md)
+- **Q11 Made in stars:** per-element cosmic origin (Johnson 2019).
+- **Q12 In your body:** composition of the human body.
+- **Q13 In your phone:** elements in a smartphone and their roles, from an open source.
+- **Q14 One human line per element:** 118, sourced; Vietnamese by moony.
+- **Q15 Fact-check of the hooks in §4:** wording against the sources; plus any non-element landmark we would like to use (e.g. the density of air).
+- **Q16 Family human names:** accuracy and tone, EN and VI.
+- Story lenses ship only once their data is fetched, cited and validated. Until then they are not shown (no placeholders on a default surface).
+
+## 8. Work order: the HERO slice first, at full polish
+1. **HERO slice: landing + table + first interaction.** Acceptance:
+   - DESIGN-RULES checklist passes.
+   - AFTER screenshots at 1440×900 and 390×844 are taken with the same tool and flags as BEFORE (`/workspace/out/redesign/shots-tool.patch`).
+   - First-time-user scores (clarity, ease, beauty, smoothness, delight) are 4 or higher.
+   - Frame-rate targets in §9 are met.
+   - **Review gate:** Gemini critique and moony's look before step 2.
+   1. *Foundations:* STYLE tokens and type stacks in CSS; transparent canvas over paper; daylight rig; rounded porcelain tiles with darker sides; instanced baked contact shadows; region labels; a pure-CSS loading state (paper and tile silhouettes) that paints in under 300 ms.
+   2. *Landing:* flat families table, one-time light sweep, bottom prompt, breathing iron and delayed "Try iron" tag, Find pill (today's search, restyled), menu.
+   3. *First interaction:* hover lift and ring in under 100 ms; tap → lift, camera glide, card or sheet with the human line, 3 anchored facts, 3 doors (wired to today's views inside the new chrome) and "All numbers & sources"; back link and Esc.
+   4. *Phone:* thumb-scrub loupe, sheet with peek and expanded states, thumb-zone layout, landscape check.
+   5. *Strings:* EN/VI for every new string (VI flagged for moony); smoke checks for the new flow.
+2. **The wow path:** scale dive; Heat restyle; kiln dimming; landmark flags; event captions; sample performance (atoms per tier); optional sound groundwork.
+3. **Inside the atom:** stippled clouds on paper, plain caption, "+ proton", "Show one cloud", "Its light", details.
+4. **Lenses and Find:**
+   - Number lenses: Atom size, Grip on electrons, Electron pull, Melting, Heft, Discovered, each with its question banner and automatic log scale.
+   - Heat-map lens.
+   - Find chips; other table shapes in the menu.
+5. **Patterns and Side by side:** question-led charts with data-derived callouts; curated pairs.
+6. **Polish and proof:**
+   - The full BEFORE/AFTER set.
+   - The DESIGN-RULES checklist recorded in LOG.md.
+   - Contrast, keyboard, reduced motion, tiers, phone landscape.
+   - README.
+7. **Later:**
+   - Story lenses as Q11–Q13 land.
+   - "Mysteries" built from the parked quiz (fix its two known bugs first).
+   - SPEC §5 Later items (demo dioramas, etc.).
+
+## 9. Performance goals (smooth on a phone)
+- **Targets** (SPEC §6, built-in meter):
+  - Mid-range phone on Medium: 60 FPS median and p95 ≤ 20 ms in the table, card and atom views; ≥ 55 FPS in Heat.
+  - Low-end Android on Low: ≥ 30 FPS.
+  - Desktop on High: 60 FPS.
+  - Interactive in ≤ 3 s on 4G; file ≤ 2 MB (master is 1.31 MB).
+- **Headless baseline** (SwiftShader, Low): BEFORE, everything is at 60 except Heat at 20 FPS on desktop. **Goal: Heat ≥ 45 on desktop and ≥ 55 on phone**, with everything else staying at 60.
+- **Budget:**
+  - No post-processing by default.
+  - Contact shadows are baked as instanced gradient quads.
+  - Device pixel ratio is capped at 2 (1.5 on Low).
+  - Table: about 6 draw calls; at most 60 visible screen-space labels.
+  - Heat: 500 / 1,200 / 3,000 beads by tier, low-poly by tier, vibration in the vertex shader.
+  - Atom: stipple points by tier, alpha-blended (less overdraw than today's additive glow).
+  - Everything renders on demand, and nothing heavy is built before first use.
+
+## 10. Checks and gates
+- Validator, unit tests and smoke tests pass on every commit; smoke checks are added for each new place.
+- Screenshot pairs (BEFORE/AFTER, same flags) and FPS notes go in LOG.md.
+- There is a review gate after the HERO slice (Gemini and moony) and after the wow path.
+- No "M<n>:" commit prefixes. Nothing is published except `git push` to origin.
+
+## 11. Open questions for Gemini's critique
+1. Does a light "porcelain & ink" stage read as *higher quality* to this audience than a dark showroom, at a fraction of the GPU cost?
+2. Are the family names in §3 accurate and inviting (EN and VI)?
+3. Is "heat iron until it glows" the right single wow moment, with the scale dive as the road to it?
+4. Which six number lenses earn the top of the lens menu?
+5. Sources for the story lenses (Q11–Q13), and the hook checks (Q15).

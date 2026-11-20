@@ -42,3 +42,39 @@ Items from FACTCHECK.md applied differently from Gemini's suggestion, with reaso
 - **"thủy ngân" vs "thuỷ ngân":** kept the source article's spelling (both orthographies are standard); for moony to confirm with the other VI wording.
 - **α-Fe COD a = 286.54 pm vs 286.65 pm:** no change; the app shows Arblaster's 286.65 pm and uses COD only for atomic positions.
 - **Answers batch (RESEARCH.md › Answers, applied 2026-11-20):** (a) β-Sr uses COD 9008551 (Wyckoff, 887 K) rather than 9012760, whose paper is about strontium above 35 kbar (pressure of that entry unclear); β-Ca uses COD 9011034 (thermal-expansion study) rather than 9012732 (Ca–Sr alloy paper). (b) β-U (30 atoms) and β-Pu (34 atoms) exceed SPEC §5's 16-atom limit, so their temperature ranges show an honest card although COD has them. (c) Transitions listed only in FACTCHECK §3.2 (β-Be, β-Tl, β-Po, δ-Ce) are added as cards ("lattice constants not in our sources"), beyond the answer's suggested scope. (d) Ranges (Hf 1742–1760 °C, U 775–776 °C, Np 576–577 °C, Be 1254–1269 °C) are drawn at their middle; the range is in the note. (e) Co uses the 422 °C equilibrium value with the ≈450 °C heating value in the note. (f) Lindemann: the answer's single 0.10 is used for every structure; the per-structure literature values (fcc 0.11, bcc 0.13, hcp 0.09) are only quoted in the note. (g) Np boiling point: 4447 K is primary as the answer recommends, but the answer itself rates this low-confidence; PubChem's 4175 K stays visible as the alternative.
+
+## Redesign decisions (21 Nov 2026)
+Who proposed each: **moony** (owner), **Gemini study** (DESIGN-STUDY.md, committed with this entry) or **Claude** (the builder). Details are in SPEC.md §0, STYLE.md and REDESIGN-PLAN.md.
+
+**From moony**
+- **Redesign now; the milestone plan stops.** M5 was judged "too technical, looks bad quality"; "why should I look at the trends?". The audience is redefined as curious adults with no chemistry assumed (a PhD who learned chemistry decades ago, developers, documentary watchers) plus students and teachers. Pre-approved overnight ("do whatever makes sense and best"). *Why:* the dashboard surface hid the science behind jargon.
+- **Quiz stopped and parked** on branch `wip-m6-quiz` (cde11a6, with two known UI bugs). **No "M<n>:" commit prefixes** from now on. *Why:* owner's direction.
+
+**Adopted from the Gemini study**
+- **A light, luminous studio look instead of dark bloom** (study §4.1). Claude's concrete answer is "porcelain & ink": warm paper, matte porcelain tiles, ink type. *Why:* legible in daylight on phones, looks crafted, costs little GPU, and is clearly not the dark photoreal showroom we compared against.
+- **Plain-language labels, jargon one tap away** (study §4.4), as "human phrase · *jargon caption*". *Why:* the core complaint; jargon stays available for teachers and the PhD.
+- **"Why it matters" hooks on every technical layer** (study §3.D) with their sources. *Why:* answers "why should I look at this?" before any number.
+- **The scale dive** (study §4.5, table → inside a tile) as the road to the wow moment. *Why:* continuous camera moves explain where you are (NASA Eyes lesson).
+- **Human-scale landmarks on sliders and charts** (study §4.6). Claude's limit: only landmarks computed from our element data (gallium 29.8 °C, lead 327 °C, iron 1,538 °C, tungsten 3,422 °C); any other landmark needs a source first (QUESTIONS Q15). *Why:* "never invent values".
+- **Curated surprising pairs in Side by side** (study §4.7). *Why:* an empty picker is not an invitation.
+- **Story lenses** (study §4.3: made in stars, in your body, in your phone) are accepted in principle but **shown only when their data is fetched and cited** (QUESTIONS Q11–Q13). *Why:* we do not have that data yet and must not invent it.
+- **"Mysteries" instead of "Quiz"** (study §4.9): deferred, since the quiz is parked.
+
+**Claude's decisions (and why)**
+- **The single wow moment: heat iron until it glows.** It is reached through the scale dive. The room dims to a kiln colour, the 912 °C crystal snap (8 → 12 neighbours), melting and boiling follow. *Why:* real physics we already model (blackbody colour, Bain path), visceral for every audience, and continuous with the M4 design bar.
+- **Places, not tabs.** Table → element card → {inside the atom, hold a piece / heat it, side by side, patterns}, with a back link always visible. *Why:* six equal tabs gave no hierarchy and created dead ends.
+- **Flat, equal tiles by default;** heights only inside a named lens that opens with its question. *Why:* heights without a question are noise.
+- **The legend is replaced by family names written on the table;** family filters move to Find. *Why:* less chrome; colour is never the only cue.
+- **The data sheet is demoted, not removed,** behind "All numbers & sources" in the card. *Why:* keep every sourced fact, but not on first contact.
+- **Other layouts (32-column, helix) move to the menu as history;** log scale is automatic per lens; °C is shown first and K in details. *Why:* choices nobody should have to make first.
+- **System fonts only** (a serif stack for the voice, a sans stack for interface and numbers). *Why:* the deliverable allows no font files; two families keep the type calm.
+- **Sound is optional and off by default,** synthesised with WebAudio, never on load. *Why:* DESIGN-RULES delight without nagging; no audio files.
+- **Phone: a thumb-scrub loupe to pick tiles.** *Why:* the 18-column table makes tiles about 18 px wide on a 390 px screen; the loupe gives a 44 px-equivalent target.
+- **Performance:** no post-processing by default, baked instanced contact shadows, atom and point budgets per quality tier, Heat ≥ 45 FPS on the headless baseline (was 20). *Why:* "smooth on phone" comes before effects.
+- **Hook wording changed for accuracy** (marked ⚠ in REDESIGN-PLAN §4):
+  - "noble gases *hardly* react" instead of "refuse to react" (some noble gases do form compounds);
+  - the Teflon claim is dropped (it oversimplifies why Teflon is non-stick);
+  - "explosive gases on the right" is dropped (the right edge holds the noble gases);
+  - "a shoebox of gold weighs as much as a small adult" is replaced by the weight of a litre computed from our density (19.3 kg).
+  Hooks whose wording still needs checking against their sources are queued as Q15.
+- **The HERO slice is built first at full polish** (landing, table, first tap and card, phone loupe), then a review gate with Gemini and moony before the wow path. *Why:* DESIGN-RULES "first slice"; change direction while it is cheap.

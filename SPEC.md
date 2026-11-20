@@ -3,6 +3,40 @@
 Draft for moony's approval · 20 Nov 2026 · no app code until approved.
 **Deliverable:** one offline `index.html`: three.js (pinned) and data inlined; every shape and light made in code; no fonts, images, models or CDN.
 
+## 0. Feel (redesign, 21 Nov 2026; moony pre-approved overnight; style in `STYLE.md`, work in `REDESIGN-PLAN.md`)
+Where this section conflicts with §2 (six tabs, kid-first wording, legend and data sheet on the first screen), this section wins. Every data, science and source rule in §3–§6 stays.
+
+**Audience.** Curious adults with no chemistry assumed: a PhD who last studied chemistry decades ago, software developers, documentary watchers. Students and teachers too.
+**Feeling.** Calm wonder: a sunlit museum of matter where every specimen can be picked up. Plain words come first; the real science and its sources are one tap away, never in the way.
+
+**The first 5 seconds (exactly what is on screen).**
+- *Desktop 1440×900:*
+  - The page is warm paper. The 118 elements sit as low porcelain tiles in the familiar 18-column shape, tilted toward you and filling about 80 % of the width. Each tile has its family glaze and its symbol in ink.
+  - The family names are written on the table itself in serif italic, like a map: "Soft, reactive metals", "Workhorse metals", "Loner gases", "Rare earths" …
+  - A soft light sweeps across once on load (1.2 s).
+  - A quiet top bar holds the wordmark, a "Find an element" pill, EN | VI and a ≡ menu.
+  - Bottom centre, in serif: *"Everything you have ever touched is built from these kinds of atom."* Under it, in small sans: **"Tap one to look inside."**
+  - The iron tile breathes gently (the suggested first tap). After 4 s without a touch, a small "Try iron" tag appears beside it.
+  - There is no legend, dropdown, data sheet or tab row.
+- *Phone 390×844 (portrait):* the same table, framed to fit the width, with the prompt above the thumb zone. Touch and slide across the table: the element under your thumb pops up large above it (a loupe). Lift to open it. This gives tiny tiles a 44 px-equivalent target.
+- **The ONE obvious action: tap an element.**
+
+**The 3-step path to the wow moment** (STYLE.md §9):
+1. Tap **iron**. Its tile lifts, the camera glides in, and a card shows *"Iron · the metal of steel"* with three plain facts and three doors.
+2. Tap **Hold a piece**. The camera dives *into* the tile, which opens into iron's real crystal (each atom touching 8 neighbours) with a big thermometer.
+3. Drag the thermometer up. The room dims like a forge, the metal glows red, then orange, then white. At 912 °C the crystal snaps into a 12-neighbour stack; it melts at 1,538 °C and boils at 2,861 °C.
+
+**User flow across views.** The views are places, not tabs. A back link ("← All elements" or "← Iron") is always visible.
+```
+Table (home: families; lenses: Heat map · Atom size · Grip on electrons · Electron pull · Melting · Heft · story lenses as data arrives)
+  └─ tap an element → Element card (name, one human line, 3 plain facts, "All numbers & sources")
+        ├─ Look inside the atom   (electron clouds, "add a proton", its light)
+        ├─ Hold a piece · heat it (crystal, thermometer, melt/boil)  ← the wow
+        ├─ Side by side           (curated surprising pairs or any element; to scale)
+        └─ "How does this change across the table?" (from any fact) → Patterns (chart that opens with a question)
+Find (search + quick filters) and the menu (lenses, other table shapes, sound, quality, sources, language) are reachable from everywhere.
+```
+
 ## 1. After 2 minutes, a visitor gets
 - Order = proton count; a column (group) shares its outer-electron pattern.
 - Trends are real: atoms shrink across a period, grow down a group; ionization energy does the opposite.
