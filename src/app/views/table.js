@@ -368,7 +368,7 @@ export function createTableView(hooks) {
     if (!keepCamera) fly(overview, state.reduced ? 0 : dur);
   }
   /** Has the user zoomed or turned the table away from its home framing? (shows "Whole table") */
-  let away = false;
+  let away = false, diving = false;
   function checkAway() {
     const o = overview, rg = E.rig;
     const now = !!o && !state.card && state.view === 'table' && !rg.tween &&
@@ -446,6 +446,7 @@ export function createTableView(hooks) {
     scene,
     init() { computeTargets(); morph(); writeColours(); placeSubTags(); },
     enter() {
+      diving = false;
       labels.enabled = true;
       key.castShadow = tierConfig().shadows;
       frame(state.reduced ? 0 : 0.8);
@@ -460,7 +461,8 @@ export function createTableView(hooks) {
       E.rig.scrub = hooks.isPhone && hooks.isPhone() && E.active === view ? scrub : null;
       E.rig.parallaxOn = (!hooks.isPhone || !hooks.isPhone()) && E.active === view;
       writeColours();
-      // keep a camera the user has zoomed or turned (only the home framing is recomputed)
+      // keep a camera the user has zoomed or turned (only the home framing is recomputed); never steer a dive
+      if (diving) return;
       if (state.card && !state.hideSel) focus(state.Z, 0); else frame(0, away);
     },
     update(dt) {
@@ -517,6 +519,15 @@ export function createTableView(hooks) {
       invalidate();
     },
     focus, frame, introSweep, showHint,
+    /** The first half of the scale dive: straight down into the tile's glaze until it fills the screen.
+     *  While diving, re-framing (the card closing changes the free area) must not steer the camera. */
+    dive(Z, dur = 1.0, r = 0.75, phi = 0.06) {
+      const i = Z - 1, c = cur[i];
+      const top = new THREE.Vector3(0, c.h + lift[i], 0).applyQuaternion(c.quat).add(c.pos);
+      diving = true;
+      E.rig.lim = { ...E.rig.lim, rMin: 0.4, phiMin: 0.02 };
+      E.rig.flyTo({ target: top, r, theta: E.rig.theta, phi }, dur);
+    },
     setBreath(Z) { breathZ = Z || 0; breathT = 0; invalidate(); },
     columnTop(Z) { const c = cur[Z - 1]; return new THREE.Vector3(0, c.h + lift[Z - 1], 0).applyQuaternion(c.quat).add(c.pos); },
     screenOf(Z) { return toScreen(view.columnTop(Z)); },

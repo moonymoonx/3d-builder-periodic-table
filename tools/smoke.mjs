@@ -249,6 +249,26 @@ await step('compare (VI): sentences use the familiar Vietnamese name too', async
   return s;
 });
 
+await step('forge: the iron card door dives into the crystal; 930 °C re-stacks to 12 neighbours; back returns to the card', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 26, card: true, hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }));
+  await page.waitForTimeout(700);
+  await page.locator('.ui-door', { hasText: 'Hold a piece' }).click();
+  await page.waitForFunction(() => window.__pt.state.view === 'heat', null, { timeout: 8000 });
+  await page.waitForTimeout(1400);
+  const start = await page.locator('.heat-caption').textContent();
+  if (!/8 neighbours/.test(start)) throw new Error('start: ' + start);
+  await page.evaluate(() => window.__pt.set({ T: 1203.15 })); // 930 °C, past the 912 °C transition
+  await page.waitForTimeout(700);
+  const cap = await page.locator('.heat-caption').textContent();
+  const kiln = await page.evaluate(() => document.body.classList.contains('kiln'));
+  if (!/912 °C/.test(cap) || !/12 neighbours/.test(cap)) throw new Error('caption: ' + cap);
+  if (!kiln) throw new Error('the room did not dim');
+  await page.locator('[data-back=card]').click(); await page.waitForTimeout(900);
+  const v = await page.evaluate(() => ({ view: window.__pt.state.view, card: window.__pt.state.card, kiln: document.body.classList.contains('kiln') }));
+  if (v.view !== 'table' || !v.card || v.kiln) throw new Error(JSON.stringify(v));
+  return cap;
+});
+
 for (const [ok, name, info] of results) console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`);
 console.log(errors.length ? `console errors:\n  ${errors.join('\n  ')}` : 'no console errors');
 await browser.close();

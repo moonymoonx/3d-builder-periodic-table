@@ -203,3 +203,72 @@ Proposed by Gemini (reviewer); every call below is Claude's (design owner), with
 
 **Not done in this round (and why)**
 - **The forge wow (heat a piece until it glows):** the reviewer's "land the forge wow". It belongs to the next slice, Hold & heat (REDESIGN-PLAN work step 2). The hero slice only opens its door.
+
+## Hero round 3: Gemini's cold review of round 2 (`reviews/hero-r2.md`) and the forge moment, 21 Nov 2026
+Proposed by Gemini (cold reviewer). The calls are Claude's (design owner); the forge scope is moony's: "build the wow moment now as part of the hero path, scoped to what the hero path needs". Round-2 scores were clarity 4.0, ease 3.5, beauty 4.0, smoothness 4.0, delight 3.5. Numbers refer to the review's §3 list.
+
+**The wow moment: built**
+- **Hold a piece · heat it** (STYLE.md §9, SPEC §0) is now the iron card's door. It leads to a new place, `places/heat.js`, over the existing simulation in a new look (`views/sample.js`, `look: 'forge'`).
+  - **The scale dive:** the camera plunges straight down into the tile until its glaze fills the screen. The glaze colour crossfades (at ~70 %), and the camera then draws back out of the crystal. The chrome steps aside meanwhile. Reduced motion: a short crossfade.
+  - **The stage:** iron's measured crystal as glazed beads in the family pigment, in a hairline glass cube on a paper slab, in daylight.
+  - **The thermometer:** one big control. Event ticks come from the data (912 °C re-stacks, 1,394 °C, 1,538 °C melts, 2,861 °C boils), with familiar metals' melting points as flags (lead, copper).
+  - **Buttons:** "Heat it ▶" plays the sweep and stops just past each event so its caption can be read. "Room temperature" starts over.
+  - **The room dims to `--kiln`** (600 ms) while the metal glows. The glow colour is the blackbody colour of the temperature (Planck × CIE, CODATA constants), now decoded as sRGB so it reads dull red at 700 °C, orange at 1,000 °C and yellow near boiling. The hot metal lights its surroundings (one light) and blooms softly (one sprite).
+  - **One quiet caption** names each moment: "912 °C: the atoms re-stack. Each now touches 12 neighbours." (neighbour counts from the phase data), melting, boiling and the way back down.
+  - **The way back:** the back link returns to the iron card in daylight, and the table's heat-map temperature is restored.
+- **Scope:**
+  - Every element with a measured crystal that is solid at room temperature uses the forge. All others keep the old sample view.
+  - "About this crystal ▾" and sound (the 912 °C "tink") are not built. *Why:* STYLE §9 keeps the stage free of other panels; sound stays deferred (earlier decision).
+  - An undrawable phase (e.g. β-uranium) gets a caption instead of an empty box.
+- **Rejected:** a separate full-screen "dive" movie. *Why:* the dive uses the real table and the real crystal, so it costs nothing to load and works the same for every element.
+
+**Ease**
+- **#1 / fix 1, gold's card clips previous / next: accepted.** Previous / next now sit in an always-visible footer on desktop.
+- **#2, no scroll cue in "All numbers": accepted.** The card body fades out at the bottom whenever more waits below (desktop and phone).
+- **#3 / #14 / #22 / fix 2, no reset after zooming, hero text over tiles: accepted.**
+  - Once the table is zoomed or turned away from its home framing, a "⌂ Whole table" pill appears, and the hero line (and the phone key) step aside.
+  - Re-framing never undoes a zoom.
+- **#4 / fix 3, tall columns hide Tc, Mo, H: accepted.**
+  - Columns are lower (the tallest is 3.6 scene units instead of 4.6) and seen more from above (desktop φ 0.44 → 0.36).
+  - *Not taken:* fading occluding columns. *Why:* it is costly and confusing; the steeper view solves most of it.
+- **#21, the thumb-scrub tile has no visible highlight: accepted.** The tile under a scrubbing thumb rises like a picked tile and gets the verdigris ring.
+- **#7, phone chips cut mid-word: accepted.** All lens chips are in view on phones, in two rows; no horizontal scroll.
+
+**Clarity**
+- **Region labels (§1): partly accepted.**
+  - "Mineral metals" now sits in row 1 right of H, above Be.
+  - Vietnamese "Nhóm tạo muối" and "Kim loại phóng xạ nặng" keep more distance from He and Ac.
+  - *Rejected:* moving "Half-metals" off B, and a separate label for H. *Why:* B is the first member of the half-metal diagonal, and one name per family is the rule; the phone key, the loupe and the card name every family.
+- **#11, no stripe / pale key in Melting point and Heft: accepted.** Every lens banner keys its stripes ("striped: predicted") and pale flat tiles ("not known").
+- **#15, unexplained dotted underlines on phone: accepted.** "Tap a value to see where it comes from." sits under the fact strip.
+- **#24, helium filed under "not measured": accepted.** Helium's flat tile carries "Helium never freezes at normal pressure". The caption says so, and "not measured" is left for the others.
+- **#12, the exception pill: accepted.** It now reads "fills its shells out of the usual order: 5d: 9 → 10, 6s: 2 → 1".
+- **#25, abridged atomic weight presented as the standard: accepted.** It is labelled "Standard atomic weight (abridged)". The full CIAAW value (196.966570(4)) is the next row in "more".
+- **#26, actinium striped in one lens and not the other: rejected, not a data error.** Its melting point is flagged predicted in both records our lenses read. The stripes were hard to see, so they are now stronger on desktop and wider on phones.
+- **#13, "Heft" may be unclear to non-native readers: rejected.** It is the chosen plain word (REDESIGN-PLAN); the banner's hook explains it at once, and Vietnamese uses "Độ nặng".
+- **#16, phone sheet: accepted.**
+  - The peek shows a sliver of what follows, and the family caption ("transition metals") is back on phones.
+- **#23, Vietnamese card headed "Iron": accepted.** For the 13 elements whose familiar names GDPT-2018 keeps, the Vietnamese card leads with that name (Sắt, Đồng…), followed by the international name. Sentences already used it.
+- **#5, Vietnamese "nguyên / tử" split: accepted** (no-break space).
+
+**Beauty**
+- **#8, dark numbers on blue liquid tiles: accepted.** Atomic numbers are printed larger and bolder; they already take the same light ink as the symbol.
+- **#9, unreadable ghost tiles: accepted.** The glaze fades toward paper but the ink stays dark (between ink and ink-2, ≥ 7 : 1).
+- **#10, muddy stripes on phone tiles: accepted.** On phones the stripes are wider and softer.
+- **#19 / fix 7, the floor ring under a lifted tile: accepted.** The ring now frames the lifted tile itself.
+- **#6, tiles peeking behind the phone top bar: accepted.** The phone top scrim is stronger while a card is open.
+- **#20, washed bottom rows behind the chips: accepted.** No bottom scrim while a card is open on desktop.
+- **Phone vertical void (fix 6): partly accepted.**
+  - The prompt is now a page heading under the top bar, so the screen reads heading, table, key, chips.
+  - The table itself stays width-bound. *Why:* rotating or cropping the table would make it less recognisable.
+- **#17, one value in teal: rejected.** It was the hover colour under the screenshot tool's pointer; the shot now moves the pointer away.
+
+**Delight**
+- **#18 / fix 3, Heft's log scale flattens gold: accepted.** Heft is linear: gold and osmium tower, gases stay at the floor. The caption explains why.
+- **The forge**, above.
+
+**Smoothness**
+- **Fix 9, the first second of a deep zoom: accepted.** On software renderers the resolution now steps down as soon as the camera is much closer than the home framing, instead of waiting for slow frames.
+- **Fix: a real bug found while building the dive.**
+  - Closing the card re-framed the table while the camera was gliding, which retargeted the glide.
+  - The table no longer steers the camera during a dive.

@@ -11,6 +11,7 @@ import { byZ, data, stateAt } from '../data.js';
 import { cellVectors, fracToCart, lindemannRms, rmsSpeed } from '../../physics/lattice.js';
 import { cmfAt, mul3, gammaEncode } from '../../physics/color.js';
 import { CATEGORY_COLORS, CATEGORY_COLORS_CB } from '../palette.js';
+import { pigment, pigmentCB, color as TOK, light as LIGHT } from '../../design/tokens.js';
 import { rng32 } from '../../physics/orbitals.js';
 
 const SPEED_SCALE = 3; // display pm/s per real m/s (the real motion is ~3 x 10^11 times faster)
@@ -76,27 +77,55 @@ export function blackbody(T) {
   return out;
 }
 
-export function createSampleView(hooks) {
+/** Soft round glow (white, alpha falloff) for the halo around hot metal. */
+function haloTexture(size = 128) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), r = size / 2;
+  const grd = g.createRadialGradient(r, r, 0, r, r, r);
+  grd.addColorStop(0, 'rgba(255,255,255,1)'); grd.addColorStop(0.35, 'rgba(255,255,255,0.45)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+
+/**
+ * look: 'legacy' (the old dark stage) or 'forge' (Hold a piece · heat it, STYLE.md §6 and §9): glazed
+ * beads in the family pigment inside a hairline glass cube with an ink unit-cell outline, in daylight;
+ * as the metal starts to glow the room dims to the kiln colour (hooks.onKiln) and the glow lights it.
+ */
+export function createSampleView(hooks, { look = 'legacy' } = {}) {
+  const FORGE = look === 'forge';
+  const CK = FORGE ? 'forge' : 'sample'; // continuous-render key
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xe6eeff, 0x1d2638, 1.3));
-  const key = new THREE.DirectionalLight(0xffffff, 2.0);
+  const hemi = FORGE ? new THREE.HemisphereLight(LIGHT.sky, LIGHT.ground, 1.0) : new THREE.HemisphereLight(0xe6eeff, 0x1d2638, 1.3);
+  scene.add(hemi);
+  const key = new THREE.DirectionalLight(FORGE ? LIGHT.key : 0xffffff, 2.0);
   key.position.set(-1, 2.2, 1.6);
   scene.add(key, key.target);
   const world = new THREE.Group();
   scene.add(world);
 
   // glass box + floor
-  const boxMat = new THREE.LineBasicMaterial({ color: 0x9fbcff, transparent: true, opacity: 0.35 });
+  const boxMat = new THREE.LineBasicMaterial({ color: FORGE ? TOK.ink : 0x9fbcff, transparent: true, opacity: FORGE ? 0.22 : 0.35 });
   const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), boxMat);
-  const glass = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x8fb0ff, transparent: true, opacity: 0.05, roughness: 0.1, depthWrite: false, side: THREE.BackSide }));
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x101a2e, roughness: 0.9 }));
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: FORGE ? TOK.paper : 0x8fb0ff, transparent: true, opacity: FORGE ? 0.04 : 0.05, roughness: 0.1, depthWrite: false, side: THREE.BackSide }));
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: FORGE ? TOK.paperDeep : 0x101a2e, roughness: FORGE ? 0.95 : 0.9 }));
   world.add(box, glass, floor);
-  const cellLines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xffcf6b, transparent: true, opacity: 0.9 }));
+  const cellMat = new THREE.LineBasicMaterial({ color: FORGE ? TOK.ink : 0xffcf6b, transparent: true, opacity: FORGE ? 0.5 : 0.9 });
+  const cellLines = new THREE.LineSegments(new THREE.BufferGeometry(), cellMat);
   world.add(cellLines);
+  // forge: the hot metal lights its surroundings and blooms softly (one light, one sprite)
+  let heatLight = null, halo = null, kilnK = 0, kilnTo = 0;
+  const INK = new THREE.Color(TOK.ink), KILN_TEXT = new THREE.Color(TOK.kilnText);
+  if (FORGE) {
+    heatLight = new THREE.PointLight(0xffffff, 0, 0, 0);
+    halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTexture(), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, depthTest: false, opacity: 0 }));
+    halo.renderOrder = 5;
+    world.add(heatLight, halo);
+  }
 
   // atoms: instanced spheres; the solid vibrates in the vertex shader, liquid/gas positions are CPU-driven
   const MAX = 3200;
-  const atomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.38, metalness: 0.15 });
+  const atomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: FORGE ? 0.35 : 0.38, metalness: FORGE ? 0 : 0.15 });
   const uni = { uTime: { value: 0 }, uAmp: { value: 0 } };
   atomMat.onBeforeCompile = sh => {
     sh.uniforms.uTime = uni.uTime; sh.uniforms.uAmp = uni.uAmp;
@@ -308,7 +337,7 @@ export function createSampleView(hooks) {
       const Rp = puddleR || boxL[0] * 0.3;
       for (let i = 0; i < n; i++) {
         const o = 3 * i;
-        Vv[o] += gauss() * jig * dt * 6; Vv[o + 1] += gauss() * jig * dt * 6 - dNN * 6 * dt; Vv[o + 2] += gauss() * jig * dt * 6;
+        Vv[o] += gauss() * jig * dt * 6; Vv[o + 1] += gauss() * jig * dt * 6 - dNN * (FORGE ? 22 : 6) * dt; Vv[o + 2] += gauss() * jig * dt * 6; // forge: it visibly slumps into a puddle
         const rx = P[o] - cx, rz = P[o + 2] - cz, rr = Math.hypot(rx, rz);
         if (rr > Rp) { const pull = (rr - Rp) * 6 * dt / rr; Vv[o] -= rx * pull * 4; Vv[o + 2] -= rz * pull * 4; }
         const damp = Math.exp(-4 * dt);
@@ -351,13 +380,30 @@ export function createSampleView(hooks) {
 
   // ---- colour, glow, vibration ----------------------------------------------------------------
   function applyLook(e, kind) {
-    const pal = state.cb ? CATEGORY_COLORS_CB : CATEGORY_COLORS;
+    const pal = FORGE ? (state.cb ? pigmentCB : pigment) : state.cb ? CATEGORY_COLORS_CB : CATEGORY_COLORS;
     atomMat.color.set(pal[e.f.cat[0]]);
     const bb = blackbody(state.T);
     const glowing = kind === 'solid' || kind === 'liquid';
-    atomMat.emissive.setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2]);
-    atomMat.emissiveIntensity = glowing ? bb.glow * 2.2 : 0;
-    key.intensity = 2.0 * (1 - 0.5 * (glowing ? bb.glow : 0));
+    if (FORGE) atomMat.emissive.setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2], THREE.SRGBColorSpace); // the blackbody colour is display-encoded
+    else atomMat.emissive.setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2]);
+    if (FORGE) {
+      // the room dims while the metal is hot enough to glow; a hot gas still glows faintly
+      const g = bb.glow;
+      atomMat.emissiveIntensity = glowing ? g * 1.25 : g * 0.8; // below tone-mapping white, so the hue reads true
+      const to = state.T > 760 && g > 0.01 && kind !== 'card' ? 1 : 0;
+      if (to !== kilnTo) { kilnTo = to; if (hooks.onKiln) hooks.onKiln(!!to); }
+      const k = kilnK;
+      hemi.intensity = 1.0 * (1 - 0.86 * k); key.intensity = 2.0 * (1 - 0.8 * k);
+      heatLight.color.setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2], THREE.SRGBColorSpace); heatLight.intensity = glowing ? g * 1.3 : 0;
+      halo.material.color.setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2], THREE.SRGBColorSpace);
+      halo.material.opacity = glowing ? Math.min(0.5, g * 0.55) : 0;
+      halo.scale.setScalar(boxL[0] * (kind === 'liquid' ? 1.5 : 1.8));
+      halo.position.set(0, (world.userData.lift || 0) * 0.5, 0);
+      boxMat.color.copy(INK).lerp(KILN_TEXT, k); cellMat.color.copy(boxMat.color);
+    } else {
+      atomMat.emissiveIntensity = glowing ? bb.glow * 2.2 : 0;
+      key.intensity = 2.0 * (1 - 0.5 * (glowing ? bb.glow : 0));
+    }
     const ratio = data().model.lindemann[0];
     const Tm = e.ph.mp?.[0] ?? e.ph.sub?.[0];
     const rms = kind === 'solid' && Tm ? lindemannRms(state.T, Tm, dNN, ratio) : 0;
@@ -392,26 +438,34 @@ export function createSampleView(hooks) {
     }
     applyLook(e, ss.kind);
     writeMatrices();
-    setContinuous('sample', atoms.visible && !state.reduced || !!morph);
+    setContinuous(CK, atoms.visible && !state.reduced || !!morph);
     if (hooks.onState) hooks.onState(current, { dNN, n, molN });
     invalidate();
   }
 
-  function frame(dur = state.reduced ? 0 : 0.7) {
+  function frameGoal() {
     const fov = freeFov();
     const R = Math.hypot(...boxL) * 0.62;
     const r = R / Math.sin(Math.min(fov.v, fov.h) / 2);
     E.camera.near = R / 200; E.camera.far = R * 50; E.camera.updateProjectionMatrix();
     E.rig.lim = { rMin: R * 0.4, rMax: R * 12, phiMin: 0.15, phiMax: 1.55 };
-    E.rig.flyTo({ target: new THREE.Vector3(0, -boxL[1] * 0.05, 0), r, theta: 0.65, phi: 1.12 }, dur);
+    return { target: new THREE.Vector3(0, -boxL[1] * 0.05, 0), r, theta: FORGE ? 0.6 : 0.65, phi: FORGE ? 1.04 : 1.12 };
   }
+  function frame(dur = state.reduced ? 0 : 0.7) { E.rig.flyTo(frameGoal(), dur); }
 
   let t = 0;
   const view = {
     scene,
     init() {},
-    enter() { phaseKey = ''; element = 0; sync(true); },
-    exit() { setContinuous('sample', false); E.camera.near = 0.05; E.camera.far = 3000; E.camera.updateProjectionMatrix(); },
+    enter() { phaseKey = ''; element = 0; kilnK = 0; kilnTo = -1; sync(true); },
+    exit() { setContinuous(CK, false); kilnK = 0; if (FORGE && hooks.onKiln) hooks.onKiln(false); E.camera.near = 0.05; E.camera.far = 3000; E.camera.updateProjectionMatrix(); },
+    /** The end of the scale dive: start inside the crystal, then draw back to see the whole lump. */
+    diveIn(dur = 1.1) {
+      const g = frameGoal();
+      if (state.reduced || dur <= 0) { E.rig.flyTo(g, 0); return; }
+      E.rig.flyTo({ target: g.target, r: g.r * 0.3, theta: g.theta + 0.5, phi: g.phi - 0.55 }, 0);
+      E.rig.flyTo(g, dur);
+    },
     resize() { if (current) frame(0); },
     onTier() { if (E.active === view) sync(true); },
     onState(ch) { if (E.active === view && ['Z', 'T', 'allotrope', 'cb', 'reduced'].some(k => k in ch)) sync(); },
@@ -419,6 +473,11 @@ export function createSampleView(hooks) {
       if (E.active !== view) return false;
       t += dt; uni.uTime.value = t;
       const e = byZ(state.Z);
+      if (FORGE && Math.abs(kilnK - Math.max(0, kilnTo)) > 1e-3) { // the room dims and returns over ~600 ms
+        kilnK += Math.sign(Math.max(0, kilnTo) - kilnK) * Math.min(Math.abs(Math.max(0, kilnTo) - kilnK), dt / 0.6);
+        applyLook(e, current ? current.kind : 'solid');
+        if (!atoms.visible || state.reduced) return true;
+      }
       if (morph) {
         morph.t = Math.min(1, morph.t + dt / morph.dur);
         const s = morph.t < 0.5 ? 2 * morph.t * morph.t : 1 - (-2 * morph.t + 2) ** 2 / 2;

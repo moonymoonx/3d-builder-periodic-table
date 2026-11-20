@@ -1,7 +1,7 @@
 // Global app state + shareable URL hash (#v=table&el=Fe&p=ie1&lay=s18&lang=vi ...).
 const listeners = new Set();
 // 'table' is home; the other views are reached through the element card (the quiz is parked on a branch)
-export const VIEWS = ['table', 'atom', 'sample', 'trends', 'compare'];
+export const VIEWS = ['table', 'atom', 'sample', 'trends', 'compare', 'heat']; // heat: the forge (Hold a piece · heat it)
 export const LENSES = ['families', 'heat', 'mp', 'density', 'rCov', 'ie1', 'en', 'year', 'abund', 'bp', 'ea', 'aw', 'rVdw', 'zeff'];
 export const LAYOUTS = ['s18', 's32', 'helix'];
 

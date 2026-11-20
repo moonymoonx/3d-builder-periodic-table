@@ -68,7 +68,8 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 - **Elevation:** paper shadows only (`0 1px 2px rgba(28,26,23,.06), 0 8px 24px rgba(28,26,23,.08)`). No glassmorphism, no glow on chrome.
 - **Targets:** at least 44 × 44 px with 8 px gaps. The primary button is an ink pill with paper text; the secondary is an outlined pill; the tertiary is a text link in verdigris.
 - **The canvas owns the screen** (about 90 %). On a default surface you see at most: a top bar (wordmark, find pill, language, menu), one card or sheet, and one bottom prompt. On phones, find is a round 44 px button that opens into a field across the bar.
-- **Element card:** a 392 px side card on desktop; when it scrolls, a compact title bar (tile, name, number) slides in under the close button, so rows never run beneath it. On phones it is a bottom sheet that stands exactly tall enough to show the three doors (at most 62 % of the screen): name, the human line, the three facts in one strip, the doors; the facts' notes, "across the table" links and all numbers follow below.
+- **Element card:** a 392 px side card on desktop; when it scrolls, a compact title bar (tile, name, number) slides in under the close button, so rows never run beneath it. Previous / next sit in an always-visible footer, and the body fades out at the bottom whenever more waits below. On phones it is a bottom sheet that stands just tall enough to show the three doors plus a sliver of what follows (at most 64 % of the screen): name, family and its caption, the human line, the three facts in one strip with "Tap a value to see where it comes from.", the doors; the facts' notes, "across the table" links and all numbers follow below. Vietnamese cards lead with the familiar GDPT-2018 name for the 13 elements that keep one (Sắt), then the international name.
+- **Home layout:** on phones the prompt is a page heading under the top bar, and all lens chips are in view (two rows, never cut mid-word). After the table is zoomed or turned away from its home framing, a "⌂ Whole table" pill takes the prompt's place (the phone key steps aside too); re-framing never undoes a zoom. Every lens banner keys what the table shows (stripes = predicted, pale and flat = not known).
 - **Name tags** (hover, "Try iron", lens notes) hang above the tile's back edge with a small caret, so they never cover the printed number. Names written on the table keep 14 px from the screen edges and stay clear of the card, or are hidden.
 
 ## 6. 3D: lighting and materials
@@ -86,6 +87,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
   - Built in code as **thick** rounded ceramic blocks (height about 40 % of their width, bevel about 6 % of the width), so they read as 3D objects in the first second and not as a tilted HTML table.
   - Material:
     - The top face is the family pigment under a glaze (`roughness 0.16`); the sides are glazed too (`roughness 0.34`) and **38 % darker**. `metalness 0` throughout.
+  - The selected tile lifts and is framed by a verdigris ring at its top edge; on phones the tile under a scrubbing thumb lifts with the same ring. Numbers lenses: the tallest column is 3.6 units and the camera looks down more steeply (φ 0.36), so tall columns hide little behind them.
     - The glaze reflects a soft studio computed in the shader (no environment map, so it costs no texture reads): warm walls, the paper floor, a long softbox low behind the table (a sheen on the far tile tops) and a key softbox front-left (a bright catchlight along each front bevel). Strength `tile.glaze 0.6`.
     - Each tile's glaze varies by ±2.5 % in lightness, like handmade ware, and a resting tile darkens slightly where it meets the paper.
   - The symbol and the atomic number are **printed on the glaze** (an atlas texture drawn with the system sans when the scene is built), so every tile always carries its label, like a specimen tray. The hovered tile's *name* pops up as a screen-space label (≥ 14 px); on phones a loupe shows it under the thumb.
@@ -93,7 +95,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
   - Pointer parallax on desktop: the camera leans at most 1.2° toward the cursor (300 ms ease-out), as a depth cue. It is off on touch screens and with reduced motion.
 - **Specimen stage (Heat it):**
   - Atoms are glazed beads (`roughness 0.35`) in the family pigment, inside a hairline glass cube with an ink unit-cell outline.
-  - When hot, the beads' emissive colour follows the blackbody glow, with a cheap additive halo sprite on Medium and High.
+  - When hot, the beads' emissive colour follows the blackbody glow (decoded as sRGB, kept below tone-mapping white so the hue reads true), with one point light in the glow colour and one soft additive halo sprite (all tiers: one draw each).
 - **Electron clouds (Inside the atom):**
   - Fine **stipple** dots, alpha-blended (no additive glare), in vermilion and cobalt. The 90 % surfaces are thin translucent glaze.
   - The nucleus is a small cluster of matte beads.
@@ -109,7 +111,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 | card or sheet in / out | 280 ms / 200 ms | ease-out / ease-in |
 | lens change (heights and colours ripple left→right by atomic number) | 650 ms total, 250 ms stagger | ease-in-out cubic |
 | camera glide to a selected element | 900 ms | ease-in-out cubic |
-| scale dive (table → inside a tile) | 1400 ms; crossfade at 70 % | ease-in-out quint |
+| scale dive (table → inside a tile) | 1000 ms down into the tile, 300 ms crossfade in its glaze colour, 1200 ms back out of the crystal; the chrome steps aside | ease-in-out |
 | return to the table | 900 ms | ease-in-out cubic |
 | number changes (counters) | 300 ms | ease-out |
 | room dims to `--kiln` (Heat it, Its light) / returns | 600 ms / 600 ms | ease-in-out |
@@ -145,6 +147,11 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 6. One quiet caption names each moment. Let go and the room light returns.
 Every number comes from our data (PubChem; Wikipedia/Arblaster transitions; COD cells). The stage around it stays calm: no other panels and no chrome beyond the thermometer and the back link.
 - **Not just iron.** The forge dims for *any* solid as soon as it starts to glow, and "Heat it ▶" plays the whole sweep with one tap. Iron is only the suggested first example.
+- **As built (round 3):**
+  - The thermometer is linear in °C from room temperature to a little past boiling. Its ticks are the element's events (labels placed so they never overlap; a tick without room keeps its mark and the caption names it). Its flags are familiar metals' melting points (lead, copper…). Its fill is coloured like heated metal.
+  - "Heat it ▶" stops just past each event for about 2 s. The caption fades in at each moment.
+  - The room dims when the glow begins (about 490 °C for iron) and returns as it cools.
+  - On the kiln stage the panel turns dark (kiln text), and ember text brightens to `#F0874F` (7 : 1 on the panel; `--ember` would be 3.3 : 1 there). The back link becomes a dark pill.
 - **An instant taste from home.** The **Heat map** lens chip on the table turns the temperature into a slider for all 118 tiles at once: drag it and watch whole regions melt and boil.
 
 ## 10. Do / Don't

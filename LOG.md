@@ -115,3 +115,32 @@
     - The forge wow is the next slice (Hold & heat).
     - The phone table is still width-bound.
     - Vietnamese strings are drafts for moony; Q17 is open.
+- 2026-11-21 ~05:26 (Saigon) — **Hero round 3 and the forge moment.** Answers Gemini's cold round-2 review (`reviews/hero-r2.md`; scores clarity 4.0, ease 3.5, beauty 4.0, smoothness 4.0, delight 3.5). Each point is accepted or rejected in DECISIONS.md › Hero round 3. A checkpoint with the review fixes was pushed first (5d039ec, 04:51).
+  - **The wow moment, built:**
+    - The iron card's door "Hold a piece · heat it" dives the camera into the tile; the glaze opens into iron's crystal (glazed beads, hairline glass cube, paper slab) in daylight.
+    - A big thermometer has the data's events (912 °C re-stacks, 1,394 °C, 1,538 °C melts, 2,861 °C boils) and familiar metals' melting points as flags. "Heat it ▶" plays the sweep, stopping at each event.
+    - The room dims to the kiln colour while the metal glows (blackbody colour, now decoded as sRGB: dull red, orange, yellow). The glow lights the slab and blooms softly.
+    - The crystal re-stacks from 8 to 12 neighbours, slumps into a glowing puddle and boils into a gas, with one caption per moment. The back link returns to the card.
+    - New: `places/heat.js`, `styles/heat.css`, `views/sample.js` `look: 'forge'`, view `heat`.
+    - Every solid with a measured crystal uses it; others keep the old sample view.
+  - **Review fixes:**
+    - Card footer (previous / next) and scroll fade.
+    - "⌂ Whole table" after zooming; the hero line and phone key step aside; re-framing never undoes a zoom.
+    - Lower columns and a steeper view in numbers lenses.
+    - Linear heft.
+    - Helium "never freezes" tag.
+    - Lens keys for stripes and pale tiles.
+    - Readable ghost tiles; softer phone stripes; bolder atomic numbers.
+    - The ring frames the lifted tile; the scrub tile lifts with a ring.
+    - Phone: prompt as a heading, all chips in view, tap hint, family caption.
+    - Vietnamese cards lead with the GDPT name (Sắt).
+    - "Standard atomic weight (abridged)"; a human gloss on the configuration exception.
+    - Proactive resolution step on software renderers.
+  - **Bug found while building the dive:** closing the card re-framed the table mid-glide and retargeted the dive. The table no longer steers the camera while diving.
+  - **Checks:** smoke 28/28 twice (new step: card door → forge → 930 °C caption "12 neighbours" → room dimmed → back to the card). An earlier mid-round run showed 23/27 once under machine load; the next four runs passed. Unit tests 17/17, validator ALL PASS, no console errors, index.html 1,460 KB.
+  - **FPS** (software renderer, automatic quality, `hero-r3/fps.txt`): all 30 states (19 review + 11 forge) at a 60 FPS median; phone flat 60. Deep zoom p95 33 ms, average 49 (round 2: 50 ms, 38.7).
+  - **Review set:** `/workspace/out/redesign/hero-r3/` (30 PNG, fps.txt, README.txt). Repo screenshots regenerated, plus two forge views.
+  - **Not done:**
+    - "About this crystal ▾" and sound (the 912 °C "tink").
+    - The phone table stays width-bound.
+    - Vietnamese strings are drafts for moony; Q17 is open.

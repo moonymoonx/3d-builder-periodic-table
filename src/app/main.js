@@ -20,6 +20,8 @@ import { buildShell } from './ui/shell.js';
 import { buildSheet } from './ui/sheet.js';
 import { buildHome } from './places/home.js';
 import { buildElementCard } from './places/elementCard.js';
+import { buildHeat, forgeable } from './places/heat.js';
+import { pigment, pigmentCB } from '../design/tokens.js';
 import { TOP as TOP_LENSES, lensSettings } from './places/lenses.js';
 import { h, isPhone } from './dom.js';
 
@@ -65,6 +67,15 @@ function boot() {
     onState: info => { if (state.view === 'sample') sampleUI.render(info); },
     onEvent: (a, b, e) => { if (state.view === 'sample') sampleUI.onEvent(a, b, e); },
   });
+  // the forge (Hold a piece · heat it): the same simulation in the porcelain look, with its own chrome
+  const kilnEl = h('div', { id: 'kiln', 'aria-hidden': 'true' });
+  const glEl = document.getElementById('gl'); glEl.parentNode.insertBefore(kilnEl, glEl); // under the transparent canvas
+  const diveEl = h('div', { id: 'dive', 'aria-hidden': 'true' });
+  document.body.append(diveEl);
+  const forge = createSampleView({
+    onEvent: (a, b, e) => { if (state.view === 'heat') heat.onEvent(a, b, e); },
+    onKiln: on => { document.body.classList.toggle('kiln', on && state.view === 'heat'); if (on) heat.onKiln(on); },
+  }, { look: 'forge' });
 
   // ---- home: the table, its chrome and the element card ----------------------------------------------
   let interacted = false, hintTimer = 0, breathTimer = 0;
@@ -91,13 +102,18 @@ function boot() {
   const card = buildElementCard(ui, {
     onClose: () => closeCard(),
     onStep: d => { const Z = state.Z + d; openCard(Z < 1 ? 118 : Z > 118 ? 1 : Z, true); },
-    onDoor: (v, Z2) => { set({ view: v, ...(v === 'compare' ? { Z2 } : {}), ...(v === 'sample' ? { T: 293.15, allotrope: null } : {}) }); },
+    onDoor: (v, Z2) => {
+      if (v === 'sample' && forgeable(byZ(state.Z))) { diveIntoHeat(); return; } // the wow path
+      set({ view: v, ...(v === 'compare' ? { Z2 } : {}), ...(v === 'sample' ? { T: 293.15, allotrope: null } : {}) });
+    },
     onPattern: prop => set({ view: 'trends', prop, log: prop === 'density' }),
     defaultPartner,
   });
   registerView('table', table);
   registerView('atom', atom);
   registerView('sample', sample);
+  registerView('heat', forge);
+  const heat = buildHeat(ui, { onInteract: () => {} });
   registerView('compare', createCompareView());
   registerView('trends', stubView());
 
@@ -119,8 +135,41 @@ function boot() {
     if (E.active === table) table.frame();
   }
   function goBack() {
+    if (state.view === 'heat') { leaveHeat(); return; }
     if (state.view !== 'table') { set({ view: 'table', card: true, hideSel: false }); return; }
     closeCard();
+  }
+
+  // ---- the scale dive: from the tapped tile into its crystal (STYLE.md §7: 1.4 s, crossfade at 70 %) ----
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  let savedT = null, diving = false;
+  async function diveIntoHeat() {
+    if (diving) return;
+    diving = true;
+    const e = byZ(state.Z), reduced = state.reduced;
+    savedT = state.T;
+    diveEl.style.background = (state.cb ? pigmentCB : pigment)[e.f.cat[0]];
+    document.body.classList.add('diving'); // the chrome steps aside for the plunge
+    card.close();
+    if (!reduced) { table.dive(e.Z, 1.0); await wait(700); }
+    diveEl.classList.add('on'); // the tile's glaze fills the screen...
+    await wait(reduced ? 120 : 320);
+    set({ view: 'heat', T: 293.15, allotrope: null });
+    forge.diveIn(reduced ? 0 : 1.2); // ...and opens into the crystal
+    await wait(60);
+    document.body.classList.remove('diving');
+    diveEl.classList.remove('on');
+    diving = false;
+  }
+  async function leaveHeat() {
+    heat.stop();
+    document.body.classList.remove('kiln');
+    diveEl.style.background = 'var(--paper)';
+    diveEl.classList.add('on');
+    await wait(state.reduced ? 100 : 260);
+    set({ view: 'table', card: true, hideSel: false, ...(savedT != null ? { T: savedT } : {}) });
+    await wait(40);
+    diveEl.classList.remove('on');
   }
 
   // ---- legacy panels per view --------------------------------------------------------------------
@@ -138,14 +187,17 @@ function boot() {
       if (!p.panel.parentNode) shell.left.append(p.panel);
       p.render(v === 'atom' ? atom.info() : undefined);
     }
-    if (v !== 'table') sheet.render();
+    if (v !== 'table' && v !== 'heat') sheet.render();
   }
   function applyPlace() {
-    const homeNow = state.view === 'table';
-    document.body.classList.toggle('legacy', !homeNow);
+    const homeNow = state.view === 'table', heatNow = state.view === 'heat';
+    document.body.classList.toggle('legacy', !homeNow && !heatNow);
     document.body.classList.toggle('place-home', homeNow);
-    shell.left.hidden = homeNow; shell.right.hidden = homeNow;
-    document.querySelector('.mobile-bar').hidden = homeNow;
+    document.body.classList.toggle('place-heat', heatNow);
+    if (!heatNow) document.body.classList.remove('kiln');
+    shell.left.hidden = homeNow || heatNow; shell.right.hidden = homeNow || heatNow;
+    document.querySelector('.mobile-bar').hidden = homeNow || heatNow;
+    heat.show(heatNow);
     if (homeNow && state.card) { if (!card.isOpen()) card.open(); else card.render(); }
     if (!homeNow && card.isOpen()) card.close();
   }
@@ -159,10 +211,12 @@ function boot() {
     if ('view' in ch) { switchView(state.view); shell.closePanels(); home.closeMenu(); }
     for (const v of Object.values(E.views)) if (v.ready && v.onState) v.onState(ch);
     home.onState(ch);
+    heat.onState(ch);
     if ('lang' in ch || 'view' in ch) renderAll();
     else {
-      if (state.view !== 'table' && ['prop', 'log', 'layout', 'cb', 'T', 'Z', 'Z2', 'density', 'orbital', 'surf', 'tier', 'allotrope', 'trendLine', 'cmpR'].some(k => k in ch)) renderLegacy();
-      if (state.view !== 'table' && ['Z', 'more', 'cb', 'T'].some(k => k in ch)) sheet.render();
+      const legacyNow = state.view !== 'table' && state.view !== 'heat';
+      if (legacyNow && ['prop', 'log', 'layout', 'cb', 'T', 'Z', 'Z2', 'density', 'orbital', 'surf', 'tier', 'allotrope', 'trendLine', 'cmpR'].some(k => k in ch)) renderLegacy();
+      if (legacyNow && ['Z', 'more', 'cb', 'T'].some(k => k in ch)) sheet.render();
       if (state.view === 'table' && state.card && ['Z', 'cb'].some(k => k in ch)) card.render();
     }
     if ('view' in ch) { applyPlace(); updateSafe(); }
@@ -217,20 +271,25 @@ function boot() {
       }
       return;
     }
+    if (state.view === 'heat') { // the crystal sits between the top bar and the thermometer
+      const pr = heat.panel.getBoundingClientRect();
+      setSafe({ left: 0, right: 0, top: tb.bottom + 8, bottom: H - pr.top + 12 });
+      return;
+    }
     if (isPhone()) { setSafe({ left: 0, right: 0, top: tb.bottom + 4, bottom: 64 }); return; }
     const L = shell.left.getBoundingClientRect(), R = shell.right.getBoundingClientRect();
     const show = el => !el.hidden && getComputedStyle(el).display !== 'none' && el.children.length;
     setSafe({ left: show(shell.left) ? L.right + 8 : 0, right: show(shell.right) ? W - R.left + 8 : 0, top: tb.bottom + 6, bottom: 0 });
   }
   const ro = new ResizeObserver(() => updateSafe());
-  for (const el of [shell.left, shell.right, home.top, home.bottom, home.head, card.el]) ro.observe(el);
+  for (const el of [shell.left, shell.right, home.top, home.bottom, home.head, card.el, heat.panel]) ro.observe(el);
   window.addEventListener('resize', () => { home.render(); updateSafe(); });
 
   renderAll();
   updateSafe();
   switchView(state.view);
   if (state.view === 'table' && state.card) table.focus(state.Z, 0);
-  if (!isPhone() && state.view !== 'table') shell.openPanel('right');
+  if (!isPhone() && state.view !== 'table' && state.view !== 'heat') shell.openPanel('right');
 
   // first five seconds: a light sweep, iron breathes, a "Try iron" tag after 4 s without a touch
   const loading = document.getElementById('loading');
@@ -244,7 +303,7 @@ function boot() {
     }
   }));
   for (const evName of ['pointerdown', 'wheel']) E.canvas.addEventListener(evName, firstTouch, { passive: true });
-  window.__pt = { state, set, E, table, home, card }; // debugging / scripted screenshots
+  window.__pt = { state, set, E, table, home, card, heat, forge, diveIntoHeat }; // debugging / scripted screenshots
 }
 
 boot();

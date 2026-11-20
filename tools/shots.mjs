@@ -68,6 +68,8 @@ cases.push({ name: 'table-layout32-en-desk', hash: 'v=table&lens=rCov&lay=s32&la
 cases.push({ name: 'table-helix-en-desk', hash: 'v=table&lens=en&lay=helix&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-heatmap-300K-vi-desk', hash: 'v=table&lens=heat&T=300&lang=vi', vp: SIZES.desk });
 cases.push({ name: 'table-heft-en-phone', hash: 'v=table&lens=density&lang=en', vp: SIZES.phone });
+cases.push({ name: 'heat-Fe-700C-en-desk', hash: 'v=heat&el=Fe&T=973.15&lang=en', vp: SIZES.desk, settle: 2400 });
+cases.push({ name: 'heat-Fe-1600C-vi-phone', hash: 'v=heat&el=Fe&T=1873.15&lang=vi', vp: SIZES.phone, settle: 3200 });
 
 if (opt('set') === 'views') { // default state of each view, as a first-time visitor sees it
   const tag = sz => `${sz === 'desk' ? 'desktop' : 'phone'}-${SIZES[sz].width}x${SIZES[sz].height}`;
@@ -87,6 +89,8 @@ if (opt('set') === 'hero') { // the redesign's hero slice: landing, table, first
   const tapTouch = async (page, Z) => { const p = await top(page, Z); await touch(page, 'pointerdown', p.x, p.y); await touch(page, 'pointerup', p.x, p.y); };
   const click = async (page, Z) => { const p = await top(page, Z); await page.mouse.move(p.x, p.y); await page.mouse.click(p.x, p.y); };
   const chipBtn = (page, label) => page.locator('.hero-lenses .ui-chip', { hasText: label }).first().click();
+  const door = async page => { await page.locator('.ui-door', { hasText: /Hold a piece|Cầm một mẩu/ }).click(); };
+  const heatTo = async (page, C, ms = 2200) => { await page.waitForTimeout(2400); await page.evaluate(T => window.__pt.set({ T }), C + 273.15); await page.waitForTimeout(ms); };
   cases = [
     { name: '01-first-load-desktop', vp: D, hash: '', settle: 2600 },
     { name: '01-first-load-phone', vp: P, hash: '', settle: 2600, touch: true },
@@ -110,6 +114,21 @@ if (opt('set') === 'hero') { // the redesign's hero slice: landing, table, first
     { name: '10-zoom-in-phone', vp: P, hash: '', touch: true, settle: 1500, act: page => page.evaluate(() => { window.__pt.E.rig.zoom(0.5); }) },
     { name: '11-vi-landing-desktop', vp: D, hash: 'lang=vi', settle: 2600 },
     { name: '11-vi-card-iron-phone', vp: P, hash: 'lang=vi', touch: true, settle: 1900, act: page => tapTouch(page, 26) },
+    // the forge (Hold a piece · heat it), reached from the iron card's door with the scale dive
+    // a still from the first half of the dive (posed: headless capture is too slow to catch it in flight)
+    { name: '12a-forge-dive-into-tile-desktop', vp: D, hash: 'el=Fe&card=1', settle: 900, act: page => page.evaluate(() => {
+      const { card, table } = window.__pt; document.body.classList.add('diving'); card.close(); table.dive(26, 0, 2.6, 0.32);
+    }) },
+    { name: '12b-forge-dive-out-of-crystal-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, now: true, act: async page => { await door(page); await page.waitForTimeout(560); } },
+    { name: '13-forge-start-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await page.waitForTimeout(2600); } },
+    { name: '13-forge-start-phone', vp: P, hash: 'el=Fe&card=1', touch: true, settle: 1500, act: async page => { await door(page); await page.waitForTimeout(2600); } },
+    { name: '14-forge-700C-glow-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 700); } },
+    { name: '14-forge-700C-glow-phone', vp: P, hash: 'el=Fe&card=1', touch: true, settle: 1500, act: async page => { await door(page); await heatTo(page, 700); } },
+    { name: '15-forge-930C-restacked-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 930, 2800); } },
+    { name: '16-forge-1600C-molten-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 1300); await heatTo(page, 1600, 3200); } },
+    { name: '16-forge-1600C-molten-phone', vp: P, hash: 'el=Fe&card=1', touch: true, settle: 1500, act: async page => { await door(page); await heatTo(page, 1300); await heatTo(page, 1600, 3200); } },
+    { name: '17-forge-2950C-gas-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 1600); await heatTo(page, 2950, 2500); } },
+    { name: '18-forge-heat-it-playing-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, now: true, act: async page => { await door(page); await page.locator('.heat-play').click(); await page.waitForTimeout(6500); } },
   ];
 }
 
@@ -142,10 +161,12 @@ for (const c of cases.filter(c => !only || c.name.includes(only))) {
   await page.waitForFunction(() => { const E = window.__pt?.E; return E && !E.rig.tween && E.anims.size === 0; }, null, { timeout: 30000 }).catch(() => logs.push('timeout: animations did not settle'));
   if (c.act) { // scripted steps: a function of the page (Playwright API) or a string run in the page
     await (typeof c.act === 'function' ? c.act(page) : page.evaluate(c.act)).catch(e => logs.push('act failed: ' + e.message));
+  }
+  if (c.act && !c.now) { // c.now: shoot at once (mid-motion: the dive, "Heat it" playing)
     await page.waitForTimeout(300);
     await page.waitForFunction(() => { const E = window.__pt?.E; return E && !E.rig.tween && E.anims.size === 0; }, null, { timeout: 30000 }).catch(() => logs.push('timeout: animations did not settle'));
   }
-  await page.waitForTimeout(c.settle || 400);
+  await page.waitForTimeout(c.now ? 0 : c.settle || 400);
   const file = path.join(OUT, `${c.name}.${PNG ? 'png' : 'jpg'}`);
   await page.screenshot(PNG ? { path: file, type: 'png' } : { path: file, type: 'jpeg', quality: 82 });
   if (FPS_S) { // the same numbers as the in-app meter (F key / ?stats): engine frame times while rendering continuously

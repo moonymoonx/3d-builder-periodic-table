@@ -1,0 +1,67 @@
+/* HEAT (places/heat.js): "Hold a piece · heat it". Daylight while the metal is cool; the room dims to
+   the kiln colour while it glows (STYLE.md §9: daylight is for matter, a dark room is for fire). */
+#kiln { position: fixed; inset: 0; background: var(--kiln); opacity: 0; pointer-events: none; transition: opacity 600ms var(--ease-in-out); }
+body.kiln #kiln { opacity: 1; }
+/* the scale dive: the tile's glaze fills the screen, then opens into the crystal */
+#dive { position: fixed; inset: 0; z-index: 70; opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease-in-out); }
+#dive.on { opacity: 1; transition-duration: 300ms; }
+body.reduced #dive, body.reduced #kiln { transition-duration: 120ms; }
+body.diving .hero-top, body.diving .hero-bottom, body.diving #labels, body.diving .hero-scrim { opacity: 0; transition: opacity 250ms var(--ease); pointer-events: none; }
+
+/* only the back link and the thermometer: no other chrome */
+body.place-heat .hero-top__right, body.place-heat .hero-word { display: none; }
+body.kiln .ui-back { background: rgba(242, 232, 218, 0.1); color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.2); box-shadow: none; }
+body.kiln .ui-back span:first-child { color: #F0A070; }
+
+.heat-panel { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(860px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 8px;
+  padding: 14px 22px 12px; border-radius: 18px; background: var(--card); color: var(--ink); box-shadow: var(--elev-float); border: 1px solid transparent;
+  transition: background 600ms var(--ease-in-out), color 600ms var(--ease-in-out), border-color 600ms var(--ease-in-out); }
+body.kiln .heat-panel { background: rgba(30, 23, 17, 0.88); color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.1); box-shadow: none; }
+.heat-caption { margin: 0; min-height: 2.9em; font: 400 18px/1.45 var(--font-serif); text-wrap: balance; }
+.heat-caption.is-new { animation: heat-say 420ms var(--ease) both; }
+@keyframes heat-say { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.heat-row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 22px; }
+.heat-readbox { min-width: 7.2em; }
+.heat-read { font: 600 36px/1.05 var(--font-serif); color: var(--ember); font-variant-numeric: tabular-nums; }
+body.kiln .heat-read { color: #F0874F; }
+.heat-word { margin-top: 3px; font: 500 13px/1.35 var(--font-sans); color: var(--ink-2); }
+body.kiln .heat-word { color: var(--kiln-text-2); }
+
+/* the thermometer: events above the rail, familiar metals' melting points below */
+.heat-track { position: relative; height: 92px; }
+.heat-rail { position: absolute; left: 0; right: 0; top: 40px; height: 12px; border-radius: 6px; background: var(--line); }
+body.kiln .heat-rail { background: rgba(242, 232, 218, 0.14); }
+.heat-fill { position: absolute; inset: 0; border-radius: 6px;
+  background: linear-gradient(90deg, #C9CFD8 0%, #C99A7E 16%, #B93E12 34%, #E5612B 52%, #F59A47 68%, #FFD796 84%, #FFF6E6 100%); }
+.heat-range { -webkit-appearance: none; appearance: none; position: absolute; left: -15px; right: -15px; width: calc(100% + 30px); top: 22px; height: 48px; margin: 0; background: transparent; cursor: pointer; }
+.heat-range::-webkit-slider-runnable-track { height: 48px; background: transparent; }
+.heat-range::-moz-range-track { height: 48px; background: transparent; }
+.heat-range::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: 9px; border-radius: 50%; background: var(--card); border: 2px solid var(--ink);
+  box-shadow: 0 2px 8px rgba(28, 26, 23, 0.25); transition: transform var(--d-tap) var(--ease); }
+.heat-range:active::-webkit-slider-thumb { transform: scale(1.12); }
+.heat-range::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--card); border: 2px solid var(--ink); }
+body.kiln .heat-range::-webkit-slider-thumb { border-color: #F0874F; background: #2A2019; }
+.heat-ticks { position: absolute; left: 0; right: 0; top: 0; height: 40px; pointer-events: none; }
+.heat-tick { position: absolute; bottom: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; white-space: nowrap;
+  font: 600 13px/1.2 var(--font-sans); padding-bottom: 6px; }
+.heat-tick small { font: 400 13px/1.2 var(--font-sans); color: var(--ink-2); }
+.heat-tick::after { content: ""; position: absolute; bottom: -6px; left: 50%; width: 2px; height: 10px; margin-left: -1px; border-radius: 1px; background: currentColor; opacity: 0.55; }
+body.kiln .heat-tick small { color: var(--kiln-text-2); }
+.heat-flags { position: absolute; left: 0; right: 0; top: 60px; height: 24px; pointer-events: none; }
+.heat-flag { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; font: italic 400 13px/1.2 var(--font-serif); color: var(--ink-3); padding-top: 6px; }
+.heat-flag::before { content: ""; position: absolute; top: 0; left: 50%; width: 1px; height: 6px; background: currentColor; }
+body.kiln .heat-flag { color: var(--kiln-text-2); }
+.heat-actions { display: flex; justify-content: center; gap: 10px; }
+body.kiln .heat-play { background: #F0874F; color: var(--kiln); }
+body.kiln .heat-room { color: #F0A070; }
+body.kiln .heat-room:hover { background: rgba(242, 232, 218, 0.08); }
+.heat-room:disabled { opacity: 0.45; cursor: default; }
+
+@media (max-width: 760px) {
+  .heat-panel { width: calc(100% - 16px); bottom: calc(8px + env(safe-area-inset-bottom)); padding: 12px 14px 10px; border-radius: 16px; gap: 6px; }
+  .heat-caption { font-size: 16px; min-height: 4.4em; }
+  .heat-row { grid-template-columns: 1fr; gap: 2px; }
+  .heat-readbox { display: flex; align-items: baseline; gap: 10px; }
+  .heat-read { font-size: 30px; }
+  .heat-track { margin: 0 6px; }
+}
