@@ -84,3 +84,39 @@ test('lattice: Lindemann vibration and gas speed', () => {
   // N2-like gas at 300 K: sqrt(3*8.314*300/0.028) ~ 517 m/s
   assert.ok(Math.abs(rmsSpeed(300, 28, 8.314462618) - 517) < 1);
 });
+
+test('isosurface: 90 % surface of hydrogen 1s is a sphere of radius r90 = 2.66 a0', async () => {
+  const { polygonise } = await import('../src/physics/isosurface.js');
+  const g = O.gridPsi(1, 0, 0, 1, 48, 5);
+  const level = O.isoLevelForFraction(g, 0.9);
+  const { positions } = polygonise(g, level);
+  assert.ok(positions.length > 900);
+  let s = 0, mn = Infinity, mx = 0;
+  for (let i = 0; i < positions.length; i += 3) { const r = Math.hypot(positions[i], positions[i + 1], positions[i + 2]); s += r; mn = Math.min(mn, r); mx = Math.max(mx, r); }
+  const mean = s / (positions.length / 3);
+  assert.ok(Math.abs(mean - O.radiusForFraction(1, 0, 1, 0.9)) < 0.08, `mean radius ${mean}`);
+  assert.ok(mx - mn < 0.1, `sphere spread ${mn}..${mx}`);
+});
+
+test('isosurface: 2p_z has two lobes of opposite phase along z', async () => {
+  const { polygonise } = await import('../src/physics/isosurface.js');
+  const g = O.gridPsi(2, 1, 0, 1, 40, 12);
+  const level = O.isoLevelForFraction(g, 0.9);
+  const plus = polygonise(g, level, 1).positions, minus = polygonise(g, level, -1).positions;
+  const meanZ = p => { let s = 0; for (let i = 2; i < p.length; i += 3) s += p[i]; return s / (p.length / 3); };
+  assert.ok(meanZ(plus) > 2 && meanZ(minus) < -2, `${meanZ(plus)} / ${meanZ(minus)}`);
+});
+
+test('isosurface: triangles are wound consistently with outward normals', async () => {
+  const { polygonise } = await import('../src/physics/isosurface.js');
+  const g = O.gridPsi(1, 0, 0, 1, 32, 5);
+  const { positions: p } = polygonise(g, O.isoLevelForFraction(g, 0.9));
+  let bad = 0;
+  for (let t = 0; t < p.length; t += 9) {
+    const ax = p[t + 3] - p[t], ay = p[t + 4] - p[t + 1], az = p[t + 5] - p[t + 2], bx = p[t + 6] - p[t], by = p[t + 7] - p[t + 1], bz = p[t + 8] - p[t + 2];
+    const n = [ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx];
+    const c = [(p[t] + p[t + 3] + p[t + 6]) / 3, (p[t + 1] + p[t + 4] + p[t + 7]) / 3, (p[t + 2] + p[t + 5] + p[t + 8]) / 3];
+    if (n[0] * c[0] + n[1] * c[1] + n[2] * c[2] < 0) bad++; // sphere: outward = away from origin
+  }
+  assert.equal(bad, 0);
+});

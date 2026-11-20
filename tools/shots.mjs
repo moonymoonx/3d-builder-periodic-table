@@ -21,6 +21,13 @@ const cases = [];
 for (const sym of ['H', 'C', 'Fe', 'Au', 'U']) for (const lang of ['en', 'vi']) for (const [sz, vp] of Object.entries(SIZES)) {
   cases.push({ name: `table-${sym}-${lang}-${sz}`, hash: `v=table&el=${sym}&p=ie1&lay=s18&lang=${lang}`, vp });
 }
+for (const sym of ['H', 'C', 'Fe', 'Au', 'U']) for (const lang of ['en', 'vi']) for (const [sz, vp] of Object.entries(SIZES)) {
+  cases.push({ name: `atom-${sym}-${lang}-${sz}`, hash: `v=atom&el=${sym}&lang=${lang}`, vp });
+}
+cases.push({ name: 'atom-Fe-total-en-desk', hash: 'v=atom&el=Fe&den=total&lang=en', vp: SIZES.desk });
+cases.push({ name: 'atom-Fe-3dz2-en-desk', hash: 'v=atom&el=Fe&orb=3d:0&lang=en', vp: SIZES.desk });
+cases.push({ name: 'atom-C-2p-surface-med-en-desk', query: 'q=med', hash: 'v=atom&el=C&orb=2p:1&lang=en', vp: SIZES.desk });
+cases.push({ name: 'atom-Au-5dxy-surface-high-vi-desk', query: 'q=high', hash: 'v=atom&el=Au&orb=5d:-2&lang=vi', vp: SIZES.desk });
 cases.push({ name: 'table-layout32-en-desk', hash: 'v=table&el=Fe&p=rCov&lay=s32&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-helix-en-desk', hash: 'v=table&el=Fe&p=en&lay=helix&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-state-vi-desk', hash: 'v=table&el=Hg&p=mp&lay=s18&col=state&T=300&lang=vi', vp: SIZES.desk });
@@ -34,7 +41,7 @@ for (const c of cases.filter(c => !only || c.name.includes(only))) {
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') logs.push(`${m.type()}: ${m.text()}`); });
   page.on('pageerror', e => logs.push(`pageerror: ${e.message}`));
   const t0 = Date.now();
-  await page.goto(`file://${ROOT}/index.html#${c.hash}`);
+  await page.goto(`file://${ROOT}/index.html${c.query ? '?' + c.query : ''}#${c.hash}`);
   await page.waitForFunction(() => window.__pt && window.__pt.E.active, null, { timeout: 30000 }).catch(() => logs.push('timeout: app did not start'));
   await page.waitForFunction(() => { const E = window.__pt?.E; return E && !E.rig.tween && E.anims.size === 0; }, null, { timeout: 30000 }).catch(() => logs.push('timeout: animations did not settle'));
   await page.waitForTimeout(400);

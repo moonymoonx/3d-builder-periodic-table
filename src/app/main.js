@@ -5,6 +5,9 @@ import { state, set, on, readHash, initHash, VIEWS, LAYOUTS } from './state.js';
 import { setLang, t } from './i18n.js';
 import { createEngine, registerView, switchView, E, invalidate, setSafe } from './engine.js';
 import { createTableView } from './views/table.js';
+import { createAtomView } from './views/atom.js';
+import { buildAtomPanel } from './ui/atomPanel.js';
+import { buildSpectrum } from './ui/spectrum.js';
 import { buildShell } from './ui/shell.js';
 import { buildSheet } from './ui/sheet.js';
 import { buildTablePanel } from './ui/tablePanel.js';
@@ -30,7 +33,9 @@ function boot() {
   initHash(Z => byZ(Z).sym, s => bySym(s)?.Z);
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   Object.assign(state, { reduced }, readHash());
-  if (new URLSearchParams(location.search).has('stats')) state.fps = true;
+  const qs = new URLSearchParams(location.search);
+  if (qs.has('stats')) state.fps = true;
+  if (['low', 'med', 'high'].includes(qs.get('q'))) state.quality = qs.get('q'); // force a quality tier
   setLang(state.lang);
   document.body.classList.toggle('reduced', state.reduced);
   try { createEngine(document.getElementById('gl')); }
@@ -40,7 +45,10 @@ function boot() {
   const shell = buildShell({ onPick: e => select(e.Z, true) });
   const sheet = buildSheet(shell.right, { onView: v => set({ view: v }) });
   const tablePanel = buildTablePanel(shell.left);
+  const atomPanel = buildAtomPanel(shell.left);
   const stubPanel = h('section', { class: 'panel' });
+  const spectrum = buildSpectrum(document.getElementById('ui'));
+  spectrum.box.hidden = true;
 
   const table = createTableView({
     onSelect: e => select(e.Z),
@@ -48,7 +56,9 @@ function boot() {
     tooltip: shell.tooltip,
   });
   registerView('table', table);
-  for (const v of VIEWS) if (v !== 'table') registerView(v, stubView(v));
+  const atom = createAtomView({ onBuilt: info => { if (state.view === 'atom') atomPanel.render(info); } });
+  registerView('atom', atom);
+  for (const v of VIEWS) if (!E.views[v]) registerView(v, stubView(v));
 
   function select(Z, fly = false) {
     set({ Z });
@@ -56,13 +66,17 @@ function boot() {
     shell.openPanel('right');
   }
 
+  const leftPanels = { table: tablePanel, atom: atomPanel };
   function renderLeft() {
-    if (state.view === 'table') {
+    for (const [v, p] of Object.entries(leftPanels)) if (v !== state.view && p.panel.parentNode) p.panel.remove();
+    spectrum.box.hidden = state.view !== 'atom';
+    if (state.view === 'atom') spectrum.render(byZ(state.Z));
+    if (leftPanels[state.view]) {
       if (stubPanel.parentNode) stubPanel.remove();
-      if (!tablePanel.panel.parentNode) shell.left.append(tablePanel.panel);
-      tablePanel.render();
+      const p = leftPanels[state.view];
+      if (!p.panel.parentNode) shell.left.append(p.panel);
+      p.render(state.view === 'atom' ? atom.info() : undefined);
     } else {
-      tablePanel.panel.remove();
       replace(stubPanel, h('div', { class: 'sec' }, h('h3', null, t('view.' + state.view)),
         h('p', null, state.lang === 'vi' ? 'Chế độ xem này đang được xây dựng ở mốc tiếp theo.' : 'This view is being built in the next milestone.')));
       if (!stubPanel.parentNode) shell.left.append(stubPanel);
@@ -77,7 +91,7 @@ function boot() {
     for (const v of Object.values(E.views)) if (v.ready && v.onState) v.onState(ch);
     if ('lang' in ch || 'view' in ch) renderAll();
     else {
-      if (['prop', 'log', 'layout', 'color', 'filters', 'cb', 'T'].some(k => k in ch)) renderLeft();
+      if (['prop', 'log', 'layout', 'color', 'filters', 'cb', 'T', 'Z', 'density', 'orbital', 'surf', 'tier'].some(k => k in ch)) renderLeft();
       if (['Z', 'more', 'cb', 'T'].some(k => k in ch)) sheet.render();
     }
     invalidate();

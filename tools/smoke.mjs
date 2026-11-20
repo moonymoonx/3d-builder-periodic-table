@@ -113,6 +113,40 @@ await step('URL hash is shareable', async () => {
   return h;
 });
 
+await step('atom view: open from the data sheet', async () => {
+  await page.click('#btn-lang'); // back to English
+  await page.evaluate(() => window.__pt.set({ Z: 23 }));
+  await page.getByRole('button', { name: 'See its atom' }).click();
+  await page.waitForFunction(() => window.__pt.E.active === window.__pt.E.views.atom, null, { timeout: 10000 });
+  await settle();
+});
+await step('atom view: + proton V -> Cr reports the 3d/4s exception', async () => {
+  await page.getByRole('button', { name: '+ proton' }).click();
+  await page.waitForTimeout(300);
+  const msg = await page.locator('.side.left .why').first().textContent();
+  if (await Z() !== 24 || !/Surprise/.test(msg)) throw new Error(`Z=${await Z()} msg=${msg}`);
+  await page.getByRole('button', { name: '+ proton' }).click(); // Mn: normal filling
+  await page.waitForTimeout(300);
+  const msg2 = await page.locator('.side.left .why').first().textContent();
+  if (!/new electron goes into 4s/.test(msg2)) throw new Error(msg2); // Mn = [Ar] 3d5 4s2
+  return msg.slice(0, 70);
+});
+await step('atom view: orbital chips and total density', async () => {
+  await page.locator('.side.left .chip', { hasText: /^3d/ }).first().click(); await settle();
+  await page.getByRole('button', { name: 'x²−y²' }).click(); await settle();
+  if (!/3d:2/.test(await page.evaluate(() => window.__pt.state.orbital))) throw new Error(await page.evaluate(() => window.__pt.state.orbital));
+  await page.getByRole('button', { name: 'All electrons' }).click(); await settle();
+  if (await page.evaluate(() => window.__pt.state.density) !== 'total') throw new Error('density mode');
+  await page.getByRole('button', { name: 'Orbitals' }).click(); await settle();
+});
+await step('atom view: tap a spectrum line shows its wavelength', async () => {
+  const box = await page.locator('.specline').first().boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height - 3);
+  const txt = await page.locator('.spectrum p').textContent();
+  if (!/nm/.test(txt)) throw new Error(txt);
+  return txt.slice(0, 60);
+});
+
 for (const [ok, name, info] of results) console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`);
 console.log(errors.length ? `console errors:\n  ${errors.join('\n  ')}` : 'no console errors');
 await browser.close();

@@ -117,6 +117,25 @@ export function fmtTemp(K, { both = true } = {}) {
   return both ? `${kStr} (${fmtNum(c, K < 30 ? 2 : Math.abs(c) < 100 ? 2 : 0)} °C)` : kStr;
 }
 /** Human string for a [value, src, flags] of field `key`. */
+// Vietnamese wording for our canonical crystal-structure names (data keeps one English form)
+const STRUCT_VI = {
+  'body-centred cubic (bcc)': 'lập phương tâm khối (bcc)', 'face-centred cubic (fcc)': 'lập phương tâm mặt (fcc)',
+  'hexagonal close-packed (hcp)': 'lục phương xếp chặt (hcp)', 'double hexagonal close-packed (dhcp)': 'lục phương xếp chặt kép (dhcp)',
+  'diamond cubic': 'lập phương kiểu kim cương', 'hexagonal layers (graphite)': 'các lớp lục giác (than chì)', 'simple cubic': 'lập phương đơn giản',
+  'rhombohedral (α-Hg type)': 'mặt thoi (kiểu α-Hg)', 'rhombohedral layers (As type)': 'các lớp mặt thoi (kiểu As)', 'rhombohedral (Sm type)': 'mặt thoi (kiểu Sm)',
+  'trigonal helical chains (Se type)': 'chuỗi xoắn ba phương (kiểu Se)', 'body-centred tetragonal': 'tứ phương tâm khối',
+  'body-centred tetragonal (white tin)': 'tứ phương tâm khối (thiếc trắng)', 'base-centred orthorhombic (Ga type)': 'trực thoi tâm đáy (kiểu Ga)',
+  'base-centred orthorhombic (α-U type)': 'trực thoi tâm đáy (kiểu α-U)', 'primitive orthorhombic (α-Np type)': 'trực thoi đơn giản (kiểu α-Np)',
+  'monoclinic (α-Pu type)': 'đơn tà (kiểu α-Pu)',
+};
+const FAM_VI = { cubic: 'lập phương', hexagonal: 'lục phương', orthorhombic: 'trực thoi', tetragonal: 'tứ phương', monoclinic: 'đơn tà', triclinic: 'tam tà' };
+const CEN_VI = { primitive: 'đơn giản', 'body-centred': 'tâm khối', 'face-centred': 'tâm mặt', 'base-centred': 'tâm đáy', rhombohedral: 'mặt thoi' };
+export function structText(s) {
+  if (!s || getLang() !== 'vi') return s;
+  if (STRUCT_VI[s]) return STRUCT_VI[s];
+  const m = s.match(/^(\S+) (\S+) lattice, (\d+) atoms per cell \((\w+)\)$/);
+  return m ? `mạng ${FAM_VI[m[2]] || m[2]} ${CEN_VI[m[1]] || m[1]}, ${m[3]} nguyên tử mỗi ô (${m[4]})` : s;
+}
 export function fmtField(key, v) {
   if (!v || v[0] == null) return null;
   const x = v[0];
@@ -131,6 +150,7 @@ export function fmtField(key, v) {
     case 'state': return t('state.' + x);
     case 'natural': return t('nat.' + x);
     case 'cat': return t('cat.' + x);
+    case 'crystal': return structText(x);
     case 'ie1': case 'ie2': case 'ie3': case 'ea': return `${fmtNum(x, 4)} eV`;
     case 'rCov': case 'rVdw': return `${fmtNum(x, 1)} pm`;
     case 'rNuc': return `${fmtNum(x, 3)} fm`;
