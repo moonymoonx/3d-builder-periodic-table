@@ -58,20 +58,38 @@ export function buildHeat(ui, hooks) {
     el = byZ(state.Z);
     lo = ROOM; hi = topK(el);
     events = eventsOf(el).filter(x => x.T > lo && x.T < hi);
-    // labels never overlap: the most important are placed first (melting, boiling, then re-stacking);
-    // a tick whose label would collide keeps its mark only (the caption names it when you get there)
+    // every event is labelled, never an unexplained mark: one line each ("912 °C re-stacks"), placed in
+    // the lowest of three rows where it fits (most important first), shortened to the number if needed
     const W = Math.max(240, track.clientWidth || (isPhone() ? 320 : 620));
+    const rows = [[], [], []];
+    const tryPlace = (x, w) => {
+      for (let r = 0; r < 3; r++) {
+        const dx = Math.max(-x + w / 2 - 6, Math.min(W - x - w / 2 + 6, 0)); // keep it inside the track
+        const a = x + dx - w / 2, b = x + dx + w / 2;
+        if (!rows[r].some(p => a < p.b + 8 && b > p.a - 8)) { rows[r].push({ a, b }); return { r, dx }; }
+      }
+      return null;
+    };
+    const rank = { melt: 0, boil: 1, sub: 1, trans: 2 };
+    const spots = new Map();
+    for (const x of [...events].sort((a, b) => rank[a.key] - rank[b.key] || a.T - b.T)) {
+      const px = ((x.T - lo) / (hi - lo)) * W, word = t(`forge.tick.${x.key}`), num = C(x.T);
+      const full = tryPlace(px, (num.length + word.length + 1) * 7.3 + 6);
+      spots.set(x, full ? { ...full, word } : { ...(tryPlace(px, num.length * 7.6 + 6) || { r: 2, dx: 0 }), word: '' });
+    }
+    replace(ticks, events.map(x => {
+      const sp = spots.get(x);
+      const el2 = h('span', { class: `heat-tick is-${x.key}`, style: { left: pct(x.T) } }, h('span', null, h('b', null, C(x.T)), sp.word ? h('small', null, sp.word) : null));
+      el2.style.setProperty('--row', String(sp.r)); el2.style.setProperty('--dx', `${sp.dx.toFixed(1)}px`);
+      return el2;
+    }));
+    track.style.marginTop = `${17 * Math.max(0, ...[...spots.values()].map(v => v.r))}px`; // room for the upper rows
     const placed = [];
     const fits = (T, chars) => {
       const x = ((T - lo) / (hi - lo)) * W, half = (chars * 7.4 + 14) / 2;
       if (x - half < -12 || x + half > W + 12 || placed.some(p => Math.abs(p.x - x) < p.half + half)) return false;
       placed.push({ x, half }); return true;
     };
-    const rank = { melt: 0, boil: 1, sub: 1, trans: 2 };
-    const labelled = new Set([...events].sort((a, b) => rank[a.key] - rank[b.key]).filter(x => fits(x.T, Math.max(C(x.T).length, t(`forge.tick.${x.key}`).length))));
-    replace(ticks, events.map(x => h('span', { class: `heat-tick is-${x.key}`, style: { left: pct(x.T) } },
-      labelled.has(x) ? [h('b', null, C(x.T)), h('small', null, t(`forge.tick.${x.key}`))] : null)));
-    placed.length = 0;
     const marks = LANDMARKS.map(s => bySym(s)).filter(x => x.Z !== el.Z).map(x => ({ x, T: propValue(x, 'mp')[0] }))
       .map(m => ({ ...m, text: t('forge.landmark', { name: name(m.x).toLowerCase(), T: C(m.T) }) }))
       .filter(m => (m.T - lo) / (hi - lo) > 0.03 && m.T < hi * 0.98 && fits(m.T, m.text.length));

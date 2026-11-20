@@ -87,6 +87,7 @@ await step('"All numbers & sources" keeps every sourced field', async () => {
   return `${n} sourced values`;
 });
 await step('lens chips: heat map follows the temperature, melting point raises columns', async () => {
+  if (await page.locator('[data-back=home]').count()) { await page.locator('[data-back=home]').click(); await settle(); } // chips live on the table without a card
   await page.locator('.hero-lenses .ui-chip', { hasText: 'Heat map' }).click(); await settle();
   await page.evaluate(() => window.__pt.set({ T: 2000 }));
   const a = await page.evaluate(() => ({ lens: window.__pt.state.lens, color: window.__pt.state.color, T: window.__pt.state.T, slider: !!document.querySelector('.hero-heat input[type=range]') }));
@@ -104,6 +105,7 @@ await step('menu: other shapes of the table (32 columns, helix) without errors',
   await page.getByRole('button', { name: '18 columns (standard)' }).click(); await settle();
 });
 await step('back link closes the card', async () => {
+  if (!(await page.locator('[data-back=home]').count())) { const p = await tileTop(26); await page.mouse.click(p.x, p.y); await settle(); }
   await page.locator('[data-back=home]').click(); await settle();
   const st = await S();
   if (st.card) throw new Error(JSON.stringify(st));

@@ -46,8 +46,9 @@ export class LabelLayer {
     const pad = 3;
     for (const it of cand) {
       // 'bottomleft': above the point like 'bottom', but extending to the right (its caret near the left end)
-      let x = it.anchor === 'left' ? it.s.x + 6 : it.anchor === 'right' ? it.s.x - it.w - 6 : it.anchor === 'bottomleft' ? it.s.x - 18 : it.s.x - it.w / 2;
-      const y = (it.anchor === 'bottom' || it.anchor === 'bottomleft' ? it.s.y - it.h - 4 : it.anchor === 'top' ? it.s.y + 4 : it.s.y - it.h / 2) - (it.dy || 0);
+      let x = it.anchor === 'left' ? it.s.x + 6 : it.anchor === 'right' ? it.s.x - it.w - 6 : it.anchor === 'bottomleft' ? it.s.x - 18 : it.anchor === 'bottomright' ? it.s.x - it.w + 18 : it.s.x - it.w / 2;
+      const above = it.anchor === 'bottom' || it.anchor === 'bottomleft' || it.anchor === 'bottomright';
+      const y = (above ? it.s.y - it.h - 4 : it.anchor === 'top' ? it.s.y + 4 : it.s.y - it.h / 2) - (it.dy || 0);
       // names written on the table never hug the screen edge (hidden instead); name tags slide inside it
       const region = it.cls.includes('region');
       if (!region) x = Math.max(8, Math.min(W - it.w - 8, x));

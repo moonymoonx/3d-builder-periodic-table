@@ -12,6 +12,8 @@ import { cellVectors, fracToCart, lindemannRms, rmsSpeed } from '../../physics/l
 import { cmfAt, mul3, gammaEncode } from '../../physics/color.js';
 import { CATEGORY_COLORS, CATEGORY_COLORS_CB } from '../palette.js';
 import { pigment, pigmentCB, color as TOK, light as LIGHT } from '../../design/tokens.js';
+import { glassMaterial, glowSprites, moltenPool, spokes as makeSpokes } from './forgeArt.js';
+import { roundedBox } from './tableArt.js';
 import { rng32 } from '../../physics/orbitals.js';
 
 const SPEED_SCALE = 3; // display pm/s per real m/s (the real motion is ~3 x 10^11 times faster)
@@ -107,8 +109,11 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   // glass box + floor
   const boxMat = new THREE.LineBasicMaterial({ color: FORGE ? TOK.ink : 0x9fbcff, transparent: true, opacity: FORGE ? 0.22 : 0.35 });
   const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), boxMat);
-  const glass = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: FORGE ? TOK.paper : 0x8fb0ff, transparent: true, opacity: FORGE ? 0.04 : 0.05, roughness: 0.1, depthWrite: false, side: THREE.BackSide }));
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: FORGE ? TOK.paperDeep : 0x101a2e, roughness: FORGE ? 0.95 : 0.9 }));
+  const glassMat = FORGE ? glassMaterial() : null;
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), FORGE ? glassMat : new THREE.MeshStandardMaterial({ color: 0x8fb0ff, transparent: true, opacity: 0.05, roughness: 0.1, depthWrite: false, side: THREE.BackSide }));
+  // forge: a glazed ceramic hearth (rebuilt to size in setBox) instead of a flat slab
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: FORGE ? '#CBBAA4' : 0x101a2e, roughness: FORGE ? 0.4 : 0.9 }));
+  box.visible = !FORGE; // the forge's vessel shows only at its glass edges
   world.add(box, glass, floor);
   const cellMat = new THREE.LineBasicMaterial({ color: FORGE ? TOK.ink : 0xffcf6b, transparent: true, opacity: FORGE ? 0.5 : 0.9 });
   const cellLines = new THREE.LineSegments(new THREE.BufferGeometry(), cellMat);
@@ -127,8 +132,20 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   const MAX = 3200;
   const atomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: FORGE ? 0.35 : 0.38, metalness: FORGE ? 0 : 0.15 });
   const uni = { uTime: { value: 0 }, uAmp: { value: 0 } };
+  const glowU = { uGlowCol: { value: new THREE.Color() }, uGlowK: { value: 0 }, uHot: { value: 0 } };
   atomMat.onBeforeCompile = sh => {
     sh.uniforms.uTime = uni.uTime; sh.uniforms.uAmp = uni.uAmp;
+    Object.assign(sh.uniforms, glowU);
+    // forge: hot beads glow brightest where they face you and darker toward the rim, whitening at the
+    // core as the temperature rises, so every atom still reads as a sphere while incandescent
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec3 uGlowCol; uniform float uGlowK; uniform float uHot;')
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        #ifdef FORGE_GLOW
+          float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
+          vec3 hot = mix(uGlowCol, vec3(1.0, 0.95, 0.86), uHot * pow(facing, 2.0));
+          totalEmissiveRadiance = hot * uGlowK * (0.28 + 0.72 * pow(facing, 1.3));
+        #endif`);
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nattribute vec3 aSeed;\nuniform float uTime;\nuniform float uAmp;')
       .replace('#include <begin_vertex>', `#include <begin_vertex>
@@ -143,6 +160,17 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   atoms.count = 0;
   atoms.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   world.add(atoms);
+  // forge: a soft incandescent glow around every hot atom, the molten pool, the glow pooling on the
+  // hearth, and spokes from one atom to the neighbours it touches
+  let glow = null, pool = null, decal = null, spk = null, spokeC = -1, poolK = 0;
+  if (FORGE) {
+    glow = glowSprites(atoms, seeds, uni); world.add(glow.mesh);
+    pool = moltenPool(); world.add(pool.mesh);
+    decal = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: haloTexture(), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0 }));
+    decal.renderOrder = 2; world.add(decal);
+    spk = makeSpokes(); world.add(spk.mesh, spk.dots);
+    atomMat.defines = { FORGE_GLOW: '' };
+  }
 
   // simulation state
   let P = new Float32Array(MAX * 3), Vv = new Float32Array(MAX * 3), Q = new Float32Array(MAX * 3); // positions, velocities, morph targets
@@ -211,13 +239,51 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       }
     }
     atoms.count = molN === 2 ? 2 * n : n;
+    // forge: a hot gas is sparse; draw a share of the particles so it reads as atoms flying apart
+    if (FORGE && current && current.kind === 'gas') atoms.count = Math.ceil(atoms.count * 0.4);
     atoms.instanceMatrix.needsUpdate = true;
+    if (glow) glow.mesh.count = atoms.count;
+    updateSpokes();
   }
 
   function setBox(L) {
     boxL = L;
     box.scale.set(L[0], L[1], L[2]); glass.scale.set(L[0], L[1], L[2]);
-    floor.scale.set(L[0] * 1.25, L[1] * 0.04, L[2] * 1.25); floor.position.set(0, -L[1] / 2 - L[1] * 0.02, 0);
+    if (FORGE) { // a rounded ceramic hearth, glazed, a little wider than the vessel
+      const w = L[0] * 1.32, hgt = L[1] * 0.07;
+      floor.geometry.dispose();
+      floor.geometry = roundedBox(w, hgt, w, Math.min(hgt * 0.45, w * 0.04), 3);
+      floor.scale.set(1, 1, 1); floor.position.set(0, -L[1] / 2 - hgt / 2, 0);
+      decal.scale.set(L[0] * 1.5, 1, L[2] * 1.5); decal.position.set(0, -L[1] / 2 + L[1] * 0.002, 0);
+    } else { floor.scale.set(L[0] * 1.25, L[1] * 0.04, L[2] * 1.25); floor.position.set(0, -L[1] / 2 - L[1] * 0.02, 0); }
+  }
+  /** Spokes from one atom inside the front corner to the neighbours it touches (8 in bcc, 12 in fcc). */
+  function updateSpokes() {
+    if (!spk) return;
+    const solid = current && current.kind === 'solid' && n > 0;
+    spk.mesh.visible = spk.dots.visible = solid;
+    if (!solid) return;
+    if (spokeC < 0 || spokeC >= n) { // the atom nearest a point a little inside the corner facing the camera
+      let mx = [0, 0, 0], cy = 0;
+      for (let i = 0; i < n; i++) { for (let k = 0; k < 3; k++) mx[k] = Math.max(mx[k], Math.abs(P[3 * i + k] - (k === 1 ? world.userData.lift || 0 : 0))); }
+      cy = world.userData.lift || 0;
+      const tx = mx[0] * 0.42, ty = cy + mx[1] * 0.42, tz = mx[2] * 0.42;
+      let best = 1e30;
+      for (let i = 0; i < n; i++) { const d = (P[3 * i] - tx) ** 2 + (P[3 * i + 1] - ty) ** 2 + (P[3 * i + 2] - tz) ** 2; if (d < best) { best = d; spokeC = i; } }
+    }
+    const c = 3 * spokeC, cx = P[c], cy2 = P[c + 1], cz = P[c + 2];
+    let dmin = 1e30;
+    const d2 = new Float32Array(n);
+    for (let i = 0; i < n; i++) { if (i === spokeC) { d2[i] = 1e30; continue; } d2[i] = (P[3 * i] - cx) ** 2 + (P[3 * i + 1] - cy2) ** 2 + (P[3 * i + 2] - cz) ** 2; if (d2[i] < dmin) dmin = d2[i]; }
+    const lim = dmin * 1.12 * 1.12, pos = spk.mesh.geometry.attributes.position.array, dots = spk.dots.geometry.attributes.position.array;
+    let m = 0;
+    dots[0] = cx; dots[1] = cy2; dots[2] = cz;
+    for (let i = 0; i < n && m < 13; i++) if (d2[i] <= lim) {
+      pos.set([cx, cy2, cz, P[3 * i], P[3 * i + 1], P[3 * i + 2]], 6 * m);
+      dots.set([P[3 * i], P[3 * i + 1], P[3 * i + 2]], 3 + 3 * m); m++;
+    }
+    spk.mesh.geometry.setDrawRange(0, 2 * m); spk.dots.geometry.setDrawRange(0, m + 1);
+    spk.mesh.geometry.attributes.position.needsUpdate = true; spk.dots.geometry.attributes.position.needsUpdate = true;
   }
 
   function drawCell(phase, block) {
@@ -266,6 +332,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       drawCell(phase, block);
     }
     n = Math.min(pts.length, MAX);
+    if (!morph || morph.kind !== 'bain') spokeC = -1; // a new block: choose the spoke atom again (a Bain morph keeps it)
     for (let i = 0; i < n; i++) { Q[3 * i] = pts[i][0]; Q[3 * i + 1] = pts[i][1]; Q[3 * i + 2] = pts[i][2]; }
     if (!morph || morph.kind === 'bain') for (let i = 0; i < 3 * n; i++) P[i] = Q[i];
     setAtomGeometry(0.46 * dNN);
@@ -273,7 +340,9 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     let mx = [0, 0, 0];
     for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) mx[k] = Math.max(mx[k], Math.abs(Q[3 * i + k]));
     const side = Math.max(mx[0], mx[1], mx[2]) * 2 + 2.2 * radius;
-    if (!current || current.Z !== e.Z || Math.abs(side * 1.3 - boxL[0]) / boxL[0] > 0.25) setBox([side * 1.3, side * 1.3, side * 1.3]);
+    // forge: a wider crucible, so the melt can spread into a low pool (about 40 % of the crystal's height)
+    const vf = FORGE ? 1.6 : 1.3;
+    if (!current || current.Z !== e.Z || Math.abs(side * vf - boxL[0]) / boxL[0] > 0.25) setBox([side * vf, side * vf, side * vf]);
     // stand the block on the floor
     const lift = -boxL[1] / 2 + mx[1] + radius * 1.05;
     for (let i = 0; i < n; i++) { Q[3 * i + 1] += lift; if (!morph || morph.kind === 'bain') P[3 * i + 1] += lift; }
@@ -307,8 +376,9 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     } else for (let i = 0; i < 3 * n; i++) Vv[i] *= 0.2;
     cellLines.visible = false;
     morph = null;
+    if (FORGE) setAtomGeometry(kind === 'gas' ? 0.26 * dNN : 0.5 * dNN);
     // a puddle with the solid's volume: radius from n particles at spacing ~d_NN in a layer ~half as high as wide
-    puddleR = Math.cbrt((n * dNN ** 3) / Math.PI) * 0.9;
+    puddleR = FORGE ? boxL[0] * 0.44 : Math.cbrt((n * dNN ** 3) / Math.PI) * 0.9;
   }
 
   const grid = new Map();
@@ -332,7 +402,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     } else {
       // liquid: jostling particles under gravity with short-range repulsion (keeps them about d_NN apart)
       // and a weak cohesive pull toward a puddle about the size of the melted block (a liquid keeps together)
-      const jig = Math.min(vrms, dNN * 2.5) * 0.9;
+      const jig = Math.min(vrms, dNN * 2.5) * (FORGE ? 0.4 : 0.9); // forge: a calmer pool, no beads flung above it
       let cx = 0, cz = 0; for (let i = 0; i < n; i++) { cx += P[3 * i]; cz += P[3 * i + 2]; } cx /= n || 1; cz /= n || 1;
       const Rp = puddleR || boxL[0] * 0.3;
       for (let i = 0; i < n; i++) {
@@ -340,6 +410,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         Vv[o] += gauss() * jig * dt * 6; Vv[o + 1] += gauss() * jig * dt * 6 - dNN * (FORGE ? 22 : 6) * dt; Vv[o + 2] += gauss() * jig * dt * 6; // forge: it visibly slumps into a puddle
         const rx = P[o] - cx, rz = P[o + 2] - cz, rr = Math.hypot(rx, rz);
         if (rr > Rp) { const pull = (rr - Rp) * 6 * dt / rr; Vv[o] -= rx * pull * 4; Vv[o + 2] -= rz * pull * 4; }
+        if (FORGE && rr > Rp * 1.02) { const f = (Rp * 1.02) / rr; P[o] = cx + rx * f; P[o + 2] = cz + rz * f; Vv[o] *= 0.5; Vv[o + 2] *= 0.5; } // a round pool, never the crucible's corners
         const damp = Math.exp(-4 * dt);
         for (let k = 0; k < 3; k++) { Vv[o + k] *= damp; P[o + k] += Vv[o + k] * dt; }
         if (P[o] > hx || P[o] < -hx) { P[o] = Math.max(-hx, Math.min(hx, P[o])); Vv[o] *= -0.3; }
@@ -387,18 +458,39 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     if (FORGE) atomMat.emissive.setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2], THREE.SRGBColorSpace); // the blackbody colour is display-encoded
     else atomMat.emissive.setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2]);
     if (FORGE) {
-      // the room dims while the metal is hot enough to glow; a hot gas still glows faintly
-      const g = bb.glow;
-      atomMat.emissiveIntensity = glowing ? g * 1.25 : g * 0.8; // below tone-mapping white, so the hue reads true
+      // the room dims while the metal is hot enough to glow. The glow only grows with temperature
+      // (solid, liquid and the hot vapour alike): colour from Planck, brightness from the visible output.
+      const g = bb.glow, on = kind !== 'card' ? g : 0;
+      const col = new THREE.Color().setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2], THREE.SRGBColorSpace);
+      atomMat.emissiveIntensity = 0;
+      glowU.uGlowCol.value.copy(col);
+      glowU.uGlowK.value = kind === 'gas' ? on * 1.7 : on * 1.35;
+      glowU.uHot.value = Math.min(0.9, Math.max(0, (state.T - 1500) / 1900));
       const to = state.T > 760 && g > 0.01 && kind !== 'card' ? 1 : 0;
       if (to !== kilnTo) { kilnTo = to; if (hooks.onKiln) hooks.onKiln(!!to); }
       const k = kilnK;
       hemi.intensity = 1.0 * (1 - 0.86 * k); key.intensity = 2.0 * (1 - 0.8 * k);
-      heatLight.color.setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2], THREE.SRGBColorSpace); heatLight.intensity = glowing ? g * 1.3 : 0;
-      halo.material.color.setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2], THREE.SRGBColorSpace);
-      halo.material.opacity = glowing ? Math.min(0.5, g * 0.55) : 0;
-      halo.scale.setScalar(boxL[0] * (kind === 'liquid' ? 1.5 : 1.8));
+      heatLight.color.copy(col); heatLight.intensity = on * 1.8;
+      heatLight.position.set(0, (world.userData.lift || 0) * 0.4, 0);
+      // one soft aura behind the crystal (depth-tested: it shows around it, not through it)
+      halo.material.color.copy(col); halo.material.opacity = Math.min(0.32, on * 0.34);
+      halo.material.depthTest = true;
+      halo.scale.setScalar(boxL[0] * 2.2);
       halo.position.set(0, (world.userData.lift || 0) * 0.5, 0);
+      // a glow around every hot atom; larger and sparser in the vapour
+      glow.mat.uniforms.uCol.value.copy(col);
+      glow.mat.uniforms.uK.value = kind === 'gas' ? on * 0.6 : on * 0.5;
+      glow.mat.uniforms.uSize.value = radius * (kind === 'gas' ? 7.5 : 3.4);
+      // per-atom glows are a fill cost software renderers cannot afford (low tier): there the beads'
+      // own incandescence and a stronger aura carry the glow
+      const sprites = tierConfig().points >= 0.7;
+      glow.mesh.visible = sprites && on > 0.02 && kind !== 'liquid'; // the molten pool glows as one surface
+      if (!sprites) halo.material.opacity = Math.min(0.5, on * 0.55);
+      // the glow pools on the hearth; the molten pool and the glass take its colour
+      decal.material.color.copy(col); decal.material.opacity = Math.min(kind === 'gas' ? 0.55 : 0.85, on * 0.95);
+      pool.uni.uCol.value.copy(col); pool.uni.uK.value = on * 1.5;
+      glassMat.uniforms.uCol.value.copy(INK).lerp(KILN_TEXT, k); glassMat.uniforms.uK.value = 0.2 - 0.06 * k;
+      spk.mat.color.copy(INK).lerp(KILN_TEXT, k); spk.dots.material.color.copy(spk.mat.color);
       boxMat.color.copy(INK).lerp(KILN_TEXT, k); cellMat.color.copy(boxMat.color);
     } else {
       atomMat.emissiveIntensity = glowing ? bb.glow * 2.2 : 0;
@@ -445,7 +537,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
 
   function frameGoal() {
     const fov = freeFov();
-    const R = Math.hypot(...boxL) * 0.62;
+    const R = Math.hypot(...boxL) * (FORGE ? 0.5 : 0.62);
     const r = R / Math.sin(Math.min(fov.v, fov.h) / 2);
     E.camera.near = R / 200; E.camera.far = R * 50; E.camera.updateProjectionMatrix();
     E.rig.lim = { rMin: R * 0.4, rMax: R * 12, phiMin: 0.15, phiMax: 1.55 };
@@ -496,7 +588,31 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         writeMatrices();
         return true;
       }
-      if (current && (current.kind === 'liquid' || current.kind === 'gas') && !state.reduced) { stepFluid(Math.min(dt, 1 / 30), current.kind, e); writeMatrices(); }
+      if (current && (current.kind === 'liquid' || current.kind === 'gas') && !state.reduced) {
+        // keep the fluid on wall-clock time when frames are slow (up to 4 steps of 1/30 s; one at 60 fps)
+        let rem = FORGE ? Math.min(dt, 4 / 30) : Math.min(dt, 1 / 30);
+        while (rem > 1e-4) { const hstep = Math.min(rem, 1 / 30); stepFluid(hstep, current.kind, e); rem -= hstep; }
+        writeMatrices();
+      }
+      if (pool) { // the molten pool: a low dome over the liquid atoms, fading in as they settle
+        const liquid = current && current.kind === 'liquid';
+        poolK = Math.max(0, Math.min(1, poolK + (liquid ? dt / 0.9 : -dt / 0.3)));
+        pool.mesh.visible = poolK > 0.01;
+        if (pool.mesh.visible) {
+          let cx = 0, cz = 0; for (let i = 0; i < n; i++) { cx += P[3 * i]; cz += P[3 * i + 2]; } cx /= n || 1; cz /= n || 1;
+          const ys = [], rs = [];
+          for (let i = 0; i < n; i += 2) { ys.push(P[3 * i + 1]); rs.push(Math.hypot(P[3 * i] - cx, P[3 * i + 2] - cz)); }
+          ys.sort((a, b) => a - b); rs.sort((a, b) => a - b);
+          const floorY = -boxL[1] / 2, top = (ys[Math.floor(ys.length * 0.95)] - floorY + radius) * 0.9, R = Math.min((rs[Math.floor(rs.length * 0.97)] + radius * 1.1) * 1.12, boxL[0] * 0.5);
+          pool.mesh.position.set(cx, floorY, cz);
+          pool.mesh.scale.set(R, Math.max(top, radius * 2), R);
+          pool.mat.opacity = 0.97 * poolK;
+          pool.uni.uTime.value = t;
+        }
+        // once the pool has formed it is the liquid (the atoms jostle on beneath its surface)
+        atoms.visible = !(liquid && poolK >= 0.999) && !!current && current.kind !== 'card';
+        if (pool.mesh.visible || liquid) return true;
+      }
       return atoms.visible && !state.reduced;
     },
     current: () => current,

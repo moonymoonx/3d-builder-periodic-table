@@ -272,3 +272,58 @@ Proposed by Gemini (cold reviewer). The calls are Claude's (design owner); the f
 - **Fix: a real bug found while building the dive.**
   - Closing the card re-framed the table while the camera was gliding, which retargeted the glide.
   - The table no longer steers the camera during a dive.
+
+## Hero round 4: the forge's look (`reviews/hero-r3.md`), 21 Nov 2026
+Gemini's cold round-3 review rated clarity, ease, beauty and smoothness 4.0 and delight 3.5. It put the table and cards at 4.5+, and the forge's climax below them: "sterile CAD wireframe + matte coaster", "flat spheres", "molten iron like orange cheese puffs", "boiling iron losing its glow". moony asked for beauty and delight at 4.5 within STYLE.md and smooth on phones. The calls are Claude's; numbers refer to the review's §3.
+
+**Correction first.** Round 3's entry says numbers lenses were "seen more from above (φ 0.44 → 0.36)". That change was never applied; the code still had 0.44 (only the column height changed). It is applied now (0.33, below).
+
+**The forge, made beautiful (E1–E4; fix 1): accepted**
+- **Stage (E4):**
+  - The CAD wireframe is gone. The vessel is glass that shows only at its edges (a Fresnel shader).
+  - The flat coaster is now a rounded, glazed ceramic hearth. It catches the glow: the metal's blackbody colour pools on it, and the glow lights it (one light).
+  - A warm ember gradient sits behind the specimen on the kiln stage.
+  - The crucible is wider, so the melt can spread.
+- **Unit-cell cue (STYLE §6):** ink spokes join one atom to every neighbour it touches: 8 in iron's bcc, 12 after the 912 °C re-stack (counted from the actual positions, not drawn by hand). They follow the Bain re-stack and turn kiln-coloured in the dark. *Why:* the caption's claim becomes visible at a glance.
+- **Glowing solid (E3):**
+  - Hot atoms glow brightest where they face you and darker toward the rim, whitening at the core as the temperature rises, so every bead stays a sphere.
+  - Each hot atom has its own soft incandescent glow: one instanced, billboarded, additive draw that shares the atoms' positions and vibration. It is drawn on medium and high tiers only. Measured on the software renderer (low tier), it halved the glowing states' frame rate (700 °C: 30 FPS median); there, the beads' own incandescence and a stronger aura carry the glow (60 FPS).
+  - The big central blob is now a faint aura behind the crystal.
+- **Molten pool (E1):**
+  - The melt settles into a low, wide pool, about 40 % of the crystal's height.
+  - It is drawn as one round, flat-topped surface whose edge rolls down like a meniscus (a lathe of y = (1 − r⁴)^¼). It has slow convection cells and a brighter meniscus, in the blackbody colour.
+  - It rises with the collapsing crystal. Once formed it *is* the liquid: the atoms jostle on beneath it, hidden, and are drawn again when it boils or freezes. The melt is kept round (never in the crucible's corners), and the fluid keeps wall-clock pace on slow frames (up to 4 sub-steps).
+- **Vapour (E2):**
+  - The glow only grows with temperature: at 2,950 °C the vapour is bright warm white with larger glows.
+  - It is drawn sparse (40 % of the particles, smaller beads) so it reads as atoms flying apart.
+  - The hearth stays lit.
+- **Rejected:** post-processing bloom, a screen-space metaball liquid and a physical (transmission) glass. *Why:* each costs a full-screen pass or heavy shading on phones and software renderers. The cheap pieces above give the look at 60 FPS.
+
+**Thermometer (D1, F3, G3; fix 2): accepted**
+- Every event is labelled ("912 °C re-stacks", "1,394 °C re-stacks", "1,538 °C melts", "2,861 °C boils"), in up to three staggered rows with leader lines. A label is shortened to its number only if no row fits; none is ever dropped, including 912 °C on phones.
+- The rail has a thermometer bulb at its cold end (C3), and "Heat it again ▶" already appears at the top.
+
+**Dive (E5, 4): accepted**
+- 12a and 12b are now real in-flight frames. The shot tool runs the page on Playwright's fake clock, pauses it, taps the door and advances exactly 450 ms or 1,400 ms.
+- The selection ring steps aside during the plunge.
+- *Rejected:* a 2× symbol atlas for the dive close-up (B3). *Why:* about 4× the texture memory for a frame seen for a quarter second before the crossfade.
+
+**Table and card fixes: accepted**
+- **A1:** "Mineral metals" is written on one line in row 1, right of H, clear of Be (EN and VI).
+- **A4:** columns are lower (tallest 3.0) and the view steeper (φ 0.33), so Tc and Mo show whole; tall columns darken toward the base, like carved blocks (E6).
+- **A5:** carbon's tag extends left and helium's right, so both show.
+- **A3:** gold's "All numbers & sources" sits clear of a shorter (22 px) edge fade, and the card is a little tighter.
+- **F2:** phones see numbers lenses from lower down with taller columns (×1.7), so heft reads as heights.
+- **A6:** the first hover over any tile dismisses "Try iron".
+- **A2:** with a card open, the lens chips are hidden, leaving one focus. The card's "across the table" links switch lenses, and the chips return with "← All elements".
+- **F4 / D2 / D3:** phone cards have the same always-visible previous / next footer as desktop. The sheet stands just clear of the doors, and the edge fade falls on empty paper, so no clipped sentence peeks below them. *Not taken:* moving the boiling note back beside the melting value on phones, which would push the doors below the fold.
+- **C1, C2:** the configuration note now reads "one electron sits in a different shell than the usual order predicts: …"; "Atomic weight (rounded)" replaces "Standard atomic weight (abridged)".
+- **F5:** the phone prompt reads "Touch and slide across the table — lift to open."
+
+**Rejected or deferred**
+- **B2, a "tap a value" hint on desktop cards: rejected.** On desktop, values show the pointer cursor and turn verdigris on hover; the hint stays on phones, where there is no hover.
+- **G1, Pu / Np / Ac striped at 1,000 °C: deferred.** Stripes follow the predicted flags in our sources (e.g. actinium's melting point is flagged as an estimate). Striping only when the deciding boundary is predicted is a sound rule, but it needs a data review first.
+- **B1, softer stripes on the heat map: deferred** (stripes were already softened on phones in round 3).
+- **F1, the phone landing's empty bands: not changed again.** The table is width-bound; round 3 made the prompt a heading and added the colour key.
+- **D4, top scrim when zoomed: deferred** (minor; the "Whole table" pill is the exit).
+- **Smoothness:** real-device GPU numbers cannot be measured in this sandbox (headless software rendering only).

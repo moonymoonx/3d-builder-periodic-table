@@ -194,8 +194,8 @@ export function buildElementCard(ui, hooks) {
       const tapHint = h('p', { class: 'card-hint card-hint--strip' }, t('card.tapSource'));
       const notes = F.map(f => f.phoneNote || f.note).filter(Boolean).map(n => h('p', { class: 'card-note' }, n));
       const links = [...new Set(F.map(f => f.across).filter(Boolean))].map(p => across(p, t(acrossKey[p])));
-      replace(sh.body, head, lead, strip, tapHint, doorBox, h('div', { class: 'card-notes' }, notes, links), all, nav);
-      sh.setFoot(null);
+      replace(sh.body, head, lead, strip, tapHint, doorBox, h('div', { class: 'card-notes' }, notes, links), all);
+      sh.setFoot(nav); // previous / next always in reach, and a clean edge under the doors
     } else {
       const list = h('div', { class: 'card-factlist' }, F.map(f => fact({ label: f.label, value: valueOf(f, false), note: f.note || null, link: f.across ? across(f.across) : null })));
       replace(sh.body, head, lead, list, doorBox, all);
@@ -205,7 +205,8 @@ export function buildElementCard(ui, hooks) {
     requestAnimationFrame(sh.updateMore);
     if (e.Z !== lastZ) { sh.body.scrollTop = 0; sh.el.classList.remove('is-scrolled'); lastZ = e.Z; }
     // phones: stand the sheet exactly tall enough to show the three doors (at most 62 % of the screen)
-    if (phone) requestAnimationFrame(() => { if (sh.isOpen()) sh.setPeek(Math.min(doorBox.offsetTop + doorBox.offsetHeight + 40, window.innerHeight * 0.64)); });
+    // phones: the sheet stands just tall enough for the doors and the previous / next footer
+    if (phone) requestAnimationFrame(() => { if (sh.isOpen()) sh.setPeek(Math.min(doorBox.offsetTop + doorBox.offsetHeight + 28 + (nav.parentNode ? nav.parentNode.offsetHeight : 0), window.innerHeight * 0.68)); }); // +28: clear of the edge fade
     else sh.setPeek(null);
   }
 

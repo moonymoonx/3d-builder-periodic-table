@@ -144,3 +144,32 @@
     - "About this crystal ▾" and sound (the 912 °C "tink").
     - The phone table stays width-bound.
     - Vietnamese strings are drafts for moony; Q17 is open.
+- 2026-11-21 ~06:19 (Saigon) — **Hero round 4: the forge's look.** Gemini's cold round-3 review (`reviews/hero-r3.md`) scored clarity, ease, beauty and smoothness 4.0 and delight 3.5. It rated the table and cards 4.5+ and held back on the forge's climax. Each point is accepted, rejected or deferred in DECISIONS.md › Hero round 4.
+  - **Correction:** round 3's "φ 0.44 → 0.36" for numbers lenses was never applied. It is applied now (0.33).
+  - **The forge:**
+    - A Fresnel glass vessel (no wireframe), a glazed ceramic hearth that catches the glow, and a warm kiln gradient.
+    - Incandescent beads that keep their 3D form, with per-atom glows on medium/high tiers.
+    - A round molten pool with a rolled meniscus and convection cells, and a bright sparse vapour whose glow keeps rising with temperature.
+    - Ink spokes showing iron's 8 → 12 neighbours, counted from positions.
+    - New: `views/forgeArt.js`.
+  - **Thermometer:** every event labelled in staggered rows (912 °C on phones too), and a bulb at the cold end.
+  - **Dive:** real in-flight review frames via Playwright's fake clock (`clockAt` in the shot tool); the ring steps aside during the plunge.
+  - **Fixes:**
+    - "Mineral metals" clear of Be.
+    - Lower columns (3.0) and a steeper view; Tc and Mo whole; carved column shading.
+    - Carbon's and helium's tags both show.
+    - Gold's card fold.
+    - Phone heft seen from lower with taller columns.
+    - The first hover dismisses "Try iron".
+    - Chips hidden while a card is open.
+    - Phone card footer; no clipped line under the doors.
+    - Plainer atomic-weight and configuration wording; phone prompt wording.
+  - **Checks:** smoke 28/28 twice (two steps updated: chips are used without a card open), unit tests 17/17, validator ALL PASS, no console errors, index.html 1,472 KB.
+  - **FPS** (`hero-r4/fps.txt`): all states at a 60 FPS median on the software path; phone states 60.
+    - The per-atom glows first halved the low tier's glowing states (700 °C desktop: 30 FPS median). They are now medium/high only, which brought it back to 60.
+    - 12a/12b ran on the fake clock (numbers not meaningful).
+  - **Review set:** `/workspace/out/redesign/hero-r4/` (30 PNG, fps.txt, README.txt).
+  - **Deferred:**
+    - Heat-map stripes only where the deciding boundary is predicted (needs a data review).
+    - A sharper atlas for the dive close-up.
+    - Top scrim when zoomed.

@@ -6,7 +6,7 @@ import { STRINGS } from '../i18n.js';
 const EN = {
   'home.word': 'Periodic Table', 'home.wordSub': '',
   'home.prompt': 'Everything you have ever touched is made of atoms — and every atom is one of these 118 kinds.',
-  'home.tap': 'Tap one to look inside.', 'home.tapAgain': 'Tap any element to look inside.', 'home.tapPhone': 'Touch the table and slide: lift your finger to open.',
+  'home.tap': 'Tap one to look inside.', 'home.tapAgain': 'Tap any element to look inside.', 'home.tapPhone': 'Touch and slide across the table — lift to open.',
   'home.try': 'Try {name}', 'home.find': 'Find an element', 'home.findShort': 'Find', 'home.menu': 'Menu', 'home.lenses': 'Ways to look at the table',
   'home.loading': 'Setting out the elements…',
 

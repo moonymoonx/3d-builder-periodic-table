@@ -206,7 +206,7 @@ export function buildHome(ui, hooks) {
       replace(legend, Object.keys(pal).map(c => h('span', null, h('i', { class: 'ui-swatch', style: { background: pal[c] } }), oneLine(t('fam.' + c)))));
       legend.setAttribute('aria-label', t('home.legend'));
     }
-    chips.hidden = state.card && isPhone();
+    chips.hidden = !!state.card; // with a card open, one focus: the card (its "across the table" links switch lenses)
     bottom.classList.toggle('is-card', state.card && !isPhone());
     word.hidden = !(home && !state.card) && isPhone();
   }

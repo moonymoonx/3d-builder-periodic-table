@@ -1,6 +1,7 @@
 /* HEAT (places/heat.js): "Hold a piece · heat it". Daylight while the metal is cool; the room dims to
    the kiln colour while it glows (STYLE.md §9: daylight is for matter, a dark room is for fire). */
-#kiln { position: fixed; inset: 0; background: var(--kiln); opacity: 0; pointer-events: none; transition: opacity 600ms var(--ease-in-out); }
+/* the kiln: a warm, dark room with a faint ember warmth behind the specimen */
+#kiln { position: fixed; inset: 0; background: radial-gradient(70% 60% at 50% 40%, #2B1C12 0%, #1C140E 45%, var(--kiln) 80%); opacity: 0; pointer-events: none; transition: opacity 600ms var(--ease-in-out); }
 body.kiln #kiln { opacity: 1; }
 /* the scale dive: the tile's glaze fills the screen, then opens into the crystal */
 #dive { position: fixed; inset: 0; z-index: 70; opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease-in-out); }
@@ -28,8 +29,11 @@ body.kiln .heat-read { color: #F0874F; }
 body.kiln .heat-word { color: var(--kiln-text-2); }
 
 /* the thermometer: events above the rail, familiar metals' melting points below */
-.heat-track { position: relative; height: 92px; }
+.heat-track { position: relative; height: 92px; margin-left: 18px; }
 .heat-rail { position: absolute; left: 0; right: 0; top: 40px; height: 12px; border-radius: 6px; background: var(--line); }
+/* a thermometer, not just a slider: the bulb at the cold end */
+.heat-rail::before { content: ""; position: absolute; left: -16px; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: #C9CFD8; box-shadow: inset 0 0 0 2px rgba(28, 26, 23, 0.12); }
+body.kiln .heat-rail::before { background: #F0874F; box-shadow: 0 0 14px rgba(240, 135, 79, 0.6); }
 body.kiln .heat-rail { background: rgba(242, 232, 218, 0.14); }
 .heat-fill { position: absolute; inset: 0; border-radius: 6px;
   background: linear-gradient(90deg, #C9CFD8 0%, #C99A7E 16%, #B93E12 34%, #E5612B 52%, #F59A47 68%, #FFD796 84%, #FFF6E6 100%); }
@@ -42,10 +46,11 @@ body.kiln .heat-rail { background: rgba(242, 232, 218, 0.14); }
 .heat-range::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--card); border: 2px solid var(--ink); }
 body.kiln .heat-range::-webkit-slider-thumb { border-color: #F0874F; background: #2A2019; }
 .heat-ticks { position: absolute; left: 0; right: 0; top: 0; height: 40px; pointer-events: none; }
-.heat-tick { position: absolute; bottom: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; white-space: nowrap;
-  font: 600 13px/1.2 var(--font-sans); padding-bottom: 6px; }
-.heat-tick small { font: 400 13px/1.2 var(--font-sans); color: var(--ink-2); }
-.heat-tick::after { content: ""; position: absolute; bottom: -6px; left: 50%; width: 2px; height: 10px; margin-left: -1px; border-radius: 1px; background: currentColor; opacity: 0.55; }
+/* every event is labelled: one line each ("912 °C re-stacks"), in up to three staggered rows */
+.heat-tick { position: absolute; bottom: 0; width: 0; height: 100%; }
+.heat-tick::after { content: ""; position: absolute; bottom: -6px; left: -1px; width: 2px; border-radius: 1px; background: currentColor; opacity: 0.5; height: calc(10px + var(--row, 0) * 17px); }
+.heat-tick span { position: absolute; bottom: calc(5px + var(--row, 0) * 17px); left: 0; transform: translateX(calc(-50% + var(--dx, 0px))); white-space: nowrap; font: 600 13px/16px var(--font-sans); }
+.heat-tick small { font: 400 13px/16px var(--font-sans); color: var(--ink-2); margin-left: 4px; }
 body.kiln .heat-tick small { color: var(--kiln-text-2); }
 .heat-flags { position: absolute; left: 0; right: 0; top: 60px; height: 24px; pointer-events: none; }
 .heat-flag { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; font: italic 400 13px/1.2 var(--font-serif); color: var(--ink-3); padding-top: 6px; }

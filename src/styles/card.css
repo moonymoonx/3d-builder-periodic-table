@@ -9,7 +9,7 @@
 .card-family { margin: 6px 0 0; display: grid; grid-template-columns: 14px 1fr; column-gap: 8px; align-items: center; font: 600 14px/1.35 var(--font-sans); }
 .card-family__cap { grid-column: 2; font-weight: 400; font-size: 13px; color: var(--ink-2); }
 .card-hint { margin: 2px 0 6px; font-size: 13px; line-height: 1.4; color: var(--ink-2); }
-.card-line { margin: 16px 0 6px; font: 400 19px/1.5 var(--font-serif); color: var(--ink); }
+.card-line { margin: 12px 0 4px; font: 400 19px/1.45 var(--font-serif); color: var(--ink); }
 /* the line's source: a quiet pill (its tap area reaches 44 px) */
 .card-src { position: relative; display: inline-flex; align-items: center; height: 24px; padding: 0 9px; margin-left: 2px; vertical-align: 2px; border: 1px solid var(--line-strong);
   border-radius: var(--r-pill); background: transparent; color: var(--ink-2); font: 600 13px/1 var(--font-sans); letter-spacing: 0.02em; }
@@ -23,7 +23,7 @@
 .card-v.is-none { border: 0; color: var(--ink-3); font-weight: 400; font-style: italic; cursor: default; }
 .card-across { border: 0; background: transparent; padding: 4px 2px; color: var(--verdigris); font: 600 13px/1.2 var(--font-sans); margin-left: auto; white-space: nowrap; }
 .card-across:hover { text-decoration: underline; text-underline-offset: 2px; }
-.card-doors { display: grid; gap: 8px; margin: 18px 0 14px; }
+.card-doors { display: grid; gap: 8px; margin: 12px 0 10px; }
 .card-facts { margin: 4px 0 8px; display: grid; grid-template-columns: minmax(110px, 42%) 1fr; }
 .card-facts dt, .card-facts dd { margin: 0; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
 .card-facts dt { color: var(--ink-2); padding-right: 10px; }
@@ -60,5 +60,5 @@
   .card-name { font-size: 30px; }
   .card-meta { margin-top: 2px; }
   .card-line { font-size: 17px; line-height: 1.45; margin: 10px 0 0; }
-  .card-doors { gap: 6px; margin: 12px 0 14px; }
+  .card-doors { gap: 6px; margin: 12px 0 34px; } /* the sheet's edge fade falls on empty paper, never on half a sentence */
 }

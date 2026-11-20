@@ -69,7 +69,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 - **Targets:** at least 44 × 44 px with 8 px gaps. The primary button is an ink pill with paper text; the secondary is an outlined pill; the tertiary is a text link in verdigris.
 - **The canvas owns the screen** (about 90 %). On a default surface you see at most: a top bar (wordmark, find pill, language, menu), one card or sheet, and one bottom prompt. On phones, find is a round 44 px button that opens into a field across the bar.
 - **Element card:** a 392 px side card on desktop; when it scrolls, a compact title bar (tile, name, number) slides in under the close button, so rows never run beneath it. Previous / next sit in an always-visible footer, and the body fades out at the bottom whenever more waits below. On phones it is a bottom sheet that stands just tall enough to show the three doors plus a sliver of what follows (at most 64 % of the screen): name, family and its caption, the human line, the three facts in one strip with "Tap a value to see where it comes from.", the doors; the facts' notes, "across the table" links and all numbers follow below. Vietnamese cards lead with the familiar GDPT-2018 name for the 13 elements that keep one (Sắt), then the international name.
-- **Home layout:** on phones the prompt is a page heading under the top bar, and all lens chips are in view (two rows, never cut mid-word). After the table is zoomed or turned away from its home framing, a "⌂ Whole table" pill takes the prompt's place (the phone key steps aside too); re-framing never undoes a zoom. Every lens banner keys what the table shows (stripes = predicted, pale and flat = not known).
+- **Home layout:** on phones the prompt is a page heading under the top bar, and all lens chips are in view (two rows, never cut mid-word). After the table is zoomed or turned away from its home framing, a "⌂ Whole table" pill takes the prompt's place (the phone key steps aside too); re-framing never undoes a zoom. Every lens banner keys what the table shows (stripes = predicted, pale and flat = not known). With a card open, the lens chips step aside: one focus (the card's "across the table" links switch lenses).
 - **Name tags** (hover, "Try iron", lens notes) hang above the tile's back edge with a small caret, so they never cover the printed number. Names written on the table keep 14 px from the screen edges and stay clear of the card, or are hidden.
 
 ## 6. 3D: lighting and materials
@@ -94,8 +94,9 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
   - Default height is equal for all tiles. Height means something only inside a numbers lens.
   - Pointer parallax on desktop: the camera leans at most 1.2° toward the cursor (300 ms ease-out), as a depth cue. It is off on touch screens and with reduced motion.
 - **Specimen stage (Heat it):**
-  - Atoms are glazed beads (`roughness 0.35`) in the family pigment, inside a hairline glass cube with an ink unit-cell outline.
-  - When hot, the beads' emissive colour follows the blackbody glow (decoded as sRGB, kept below tone-mapping white so the hue reads true), with one point light in the glow colour and one soft additive halo sprite (all tiers: one draw each).
+  - Atoms are glazed beads (`roughness 0.35`) in the family pigment, inside a glass vessel that shows only at its edges (Fresnel, no wireframe), standing on a rounded glazed ceramic hearth. Ink spokes join one atom to every neighbour it touches (8 in bcc, 12 in fcc): the unit-cell idea made visible.
+  - When hot, the beads glow in the blackbody colour (decoded as sRGB), brightest where they face you and whitening at the core as the temperature rises, so each stays a sphere. Each hot atom has its own soft incandescent glow (one instanced additive draw). The glow lights the hearth (one point light) and pools on it, with a faint aura behind the crystal. No post-processing.
+  - Molten: one flat-topped pool with a meniscus edge, slow convection cells, glowing. Boiling: a sparse, bright vapour whose glow keeps rising with temperature.
 - **Electron clouds (Inside the atom):**
   - Fine **stipple** dots, alpha-blended (no additive glare), in vermilion and cobalt. The 90 % surfaces are thin translucent glaze.
   - The nucleus is a small cluster of matte beads.
@@ -148,7 +149,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 Every number comes from our data (PubChem; Wikipedia/Arblaster transitions; COD cells). The stage around it stays calm: no other panels and no chrome beyond the thermometer and the back link.
 - **Not just iron.** The forge dims for *any* solid as soon as it starts to glow, and "Heat it ▶" plays the whole sweep with one tap. Iron is only the suggested first example.
 - **As built (round 3):**
-  - The thermometer is linear in °C from room temperature to a little past boiling. Its ticks are the element's events (labels placed so they never overlap; a tick without room keeps its mark and the caption names it). Its flags are familiar metals' melting points (lead, copper…). Its fill is coloured like heated metal.
+  - The thermometer is linear in °C from room temperature to a little past boiling, with a bulb at the cold end. Its ticks are the element's events, every one labelled ("912 °C re-stacks"), staggered in up to three rows so labels never overlap (shortened to the number only if no row fits). Its flags are familiar metals' melting points (lead, copper…). Its fill is coloured like heated metal.
   - "Heat it ▶" stops just past each event for about 2 s. The caption fades in at each moment.
   - The room dims when the glow begins (about 490 °C for iron) and returns as it cools.
   - On the kiln stage the panel turns dark (kiln text), and ember text brightens to `#F0874F` (7 : 1 on the panel; `--ember` would be 3.3 : 1 there). The back link becomes a dark pill.

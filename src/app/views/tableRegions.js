@@ -5,7 +5,7 @@
 // their tiles are too small to share space with words (the loupe and the card name the family).
 export const REGIONS = [
   { cat: 'transition', x: -2.0, z: -2.75, anchor: 'center', priority: 6 },
-  { cat: 'alkaline-earth', x: -7.92, z: -4.35, anchor: 'left', priority: 5 }, // in row 1, right of H, above Be
+  { cat: 'alkaline-earth', x: -7.92, z: -4.4, anchor: 'left', priority: 5, oneLine: true }, // one line in row 1, right of H, clear of Be
   { cat: 'alkali', x: -9.1, z: -0.85, anchor: 'right', priority: 5 },
   { cat: 'metalloid', x: 3.3, z: -4.62, anchor: 'bottom', priority: 4 },
   { cat: 'nonmetal', x: 5.45, z: -4.62, anchor: 'bottom', priority: 4 },

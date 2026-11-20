@@ -90,6 +90,7 @@ function boot() {
     onEmpty: () => { if (state.card && !isPhone()) closeCard(); },
     loupe: (e, x, y) => { firstTouch(); home.loupe(e, x, y); },
     onAway: a => home.setAway(a),
+    onHoverTile: () => firstTouch(),
     isPhone,
   });
   const home = buildHome(ui, {

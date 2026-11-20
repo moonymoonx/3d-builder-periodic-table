@@ -9,12 +9,12 @@ import { E, invalidate, animate, raycastFrom, tierConfig, freeFov, toScreen } fr
 import { state } from '../state.js';
 import { elements, propValue, propRange, prop, stateAt, isPred, name } from '../data.js';
 import { LabelLayer } from '../labels.js';
-import { t, fmtNum } from '../i18n.js';
+import { t, fmtNum, oneLine } from '../i18n.js';
 import { pigment, pigmentCB, stateColor, color as TOK, light as LIGHT, tile as TILE, motion, font } from '../../design/tokens.js';
 import { roundedBox, symbolAtlas, roundedOutline, luminance, bakeContactShadows, GLAZE } from './tableArt.js';
 import { REGIONS } from './tableRegions.js';
 
-const W = TILE.width, H0 = TILE.thickness, HMAX = 3.6; // tallest column: lower = fewer rows hidden behind it
+const W = TILE.width, H0 = TILE.thickness, HMAX = 3.0; // tallest column: lower = fewer rows hidden behind it
 const HELIX_R = (32 * 1.06) / (2 * Math.PI), HELIX_DY = 1.45, HELIX_H = 0.5; // radial columns are drawn at half height
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -98,9 +98,9 @@ export function createTableView(hooks) {
       .replace('#include <common>', `#include <common>
         attribute float aH; attribute float aLift; attribute float aCell; attribute vec4 aFx; attribute vec3 aInk;
         uniform float uH0;
-        varying vec3 vLocal; varying float vTop; varying vec4 vFx; varying vec3 vInk; varying float vCell; varying vec3 vWP;`)
+        varying vec3 vLocal; varying float vTop; varying vec4 vFx; varying vec3 vInk; varying float vCell; varying vec3 vWP; varying float vH;`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
-        vLocal = position; vTop = normal.y; vFx = aFx; vInk = aInk; vCell = aCell;
+        vLocal = position; vTop = normal.y; vFx = aFx; vInk = aInk; vCell = aCell; vH = aH;
         if (position.y > uH0 * 0.5) transformed.y += max(aH - uH0, 0.0);
         transformed.y += aLift;
         vWP = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;`);
@@ -109,7 +109,7 @@ export function createTableView(hooks) {
         uniform sampler2D uAtlas; uniform vec2 uGrid; uniform float uW; uniform float uSide; uniform float uTopRough; uniform float uSideRough;
         uniform vec3 uPaper; uniform float uSweep; uniform float uSweepAmp; uniform float uJitter; uniform float uHatch; uniform float uHatchF; uniform float uGlaze; uniform float uFloorAO;
         ${GLAZE}
-        varying vec3 vLocal; varying float vTop; varying vec4 vFx; varying vec3 vInk; varying float vCell; varying vec3 vWP;`)
+        varying vec3 vLocal; varying float vTop; varying vec4 vFx; varying vec3 vInk; varying float vCell; varying vec3 vWP; varying float vH;`)
       .replace('#include <color_fragment>', `#include <color_fragment>
         float top = smoothstep(0.55, 0.95, vTop);
         // each tile a touch different, like handmade ware
@@ -117,6 +117,8 @@ export function createTableView(hooks) {
         diffuseColor.rgb *= mix(1.0 - uSide, 1.0, top);
         // a little occlusion where a resting tile meets the paper (fades as it lifts)
         diffuseColor.rgb *= mix(1.0 - 0.2 * uFloorAO * (1.0 - smoothstep(0.0, 0.16, vWP.y)), 1.0, top);
+        // tall columns: the walls darken gently toward the base, like a carved block
+        diffuseColor.rgb *= mix(1.0, mix(0.78, 1.0, smoothstep(0.0, vH * 0.85, vWP.y)), (1.0 - top) * step(1.0, vH) * uFloorAO);
         if (vFx.x > 0.5) { float s = step(0.5, fract((vWP.x - vWP.z) * uHatchF)); diffuseColor.rgb *= mix(1.0, uHatch, s * top); }
         // unknown values: the glaze fades toward the paper, the ink stays readable (ink-2, >= 4.5:1)
         diffuseColor.rgb = mix(diffuseColor.rgb, uPaper, vFx.y * 0.66);
@@ -196,7 +198,7 @@ export function createTableView(hooks) {
   const SUBLIME = els.filter(e => e.ph.sub && !propValue(e, 'mp'));
   // helium never freezes at 1 atm: its flat tile says so instead of passing for "not measured"
   const subTags = [...SUBLIME.filter(e => e.ph.sub[0] === Math.max(...SUBLIME.map(x => x.ph.sub[0]))), ...els.filter(e => e.ph.noSolid)]
-    .map(e => ({ e, it: labels.add({ pos: new THREE.Vector3(), text: '', cls: e.ph.noSolid ? 'pop note left' : 'pop note', priority: -1, anchor: e.ph.noSolid ? 'bottomleft' : 'bottom', dy: 6 }) }));
+    .map(e => ({ e, it: labels.add({ pos: new THREE.Vector3(), text: '', cls: e.ph.noSolid ? 'pop note left' : 'pop note right', priority: -1, anchor: e.ph.noSolid ? 'bottomleft' : 'bottomright', dy: 6 }) }));
   const backTop = (i, out) => out.set(0, cur[i].h + lift[i], -W / 2).applyQuaternion(cur[i].quat).add(cur[i].pos);
 
   function heightFor(e) {
@@ -211,7 +213,9 @@ export function createTableView(hooks) {
     if (log) { if (!(x > 0)) return null; f = (Math.log10(x) - Math.log10(lo)) / Math.max(1e-9, Math.log10(hi) - Math.log10(lo)); }
     else if (p.key === 'year') f = (x - lo) / Math.max(1e-9, hi - lo);
     else { const base = Math.min(0, lo); f = (x - base) / Math.max(1e-9, hi - base); }
-    return H0 + Math.max(0, Math.min(1, f)) * (HMAX - H0);
+    // phones see columns from lower down, so they stand taller there to read as heights
+    const hm = hooks.isPhone && hooks.isPhone() ? HMAX * 1.7 : HMAX;
+    return H0 + Math.max(0, Math.min(1, f)) * (hm - H0);
   }
   const ranges = new Map();
   function rangeCache(k, log) { const id = k + log; if (!ranges.has(id)) ranges.set(id, propRange(k, log)); return ranges.get(id); }
@@ -277,7 +281,7 @@ export function createTableView(hooks) {
     // family names on the table: home layout, families lens only; phones show the ones that fit
     const phone = !!(hooks.isPhone && hooks.isPhone());
     for (const { r, it } of regionLabels) {
-      labels.setText(it, t('fam.' + r.cat));
+      labels.setText(it, r.oneLine ? oneLine(t('fam.' + r.cat)) : t('fam.' + r.cat));
       const show = state.layout === 's18' && state.color === 'cat' && state.flat && (!phone || r.phone !== false);
       it.priority = show ? r.priority : -1;
       const at = phone && r.phonePos ? r.phonePos : [r.x, r.z];
@@ -287,7 +291,7 @@ export function createTableView(hooks) {
   function placeSelection() {
     const flat = state.layout !== 'helix';
     const ring = (m, i, on) => { m.visible = on && flat; if (on && flat) { const c = cur[i]; m.position.set(c.pos.x, c.h + lift[i] + 0.004, c.pos.z); } };
-    ring(sel, state.Z - 1, !state.hideSel);
+    ring(sel, state.Z - 1, !state.hideSel && !diving); // the ring steps aside for the plunge into the tile
     ring(scrubRing, Math.max(0, hovered - 1), scrubbing && hovered > 0 && (state.hideSel || hovered !== state.Z));
   }
   function setLiftTargets() {
@@ -358,7 +362,7 @@ export function createTableView(hooks) {
     const tall = !state.flat ? HMAX * 0.5 : 0;
     // flat tiles: a low, museum-like angle (phones: enough to see the tiles' glazed fronts);
     // columns: look more from above so the tall ones hide less of the rows behind them
-    const phi = portrait ? (state.flat ? 0.5 : 0.3) : s32 ? 0.62 : state.flat ? 0.78 : 0.44;
+    const phi = portrait ? (state.flat ? 0.5 : 0.8) : s32 ? 0.62 : state.flat ? 0.78 : 0.33;
     const rW = halfW / Math.tan(fov.h / 2);
     const rD = (halfD * Math.cos(phi) + (tall + 0.4) * Math.sin(phi)) / Math.tan(fov.v / 2) + halfD * Math.sin(phi);
     const r = Math.max(rW, rD) * 1.03;
@@ -402,6 +406,7 @@ export function createTableView(hooks) {
   function setHover(Z) {
     if (Z === hovered) return;
     hovered = Z;
+    if (Z && hooks.onHoverTile) hooks.onHoverTile(); // the first hover dismisses "Try iron"
     setLiftTargets(); writeColours();
     // phones show the loupe instead; the open card already names the selected element
     if (!Z || scrubbing || (state.card && !state.hideSel && Z === state.Z)) { pop.priority = -1; return; }
@@ -524,7 +529,7 @@ export function createTableView(hooks) {
     dive(Z, dur = 1.0, r = 0.75, phi = 0.06) {
       const i = Z - 1, c = cur[i];
       const top = new THREE.Vector3(0, c.h + lift[i], 0).applyQuaternion(c.quat).add(c.pos);
-      diving = true;
+      diving = true; placeSelection();
       E.rig.lim = { ...E.rig.lim, rMin: 0.4, phiMin: 0.02 };
       E.rig.flyTo({ target: top, r, theta: E.rig.theta, phi }, dur);
     },

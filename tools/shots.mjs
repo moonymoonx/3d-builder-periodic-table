@@ -115,11 +115,10 @@ if (opt('set') === 'hero') { // the redesign's hero slice: landing, table, first
     { name: '11-vi-landing-desktop', vp: D, hash: 'lang=vi', settle: 2600 },
     { name: '11-vi-card-iron-phone', vp: P, hash: 'lang=vi', touch: true, settle: 1900, act: page => tapTouch(page, 26) },
     // the forge (Hold a piece · heat it), reached from the iron card's door with the scale dive
-    // a still from the first half of the dive (posed: headless capture is too slow to catch it in flight)
-    { name: '12a-forge-dive-into-tile-desktop', vp: D, hash: 'el=Fe&card=1', settle: 900, act: page => page.evaluate(() => {
-      const { card, table } = window.__pt; document.body.classList.add('diving'); card.close(); table.dive(26, 0, 2.6, 0.32);
-    }) },
-    { name: '12b-forge-dive-out-of-crystal-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, now: true, act: async page => { await door(page); await page.waitForTimeout(560); } },
+    // real in-flight frames of the dive: the page runs on Playwright's fake clock, paused, and is
+    // advanced exactly clockAt ms after the tap (headless rendering is too slow to catch it otherwise)
+    { name: '12a-forge-dive-into-tile-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, now: true, clockAt: 450, act: door },
+    { name: '12b-forge-dive-out-of-crystal-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, now: true, clockAt: 1400, act: door },
     { name: '13-forge-start-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await page.waitForTimeout(2600); } },
     { name: '13-forge-start-phone', vp: P, hash: 'el=Fe&card=1', touch: true, settle: 1500, act: async page => { await door(page); await page.waitForTimeout(2600); } },
     { name: '14-forge-700C-glow-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 700); } },
@@ -156,19 +155,27 @@ for (const c of cases.filter(c => !only || c.name.includes(only))) {
   page.on('pageerror', e => logs.push(`pageerror: ${e.message}`));
   const t0 = Date.now();
   const qs = [c.query, QUERY].filter(Boolean).join('&');
+  if (c.clockAt != null) await page.clock.install(); // time runs normally until paused
   await page.goto(`${BASE}/index.html${qs ? '?' + qs : ''}${c.hash ? '#' + c.hash : ''}`);
   await page.waitForFunction(() => window.__pt && window.__pt.E.active, null, { timeout: 30000 }).catch(() => logs.push('timeout: app did not start'));
   await page.waitForFunction(() => { const E = window.__pt?.E; return E && !E.rig.tween && E.anims.size === 0; }, null, { timeout: 30000 }).catch(() => logs.push('timeout: animations did not settle'));
-  if (c.act) { // scripted steps: a function of the page (Playwright API) or a string run in the page
+  if (c.act && c.clockAt != null) { // pause time, act, advance exactly clockAt ms, shoot
+    await page.waitForTimeout(c.settle || 400);
+    const now = await page.evaluate(() => Date.now());
+    await page.clock.pauseAt(now + 50);
+    await c.act(page).catch(e => logs.push('act failed: ' + e.message));
+    await page.clock.runFor(c.clockAt);
+  } else if (c.act) { // scripted steps: a function of the page (Playwright API) or a string run in the page
     await (typeof c.act === 'function' ? c.act(page) : page.evaluate(c.act)).catch(e => logs.push('act failed: ' + e.message));
   }
-  if (c.act && !c.now) { // c.now: shoot at once (mid-motion: the dive, "Heat it" playing)
+  if (c.act && !c.now && c.clockAt == null) { // c.now: shoot at once (mid-motion: the dive, "Heat it" playing)
     await page.waitForTimeout(300);
     await page.waitForFunction(() => { const E = window.__pt?.E; return E && !E.rig.tween && E.anims.size === 0; }, null, { timeout: 30000 }).catch(() => logs.push('timeout: animations did not settle'));
   }
   await page.waitForTimeout(c.now ? 0 : c.settle || 400);
   const file = path.join(OUT, `${c.name}.${PNG ? 'png' : 'jpg'}`);
   await page.screenshot(PNG ? { path: file, type: 'png' } : { path: file, type: 'jpeg', quality: 82 });
+  if (FPS_S && c.clockAt != null) await page.clock.resume(); // real time again for the frame statistics
   if (FPS_S) { // the same numbers as the in-app meter (F key / ?stats): engine frame times while rendering continuously
     const st = await page.evaluate(async secs => {
       const E = window.__pt.E;
