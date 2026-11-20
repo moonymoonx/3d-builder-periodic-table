@@ -140,6 +140,19 @@
       "field": "bp",
       "flag": "p",
       "why": "The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3)."
+    },
+    {
+      "sym": "Np",
+      "field": "bp",
+      "from": "boiling point K",
+      "flag": "p",
+      "why": "Not measured directly: both values are extrapolations of vapour pressures measured only up to about 2074 K (Ackermann & Rauh 1975, doi:10.1016/0021-9614(75)90058-0). Shown: 4447 K (Wikipedia; NIST WebBook). Other value: PubChem 4175 K (3902 °C, Jefferson Lab). Low confidence (RESEARCH.md Answers Q10)."
+    },
+    {
+      "sym": "Am",
+      "field": "bp",
+      "flag": "p",
+      "why": "Extrapolated value (CRC, Lange's, PubChem: 2284 K). The 2880 K given by Wikipedia traces to a 1955 effusion study (Carniglia & Cunningham, doi:10.1021/ja01611a028) (RESEARCH.md Answers Q10)."
     }
   ],
   "lattices": {

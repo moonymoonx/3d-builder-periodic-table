@@ -50,6 +50,7 @@ export function runValidation({ report = false, quiet = false } = {}) {
       else visit(`${e.sym}.ph.${k}`, v);
     }
     if (e.lat.kind === 'lattice') for (const p of e.lat.phases) {
+      if (p.card) { if (!D.sources[p.src]) bad.push(`${e.sym}.lat.${p.id}: card without a known source`); continue; }
       if (!D.sources[p.cellSrc]) bad.push(`${e.sym}.lat.${p.id}: unknown cell source ${p.cellSrc}`);
       if (!D.sources[p.sitesSrc]) bad.push(`${e.sym}.lat.${p.id}: unknown sites source ${p.sitesSrc}`);
     }
@@ -128,7 +129,19 @@ export function runValidation({ report = false, quiet = false } = {}) {
   for (const e of D.elements) {
     if (e.lat.kind !== 'lattice') continue;
     nLattice++;
+    // temperature sequence: windows contiguous and increasing, last one open to the melting point
+    const seq = e.lat.phases.filter(p => p.T).sort((a, b) => a.T[0] - b.T[0]);
+    seq.forEach((p, i) => {
+      if (i === 0 && p.T[0] !== 0) latBad.push(`${e.sym}: first phase does not start at 0 K`);
+      if (i > 0 && Math.abs(seq[i - 1].T[1] - p.T[0]) > 1e-6) latBad.push(`${e.sym}: gap between ${seq[i - 1].id} and ${p.id}`);
+      if (i === seq.length - 1 && p.T[1] !== null) latBad.push(`${e.sym}: last phase must run to the melting point`);
+      if (p.T[1] !== null && p.T[1] <= p.T[0]) latBad.push(`${e.sym}/${p.id}: empty window`);
+    });
+    if (seq.length && (e.ph.trans || []).length !== seq.length - 1) latBad.push(`${e.sym}: ${seq.length} phases but ${(e.ph.trans || []).length} transitions`);
+    const mpK = e.ph.mp?.[0] ?? e.ph.sub?.[0];
+    if (seq.length && mpK && seq[seq.length - 1].T[0] >= mpK) latBad.push(`${e.sym}: last transition above the melting point`);
     for (const p of e.lat.phases) {
+      if (p.card) { if (!p.T) latBad.push(`${e.sym}/${p.id}: card phase without temperature window`); continue; }
       const c = p.cell;
       if (!(c.a > 50 && c.b > 50 && c.c > 50)) latBad.push(`${e.sym}/${p.id}: cell lengths not in pm`);
       if (p.sites.some(s => s.some(v => v < 0 || v >= 1))) latBad.push(`${e.sym}/${p.id}: fractional coordinate outside [0,1)`);

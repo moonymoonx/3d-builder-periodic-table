@@ -30,6 +30,7 @@ const accessedOf = prefix => {
 const curated = f => JSON.parse(fs.readFileSync(path.join(ROOT, 'data/curated', f), 'utf8'));
 const placeholders = curated('placeholders.json');
 const FIX = curated('factcheck-fixes.json');
+const HIT = curated('phases-highT.json');
 const warnings = [];
 const warn = (...a) => warnings.push(a.join(' '));
 const num = v => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
@@ -69,7 +70,7 @@ const SOURCES = {
   'wp-syn': { name: 'Wikipedia: "Synthetic element" (which elements occur in nature)', url: 'https://en.wikipedia.org/wiki/Synthetic_element', accessed: accessedOf('wikipedia/article-synthetic'), licence: 'CC BY-SA 4.0 page; facts only' },
   'wp-cie': { name: 'CIE 1931 colour-matching functions, analytic multi-lobe Gaussian fit (Wyman, Sloan & Shirley 2013, JCGT 2(2)), coefficients as given in Wikipedia "CIE 1931 color space"', url: 'https://en.wikipedia.org/wiki/CIE_1931_color_space', accessed: accessedOf('wikipedia/articles-factcheck'), licence: 'formula coefficients (facts); no CIE table is embedded' },
   wd: { name: 'Wikidata element labels (en, vi)', url: 'https://www.wikidata.org/', accessed: accessedOf('wikidata/'), licence: 'CC0 1.0' },
-  gdpt: { name: 'GDPT-2018 naming rule (Circular 32/2018/TT-BGDĐT) as reported by Báo Đại Đoàn Kết: IUPAC names; 13 familiar Vietnamese names kept with annotation', url: 'https://daidoanket.vn/doi-cach-doc-ten-cac-nguyen-to-hoa-hoc-hoc-sinh-boi-roi-giao-vien-ban-khoan-10233769.html', accessed: accessedOf('vi-gdpt/'), licence: 'facts from a news article; primary MOET source requested (QUESTIONS.md Q7)' },
+  gdpt: { name: 'GDPT-2018 chemistry programme (Thông tư 32/2018/TT-BGDĐT): IUPAC names; 13 familiar Vietnamese names kept for the elements, with the English name — as stated by GS.TS Đặng Thị Oanh (Báo Đại Đoàn Kết) and PGS.TS Cao Cự Giác (cm.pek.edu.vn)', url: 'https://daidoanket.vn/doi-cach-doc-ten-cac-nguyen-to-hoa-hoc-hoc-sinh-boi-roi-giao-vien-ban-khoan-10233769.html', accessed: accessedOf('vi-gdpt/'), licence: 'facts from published interviews; programme PDF page not verified (RESEARCH.md Answers Q7)' },
   'mdl-cordero': { name: `Covalent radii: ${bib.Cordero2008 || 'Cordero 2008'} — via mendeleev v1.3.0`, url: 'https://doi.org/10.1039/b801115j', accessed: accessedOf('mendeleev/'), licence: 'numeric facts, cited; mendeleev package MIT' },
   'mdl-alvarez': { name: `van der Waals radii: ${bib.Alvarez2013 || 'Alvarez 2013'} — via mendeleev v1.3.0`, url: 'https://doi.org/10.1039/c3dt50599e', accessed: accessedOf('mendeleev/'), licence: 'numeric facts, cited; mendeleev package MIT' },
   'mdl-crc': { name: `CRC Handbook values (${bib.haynes2014crc || 'Haynes 2014'}; ${bib.haynes2016crc || 'Haynes 2016'}) — via mendeleev v1.3.0`, url: 'https://github.com/lmmentel/mendeleev', accessed: accessedOf('mendeleev/'), licence: 'individual numeric facts, cited (the Handbook itself is proprietary)' },
@@ -79,6 +80,7 @@ const SOURCES = {
   codata: { name: 'CODATA 2022 recommended values of the fundamental physical constants (NIST)', url: 'https://physics.nist.gov/cuu/Constants/', accessed: accessedOf('nist-codata/'), licence: 'individual constants used as cited facts (moony, 2026-11-20)' },
   w3c: { name: 'W3C CSS Color 4 sample code — XYZ (D65) to linear sRGB matrix (IEC 61966-2-1)', url: 'https://drafts.csswg.org/css-color-4/conversions.js', accessed: accessedOf('w3c/'), licence: 'W3C Software and Document License' },
   fc: { name: 'Gemini fact-check of 2026-11-20 (FACTCHECK.md): correction with the citation given there; our consistency check in the note', url: '', licence: 'n/a' },
+  ans: { name: 'Research answers of 2026-11-20 (RESEARCH.md › Answers, Gemini batch 2, partly spot-checked by the project): the underlying citation is in the note', url: '', licence: 'n/a' },
   layout: { name: 'Computed from Z: 18-column layout with group 3 = Sc, Y, Lu, Lr (2021 IUPAC project provisional recommendation); f-block La–Yb, Ac–No', url: 'https://iupac.org/what-we-do/periodic-table-of-elements/', licence: 'n/a (layout convention)' },
   calc: { name: 'Computed in this project from sourced inputs (method in the note)', url: '', licence: 'n/a' },
   model: { name: 'Modelling assumption of this app (stated in the note)', url: '', licence: 'n/a' },
@@ -637,6 +639,52 @@ function xrayDensity(cell, nAtoms, Z) {
   return M ? (nAtoms * M) / (CODATA.NA * V_cm3) : null;
 }
 
+// A COD entry by id (fetched raw file): cell in pm, full conventional-cell sites, temperature, source key
+function codById(id) {
+  const cif = parseCIF(readRaw(`cod/${id}.cif`));
+  let sites = expandSites(cif), cell = { ...cif.cell };
+  if (cif.sgNumber >= 143 && cif.sgNumber <= 167 && Math.abs(cell.gamma - 120) > 1e-3 && Math.abs(cell.alpha - cell.beta) < 1e-6) ({ cell, sites } = rhombToHex(cell, sites));
+  const pm = Object.fromEntries(Object.entries({ a: cell.a * 100, b: cell.b * 100, c: cell.c * 100, alpha: cell.alpha, beta: cell.beta, gamma: cell.gamma }).map(([k, v]) => [k, round(v, 6)]));
+  return { cell: pm, sites: sites.map(p => p.map(v => round(v, 5))), T: cif.T, sgNumber: cif.sgNumber, sg: cif.sg, key: addCodSource(id, cif) };
+}
+/** Pearson symbol from the space group (number + Hermann–Mauguin centring letter) and the atom count. */
+function pearsonOf(sgNumber, sg, n) {
+  const fam = sgNumber <= 2 ? 'a' : sgNumber <= 15 ? 'm' : sgNumber <= 74 ? 'o' : sgNumber <= 142 ? 't' : sgNumber <= 194 ? 'h' : 'c';
+  let cen = String(sg || 'P').trim()[0].toUpperCase();
+  if (cen === 'C' || cen === 'A' || cen === 'B') cen = 'S';
+  return `${fam}${cen}${n}`;
+}
+/** Apply the high-temperature phase sequence from data/curated/phases-highT.json. */
+function applyHighT(sym, phases, out) {
+  const H = HIT[sym];
+  if (!H) return null;
+  if (H.note) { out.hiNote = V(H.note, 'ans', { n: 'RESEARCH.md Answers Q8' }); return null; }
+  const mid = v => (Array.isArray(v) ? (v[0] + v[1]) / 2 : v);
+  const base = phases.find(p => p.id === out.def);
+  if (!base.label) base.label = `α-${sym}`;
+  const steps = H.steps;
+  const Ts = steps.map(st => round(mid(st.T_C) + K0, 6));
+  base.T = [0, Ts[0]];
+  const trans = [];
+  let prev = base.label || sym;
+  steps.forEach((st, i) => {
+    const T = Ts[i], Tnext = i + 1 < steps.length ? Ts[i + 1] : null;
+    let ph;
+    if (st.cod) {
+      const c = codById(st.cod);
+      const proto = c.sgNumber === 229 ? 'bcc' : c.sgNumber === 225 ? 'fcc' : null;
+      const pearson = pearsonOf(c.sgNumber, c.sg, c.sites.length);
+      ph = { id: `h${i}`, label: st.to, name: structName(proto, pearson), pearson, proto, cell: c.cell, cellSrc: c.key, cellNote: `COD ${st.cod}`, cond: c.T ? `${c.T} K` : null,
+        sites: c.sites, sitesSrc: c.key, dNN: round(nearestNeighbour(c.cell, c.sites), 5), cn: coordination(c.cell, c.sites), T: [T, Tnext] };
+    } else ph = { id: `h${i}`, label: st.to, card: st.card, src: 'ans', note: st.cite, T: [T, Tnext] };
+    phases.push(ph);
+    const tc = Array.isArray(st.T_C) ? `${st.T_C[0]}–${st.T_C[1]} °C` : `${st.T_C} °C`;
+    trans.push({ T: V(T, 'ans', { n: `${prev} → ${st.to} at ${tc} (${st.cite})` }), to: ph.id });
+    prev = st.to;
+  });
+  return trans;
+}
+
 function buildLattice({ Z, sym, structs }) {
   const mainS = structs[0];
   const structure = mainS ? structName(mainS.proto, mainS.pearson) : null;
@@ -736,7 +784,7 @@ function buildLattice({ Z, sym, structs }) {
       out.def = white.id;
     }
   }
-  if (!trans && phases.length > 1) phases.slice(1).forEach(p => { p.alt = true; });
+  if (!trans && phases.length > 1 && !HIT[sym]?.steps) phases.slice(1).forEach(p => { p.alt = true; });
   if (sym === 'C') { phases.forEach(p => { p.label = p.proto === 'graphite' ? 'graphite' : 'diamond'; }); }
   if (sym === 'Ce') {
     // Wikipedia "Cerium": γ (fcc) is the stable form from 726 °C down to about room temperature; β (dhcp)
@@ -744,9 +792,11 @@ function buildLattice({ Z, sym, structs }) {
     const g = phases.find(p => p.proto === 'fcc'), b = phases.find(p => p.proto === 'dhcp');
     if (g && b) {
       out.def = g.id; g.alt = false; b.alt = true; g.label = 'γ-Ce'; b.label = 'β-Ce';
-      out.defNote = V('γ-Ce (fcc) is shown by default: it is stable from 726 °C down to about room temperature; β-Ce (dhcp) takes over below about room temperature.', 'wpa', { n: 'Wikipedia: Cerium' });
+      out.defNote = V('γ-Ce (fcc) is shown by default: it is what room-temperature cerium usually is. β-Ce (dhcp) is the true equilibrium form at 20 °C (β↔γ equilibrium near 75 °C), but γ turns into β only on cooling below about −15 °C (large hysteresis).', 'ans', { n: 'RESEARCH.md Answers Q2: Koskimaki, Gschneidner & Panousis 1974, doi:10.1016/0022-0248(74)90098-0; Wikipedia: Cerium. γ-Ce a = 516.12 pm agrees with COD 9010987.' });
     }
   }
+  const hiTrans = applyHighT(sym, phases, out);
+  if (hiTrans) trans = (trans || []).concat(hiTrans);
   return { out, trans };
 }
 
@@ -787,7 +837,7 @@ const out = {
     a0_pm: V(CODATA.a0_m * 1e12, 'codata'), R: V(CODATA.R, 'codata', { n: 'J mol⁻¹ K⁻¹' }), kB: V(CODATA.kB, 'codata', { n: 'J K⁻¹' }),
     u_kg: V(CODATA.u_kg, 'codata'), NA: V(CODATA.NA, 'codata'), h: V(CODATA.h, 'codata'), c: V(CODATA.c, 'codata'), eV_J: V(CODATA.eV_J, 'codata'),
   },
-  model: { lindemann: V(placeholders.lindemannRatio.value, 'placeholder', { n: `${placeholders.lindemannRatio.note} (${placeholders.lindemannRatio.q})` }) },
+  model: { lindemann: V(0.10, 'ans', { n: 'model parameter: rms thermal displacement ÷ nearest-neighbour distance at the melting point. Literature means: fcc 0.11, bcc 0.13, hcp 0.09 (Gilvarry 1956, doi:10.1103/PhysRev.102.308, as quoted in de With, Chem. Rev. 123, 13713 (2023)); lattice-dynamics values are lower (Shapiro 1970).' }) },
   cmfFit: { v: CMF_FIT, src: 'wp-cie' },
   srgb: { v: SRGB, src: 'w3c' },
   elements,

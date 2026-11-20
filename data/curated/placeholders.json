@@ -3,10 +3,5 @@
   "deltaFe": {
     "q": "QUESTIONS.md Q1",
     "note": "δ-Fe drawn with the α-Fe lattice constant (286.65 pm at 20 °C); the δ-Fe value is not in our sources (fallback only: δ-Fe now uses COD 9013487)"
-  },
-  "lindemannRatio": {
-    "value": 0.1,
-    "q": "QUESTIONS.md Q3",
-    "note": "vibration amplitude at the melting point as a fraction of the nearest-neighbour distance (model parameter)"
   }
 }

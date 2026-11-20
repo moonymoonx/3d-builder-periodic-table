@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-20T15:48:03.230Z",
+ "generated": "2026-11-20T16:18:20.650Z",
  "note": "Provenance of every raw download. sha256 is of the bytes as served.",
  "files": {
   "ciaaw/abridged-atomic-weights.htm": {
@@ -62,6 +62,17 @@
    "phase": "alpha-Po",
    "reason": "sg P m -3 m (#221); T=283 K; William H. Beamer; Charles R. Maxwell 1949; 1 candidates"
   },
+  "cod/1522789.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/1522789.cif",
+   "accessed": "2026-11-20T16:18:17.038Z",
+   "bytes": 3088,
+   "sha256": "3a25c7b7cf1e01a474c0b9635a420c10ecea298a352882cdc65981cbf9de1cdd",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Hf",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
   "cod/1523182.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/1523182.cif",
@@ -73,6 +84,17 @@
    "element": "Hg",
    "phase": "alpha-Hg",
    "reason": "sg R -3 m :H (#166); T=n/a K; Amand, R.S.; Giessen, B.C. 1978; 3 candidates"
+  },
+  "cod/1523533.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/1523533.cif",
+   "accessed": "2026-11-20T16:18:17.437Z",
+   "bytes": 4429,
+   "sha256": "bdde259d3c2c8780305a60419ab97dd260d4e36608072f2e2efc633ade148f90",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "La",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
   },
   "cod/1537782.cif": {
    "source": "cod",
@@ -86,6 +108,17 @@
    "phase": "alpha-Pa",
    "reason": "sg I 4/m m m (#139); T=n/a K; Benedict, U.; Spirlet, J.C.; Dufour, C.; Peterson, J.R.; Bir 1982; 2 candidates"
   },
+  "cod/1539778.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/1539778.cif",
+   "accessed": "2026-11-20T16:18:18.364Z",
+   "bytes": 3108,
+   "sha256": "785358fe1fb18d84bbbe9cd08721f9d1d6de63e91477019fbb94d46b1223856d",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "U",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
   "cod/2100456.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/2100456.cif",
@@ -98,6 +131,17 @@
    "phase": "In (A6)",
    "reason": "sg I 4/m m m (#139); T=n/a K; E. G. Moshopoulou; R. M. Ibberson; J. L. Sarrao; J. D. Thomp 2006; 20 candidates"
   },
+  "cod/2106190.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/2106190.cif",
+   "accessed": "2026-11-20T16:18:18.233Z",
+   "bytes": 2213,
+   "sha256": "e608680343a48c5a0e65439db7346d775bc42f95bee86c89922be18e4c4611cd",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "U",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
   "cod/2300702.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/2300702.cif",
@@ -109,6 +153,17 @@
    "element": "C",
    "phase": "diamond",
    "reason": "sg F d -3 m :2 (#227); T=293 K; Houben, Andreas; Meinerzhagen, Yannick; Nachtigall, Noah; Ja 2023; 23 candidates"
+  },
+  "cod/2311043.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/2311043.cif",
+   "accessed": "2026-11-20T16:18:18.757Z",
+   "bytes": 2247,
+   "sha256": "05c9a34898f2656fe20e41bf6215c06381e66cec09ef4e44408fdfd88f3292cf",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Pu",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
   },
   "cod/7040217.cif": {
    "source": "cod",
@@ -158,6 +213,17 @@
    "phase": "alpha-Ga",
    "reason": "pinned (fact-check); sg C m c e (#64); T=n/a K; Sharma, B. D.; Donohue, J. 1962; 3 candidates"
   },
+  "cod/9008481.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008481.cif",
+   "accessed": "2026-11-20T16:18:19.017Z",
+   "bytes": 4609,
+   "sha256": "75183258d6c4757aafb990a89128a7964f54cc4ce1406db9ff7fea2f7f0d817f",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Pu",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
   "cod/9008524.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/9008524.cif",
@@ -169,6 +235,72 @@
    "element": "Am",
    "phase": "alpha-Am (dhcp)",
    "reason": "sg P 63/m m c (#194); T=n/a K; Wyckoff, R. W. G. 1963; 1 candidates"
+  },
+  "cod/9008547.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008547.cif",
+   "accessed": "2026-11-20T16:18:18.626Z",
+   "bytes": 3387,
+   "sha256": "2828142624d3146938dcc13eaca4ffcd63f2233bf9dee23b6803c3643ba23c23",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Np",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
+  "cod/9008548.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008548.cif",
+   "accessed": "2026-11-20T16:18:19.149Z",
+   "bytes": 3394,
+   "sha256": "9b43359581b983a24f6469088fc094f5b731d690808c5c39f2e0e4b91255f389",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Pu",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
+  "cod/9008551.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008551.cif",
+   "accessed": "2026-11-20T16:18:17.963Z",
+   "bytes": 3403,
+   "sha256": "4510692af087464c4e121190aa82d12a0080fe9887e5c920e76c7ff4e6c5cfe8",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Sr",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
+  "cod/9008553.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008553.cif",
+   "accessed": "2026-11-20T16:18:18.095Z",
+   "bytes": 3331,
+   "sha256": "8fc0b26bfd7ba4dcf17021e1433f5647ec6a158d502308d0eb6d2210f1ac404b",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Th",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
+  "cod/9008554.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008554.cif",
+   "accessed": "2026-11-20T16:18:16.288Z",
+   "bytes": 3405,
+   "sha256": "2b5ac7d25a9015712900c0f129d96e926e55662e13674cbbe4634248e0729169",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Ti",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
+  "cod/9008559.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008559.cif",
+   "accessed": "2026-11-20T16:18:16.907Z",
+   "bytes": 3334,
+   "sha256": "894ee7a2da44eef797da44a0cfa59b53655fdd5d8584ade9f12fe01ce255fab3",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Zr",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
   },
   "cod/9008568.cif": {
    "source": "cod",
@@ -206,6 +338,17 @@
    "phase": "alpha-Np",
    "reason": "sg P m c n (#62); T=n/a K; Wyckoff, R. W. G. 1963; 1 candidates"
   },
+  "cod/9008586.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008586.cif",
+   "accessed": "2026-11-20T16:18:18.494Z",
+   "bytes": 2240,
+   "sha256": "bebb6556a0510308a587bbefeaa990576a0b49ccc384e4751a30c9a82e1dd1d7",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Np",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
   "cod/9008587.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/9008587.cif",
@@ -217,6 +360,17 @@
    "element": "Pu",
    "phase": "alpha-Pu",
    "reason": "sg P 1 21/m 1 (#11); T=n/a K; Wyckoff, R. W. G. 1963; 1 candidates"
+  },
+  "cod/9008588.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008588.cif",
+   "accessed": "2026-11-20T16:18:18.887Z",
+   "bytes": 2627,
+   "sha256": "9014976814529fe9718ed8664f1ada1b9b2087ddb614bc605ada8aa470b1e48e",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Pu",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
   },
   "cod/9009652.cif": {
    "source": "cod",
@@ -241,6 +395,17 @@
    "element": "Sb",
    "phase": "Sb (A7)",
    "reason": "sg R -3 m :H (#166); T=299 K; Schiferl, D.; Barrett, C. S. 1969; 10 candidates"
+  },
+  "cod/9011034.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9011034.cif",
+   "accessed": "2026-11-20T16:18:17.570Z",
+   "bytes": 3497,
+   "sha256": "5789ff72dee80277b7d22298af5981a513045d73eb12d1aa4e69e830333d08a3",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Ca",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
   },
   "cod/9011050.cif": {
    "source": "cod",
@@ -301,6 +466,50 @@
    "element": "Fe",
    "phase": "gamma-Fe",
    "reason": "sg F m -3 m (#225); T=1457 K; Basinski, Z. S.; Hume-Rothery W; Sutton, A. L. 1955; 9 candidates"
+  },
+  "cod/9012732.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9012732.cif",
+   "accessed": "2026-11-20T16:18:17.701Z",
+   "bytes": 3467,
+   "sha256": "a3ed65c2e4f148350e813d688c0e986ffc94845563c285d9dc1a25c6a9391ccf",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Ca",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
+  "cod/9012760.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9012760.cif",
+   "accessed": "2026-11-20T16:18:17.832Z",
+   "bytes": 3437,
+   "sha256": "db9646bdf5070eb084a62a05fc3d4ffd07dd318b44cf9ec8525f53f64bcf3b87",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Sr",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
+  "cod/9012926.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9012926.cif",
+   "accessed": "2026-11-20T16:18:17.170Z",
+   "bytes": 4706,
+   "sha256": "fc317c20026c237fa5369b9e7d66bb5a839340bccda4dd2e8b09d33aa08fcd9d",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Co",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
+  "cod/9012948.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9012948.cif",
+   "accessed": "2026-11-20T16:18:17.305Z",
+   "bytes": 4708,
+   "sha256": "91021888d8c564f3fec00cc5d8b1aefda4caf53368ac5b92d9bb824217ffa5be",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Co",
+   "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
   },
   "cod/9013487.cif": {
    "source": "cod",
@@ -1828,6 +2037,15 @@
    "sha256": "6abc1932a117fccc4c61bf9cdbcf96a0355beac82cddba82bd436e6ce4aee72a",
    "licence": "NCBI/NLM: no restrictions on NCBI-produced data (https://www.ncbi.nlm.nih.gov/home/about/policies/). PubChem element values are compiled from US Government sources (Jefferson Lab, LANL, NIST) and IUPAC/CIAAW.",
    "committed": true
+  },
+  "vi-gdpt/cm-pek-811.html": {
+   "source": "vi-gdpt",
+   "url": "https://cm.pek.edu.vn/fr/news/dien-dan-giao-duc/vi-sao-chuong-trinh-gdpt-2018-dung-ten-goi-nguyen-to-hoa-hoc-bang-tieng-anh-811.html",
+   "accessed": "2026-11-20T16:18:20.650Z",
+   "bytes": 87793,
+   "sha256": "7b824198f49b64ebbb6ac5c85cba1c19738388f79f2f515b3831b0948f0a7160",
+   "licence": "News article (Bao Dai Doan Ket), copyright of the publisher. Only the factual list of 13 Vietnamese element names is extracted. Raw HTML kept local only.",
+   "committed": false
   },
   "vi-gdpt/daidoanket-10233769.html": {
    "source": "vi-gdpt",

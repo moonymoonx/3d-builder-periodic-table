@@ -34,12 +34,12 @@ SPEC sample (seed 20261120): Z = 12, 16, 24, 31, 38, 47, 49, 57, 66, 68, 70, 75,
 | 89 | Ac | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 90 | Th | ie1 | 6.3067 (nist-ie) | 6.08 (pc) | explained | NIST ASD 5.12 gives 6.3067 ± 0.00025 eV (ref. L15992); PubChem 6.08 eV and Wikipedia 587 kJ/mol (6.084 eV) differ by 3.6 %. NIST is used. |
 | 91 | Pa | bp | 4300 (wp) | — | predicted | The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3). |
-| 93 | Np | bp | 4175 (pc) | 4447 (wp) | predicted | Not measured directly (vapour-pressure extrapolations differ): PubChem 4175 K, Wikipedia 4447 K. Shown as an estimate (fact-check §3.3). |
+| 93 | Np | bp | 4447 (wp) | 4175 (pc) | predicted | Not measured directly: both values are extrapolations of vapour pressures measured only up to about 2074 K (Ackermann & Rauh 1975, doi:10.1016/0021-9614(75)90058-0). Shown: 4447 K (Wikipedia; NIST WebBook). Other value: PubChem 4175 K (3902 °C, Jefferson Lab). Low confidence (RESEARCH.md Answers Q10). |
 | 93 | Np | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 94 | Pu | ie1 | 6.02576 (nist-ie) | 6.06 (pc) | explained | NIST ASD 5.12 gives 6.02576 ± 0.00025 eV (refs. L15992, L11260); PubChem 6.06 eV and Wikipedia 584.7 kJ/mol (6.060 eV) differ by 0.6 %. NIST is used. |
 | 94 | Pu | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
-| 95 | Am | bp | 2284 (pc) | 2880 (wp) | predicted | Not measured directly (vapour-pressure extrapolations differ): PubChem 2284 K, Wikipedia 2880 K. Shown as an estimate (fact-check §3.3). |
-| 95 | Am | density | 13.69 (pc) | 12 (wp) | explained | PubChem 13.69 g/cm³ is kept: the fact-check identifies it as the X-ray density of α-americium (13.67–13.69); the 12 g/cm³ in Wikipedia and the CRC Handbook (via mendeleev) is an older bulk value. |
+| 95 | Am | bp | 2284 (pc) | 2880 (wp) | predicted | Extrapolated value (CRC, Lange's, PubChem: 2284 K). The 2880 K given by Wikipedia traces to a 1955 effusion study (Carniglia & Cunningham, doi:10.1021/ja01611a028) (RESEARCH.md Answers Q10). |
+| 95 | Am | density | 13.69 (pc) | 12 (wp) | explained | PubChem 13.69 g/cm³ is the X-ray density of α-americium (McWhan, Cunningham & Wallmann 1962, doi:10.1016/0022-1902(62)80246-2). The 12 g/cm³ in Wikipedia and the CRC Handbook (via mendeleev) comes from a 1951 microgram sample (Westrum & Eyring) and is not used (RESEARCH.md Answers Q10). |
 | 95 | Am | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 96 | Cm | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 97 | Bk | bp | 2900 (wp) | — | predicted | The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3). |

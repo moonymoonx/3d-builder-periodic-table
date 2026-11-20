@@ -10,7 +10,5 @@
   "Pu:ie1": "NIST ASD 5.12 gives 6.02576 ± 0.00025 eV (refs. L15992, L11260); PubChem 6.06 eV and Wikipedia 584.7 kJ/mol (6.060 eV) differ by 0.6 %. NIST is used.",
   "Bk:ie1": "NIST ASD 5.12 gives 6.19785 ± 0.00025 eV (ref. L15992); PubChem 6.23 eV and Wikipedia 601 kJ/mol (6.229 eV) differ by 0.5 %. NIST is used.",
   "Es:ie1": "NIST ASD 5.12 gives 6.3684 ± 0.00006 eV (ref. L22449); PubChem 6.42 eV and Wikipedia 619 kJ/mol (6.415 eV) differ by 0.8 %. NIST is used.",
-  "Np:bp": "Not measured directly (vapour-pressure extrapolations differ): PubChem 4175 K, Wikipedia 4447 K. Shown as an estimate (fact-check §3.3).",
-  "Am:bp": "Not measured directly (vapour-pressure extrapolations differ): PubChem 2284 K, Wikipedia 2880 K. Shown as an estimate (fact-check §3.3).",
-  "Am:density": "PubChem 13.69 g/cm³ is kept: the fact-check identifies it as the X-ray density of α-americium (13.67–13.69); the 12 g/cm³ in Wikipedia and the CRC Handbook (via mendeleev) is an older bulk value."
+  "Am:density": "PubChem 13.69 g/cm³ is the X-ray density of α-americium (McWhan, Cunningham & Wallmann 1962, doi:10.1016/0022-1902(62)80246-2). The 12 g/cm³ in Wikipedia and the CRC Handbook (via mendeleev) comes from a 1951 microgram sample (Westrum & Eyring) and is not used (RESEARCH.md Answers Q10)."
 }

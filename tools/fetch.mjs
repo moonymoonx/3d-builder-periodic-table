@@ -304,9 +304,31 @@ async function cod() {
   }
 }
 
+// ---- 9b. COD entries for high-temperature phases (ids from RESEARCH.md › Answers Q8) -------------
+export const COD_HIGH_T = {
+  Ti: ['9008554'], Zr: ['9008559'], Hf: ['1522789'], Co: ['9012926', '9012948'], La: ['1523533'], Ca: ['9011034', '9012732'],
+  Sr: ['9012760', '9008551'], Th: ['9008553'], U: ['2106190', '1539778'], Np: ['9008586', '9008547'],
+  Pu: ['2311043', '9008588', '9008481', '9008548'],
+};
+async function codHighT() {
+  console.log('COD high-temperature phases');
+  for (const [sym, ids] of Object.entries(COD_HIGH_T)) for (const id of ids) {
+    await fetchTo('cod', `cod/${id}.cif`, `https://www.crystallography.net/cod/${id}.cif`, {
+      timeout: 120000, validate: b => (b.toString('utf8').includes('_cell_length_a') ? null : 'not a CIF'),
+      extra: { element: sym, phase: 'high-temperature phase (RESEARCH.md Answers Q8)' },
+    });
+  }
+}
+// Second published source for the GDPT-2018 naming rule (RESEARCH.md › Answers Q7)
+async function viGdpt2() {
+  await fetchTo('vi-gdpt', 'vi-gdpt/cm-pek-811.html', 'https://cm.pek.edu.vn/fr/news/dien-dan-giao-duc/vi-sao-chuong-trinh-gdpt-2018-dung-ten-goi-nguyen-to-hoa-hoc-bang-tieng-anh-811.html', {
+    headers: { 'User-Agent': 'Mozilla/5.0' }, validate: b => (b.toString('utf8').includes('13 nguyên tố') ? null : 'expected text not found'),
+  });
+}
+
 // ---- run ----------------------------------------------------------------------------------
 const steps = [['pubchem', pubchem], ['ciaaw', ciaaw], ['nist-ie', nistIE], ['nist-lines', nistLines], ['wikipedia', wikipedia],
-  ['codata', codata], ['colour', colour], ['vi-gdpt', viGdpt], ['wikidata', wikidata], ['mendeleev', mendeleev], ['nubase', nubase], ['cod', cod]];
+  ['codata', codata], ['colour', colour], ['vi-gdpt', viGdpt], ['wikidata', wikidata], ['mendeleev', mendeleev], ['nubase', nubase], ['cod', cod], ['cod-hiT', codHighT], ['vi-gdpt2', viGdpt2]];
 fs.mkdirSync(RAW, { recursive: true });
 for (const [id, fn] of steps) {
   if (!want(id)) continue;
