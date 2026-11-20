@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-20T16:18:20.650Z",
+ "generated": "2026-11-20T19:23:56.205Z",
  "note": "Provenance of every raw download. sha256 is of the bytes as served.",
  "files": {
   "ciaaw/abridged-atomic-weights.htm": {
@@ -2125,6 +2125,24 @@
    "accessed": "2026-11-20T13:33:10.491Z",
    "bytes": 127525,
    "sha256": "e0a110ba3a0c32dd531a0ca1d3658c4bc1b955a74884612a1f4a7d957b3de6be",
+   "licence": "Wikipedia text CC BY-SA 4.0 (Wikipedia contributors; revision ids recorded). We extract factual values only and cite the references given in the infobox.",
+   "committed": true
+  },
+  "wikipedia/intros-1.json": {
+   "source": "wikipedia",
+   "url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts%7Crevisions&rvprop=ids&exintro=1&explaintext=1&exlimit=20&format=json&formatversion=2&redirects=1&titles=Hydrogen%7CHelium%7CLithium%7CCarbon%7CNitrogen%7COxygen%7CFluorine%7CNeon%7CSodium%7CMagnesium%7CAluminium%7CSilicon%7CPhosphorus%7CSulfur%7CChlorine%7CPotassium%7CCalcium%7CTitanium%7CIron",
+   "accessed": "2026-11-20T19:23:55.059Z",
+   "bytes": 50113,
+   "sha256": "d2f3298908ba75ad34c2d1ea4078dcce0fcff2fc24526224c8e62141151fb123",
+   "licence": "Wikipedia text CC BY-SA 4.0 (Wikipedia contributors; revision ids recorded). We extract factual values only and cite the references given in the infobox.",
+   "committed": true
+  },
+  "wikipedia/intros-2.json": {
+   "source": "wikipedia",
+   "url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts%7Crevisions&rvprop=ids&exintro=1&explaintext=1&exlimit=20&format=json&formatversion=2&redirects=1&titles=Copper%7CZinc%7CGallium%7CBromine%7CStrontium%7CSilver%7CTin%7CIodine%7CCaesium%7CNeodymium%7CTungsten%7CPlatinum%7CGold%7CMercury+%28element%29%7CLead%7CUranium%7CPlutonium%7COganesson",
+   "accessed": "2026-11-20T19:23:55.705Z",
+   "bytes": 40588,
+   "sha256": "81322d96f8f60f3a92a57e17fd407a77b27146b3ccc89ef744b267c349c166d1",
    "licence": "Wikipedia text CC BY-SA 4.0 (Wikipedia contributors; revision ids recorded). We extract factual values only and cite the references given in the infobox.",
    "committed": true
   }

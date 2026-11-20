@@ -33,10 +33,24 @@ function guessTier() {
   return cores >= 8 ? 'high' : 'med';
 }
 
+/** Ask a throwaway WebGL context which renderer we will get (before the real one picks antialiasing). */
+function probeRenderer() {
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2') || document.createElement('canvas').getContext('webgl');
+    if (!gl) return '';
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    const name = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    const lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
+    return name;
+  } catch { return ''; }
+}
+
 export function createEngine(canvas) {
   E.canvas = canvas;
   const startTier = state.quality === 'auto' ? 'med' : state.quality;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: startTier !== 'low', alpha: true, powerPreference: 'high-performance' });
+  // software renderers (SwiftShader, llvmpipe) pay several times over for multisampling: skip it there
+  const soft = /swiftshader|llvmpipe|software|basic render/i.test(probeRenderer());
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: startTier !== 'low' && !(soft && state.quality === 'auto'), alpha: true, powerPreference: 'high-performance' });
   renderer.setClearColor(0x000000, 0);
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 1.0;
@@ -59,7 +73,7 @@ export function setTier(tier) {
   if (!TIERS[tier]) tier = 'med';
   E.tier = tier;
   const cfg = TIERS[tier];
-  E.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, cfg.maxDpr));
+  E.renderer.setPixelRatio(pixelRatioFor(cfg));
   E.renderer.shadowMap.enabled = cfg.shadows;
   document.body.classList.toggle('tier-low', tier === 'low');
   if (state.tier !== tier) set({ tier });
@@ -67,9 +81,18 @@ export function setTier(tier) {
   resize();
 }
 export const tierConfig = () => TIERS[E.tier];
+/** Device pixel ratio for a tier. A software renderer on the low tier also lowers the internal
+ *  resolution of big windows (to about 0.75 megapixels), so it can keep its frame rate. */
+function pixelRatioFor(cfg) {
+  const dpr = Math.min(window.devicePixelRatio || 1, cfg.maxDpr);
+  if (!(E.software && E.tier === 'low')) return dpr;
+  const mp = (window.innerWidth * window.innerHeight * dpr * dpr) / 1e6;
+  return mp > 0.75 ? Math.max(0.6, dpr * Math.sqrt(0.75 / mp)) : dpr;
+}
 
 export function resize() {
   const w = window.innerWidth, h = window.innerHeight;
+  if (E.software && E.tier === 'low') E.renderer.setPixelRatio(pixelRatioFor(TIERS.low));
   E.renderer.setSize(w, h, false);
   E.camera.aspect = w / h;
   applyViewOffset();

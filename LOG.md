@@ -37,3 +37,47 @@
 - 2026-11-21 ~01:30 (Saigon) — **Quiz stopped by moony and parked:** all uncommitted M6 work was committed as "WIP quiz (parked)" (cde11a6) on branch `wip-m6-quiz`, pushed; master stays at 3afda10. Known bugs in the parked code: blank choice labels (class clash `.lbl`/`.mark`) and the flat quiz table needs a steeper camera. The quiz unit tests on that branch passed (5/5). (Also corrected above: the M5 entry time was ~01:00, not ~01:45.)
 - 2026-11-21 ~01:45 (Saigon) — **BEFORE screenshots** for the redesign: master 3afda10, 5 views × desktop 1440×900 + phone 390×844, PNG, local HTTP server, headless Chromium → `/workspace/out/redesign/before/` (not in the repo). The shot-tool flags used are saved as `/workspace/out/redesign/shots-tool.patch`. FPS on SwiftShader (low tier): every view 60 median, except Sample on desktop at 20 FPS (phone Sample 60 median, 39 average). No console errors.
 - 2026-11-21 ~02:00 (Saigon) — **Redesign plan written (no code):** STYLE.md ("porcelain & ink" style card), SPEC.md §0 Feel (audience, first 5 seconds, path to the wow moment, flow), REDESIGN-PLAN.md (surface, plain-language map, hooks with sources, removed/demoted list, facts kept, work order with the HERO slice first, performance goals), DECISIONS.md › Redesign decisions, QUESTIONS Q11–Q16. Gemini's DESIGN-STUDY.md is committed with it. Next: Gemini critiques the plan; no building until then.
+- 2026-11-21 ~02:20 (Saigon) — **Redesign plan revised after Gemini's critique** (PLAN-CRITIQUE.md committed): fact fixes accepted (iron's electrons "sit in" 4 shells; cloverleaf d cloud first; lithium atom vs ion; gas litre weights at 20 °C; tungsten cited to PubChem), the "118 ingredients" landing line rejected as inaccurate (94 natural elements), design points accepted (thicker glazed tiles, heat map on home, "Its light" dims the room, top lens chips, story lenses to step 4, ~30 hand-written element lines, revised family names, sound deferred). Pushed as 5e29487.
+- 2026-11-21 ~03:20 (Saigon) — **Redesign HERO slice: landing + table + element card — built.**
+  - **Design system:**
+    - `src/design/tokens.js` is the one token source; the build writes it as CSS variables.
+    - Shared `ui-` kit in `src/app/ui/kit.js` + `src/styles/kit.css`.
+    - Places in `src/app/places/` (home, element card, lenses).
+    - The table is `views/table.js` + `tableArt.js` + `tableRegions.js`.
+    - The old views (atom, sample, trends, compare) are untouched on a dark stage (`legacy.css`) and are reached through the card's doors, with a back link.
+  - **Home:**
+    - Warm paper; 118 thick porcelain tiles with darker sides, satin glaze and symbol + number printed on the glaze; soft contact shadows.
+    - Family names written on the table like a map (desktop).
+    - Quiet top bar: wordmark / back link, "Find an element", EN | VI, menu with other table shapes, colour-blind palette, reduced motion, share, keys, settings, sources.
+    - One prompt: "Everything you have ever touched is made of atoms — and every atom is one of these 118 kinds. Tap one to look inside."
+    - Lens chips: Families · Heat map (temperature slider for all 118) · Melting point · Heft · Atom size · Grip on electrons · More (8 more), each with a hook and a plain caption.
+    - First 5 seconds: a light sweep, breathing iron and a "Try iron" tag after 4 s.
+    - Desktop: hover lift + name label + slight parallax. Phone: a thumb-scrub loupe.
+  - **Element card** (side card on desktop, bottom sheet on phones):
+    - Name, symbol and number, family (human + caption) and one human line: 37 hand-written, checked against stored Wikipedia lead sections (new fetch step `wikipedia-intros`), the rest generated from data.
+    - Three facts with anchors from our data: state at 20 °C; melting with boiling and "higher than copper, lower than tungsten"; what a litre weighs (gases at 20 °C). Each value is tappable for its source, with "↗ across the table" links.
+    - Three doors (inside the atom · hold a piece, heat it · side by side, with a curated partner), "All numbers & sources" (the full sourced sheet), previous / next.
+  - **Checks:**
+    - Validator all pass; unit tests 17/17; smoke 27/27, rewritten for the new flow (landing, tile → card, hover name, search, keyboard, sources, all numbers, lenses, menu shapes, back link, language, credits, shareable hash, door → atom → back), plus the legacy view checks.
+    - 0 console errors. `index.html` 1,415 KB.
+  - **Review set:** `/workspace/out/redesign/hero-r1/`, 19 PNG at 1440×900 + 390×844 with `?q=med`: first load, try-iron hint, hover, thumb-scrub, iron and gold cards, all numbers, oxygen, heat map, melting, heft, zoom, VI. Each shot was checked against STYLE.md.
+  - **Fixed during review:**
+    - Garbled printed symbols (atlas row math).
+    - Map labels overlapping row 2.
+    - The card camera diving too close; the prompt left showing under an open card.
+    - Colliding ruler labels (replaced by a sentence); hyphen-minus; Vietnamese state wording; Vietnamese names in sentences (GDPT-2018 familiar names only).
+    - The heat slider collapsing on phones; text over zoomed tiles (paper scrims).
+    - The hover label duplicating the card; labels peeking from under the card.
+    - **A token naming bug:** `--ink2` was generated where every stylesheet used `--ink-2`.
+    - Legacy `--line` overriding the new token; a legacy `.small` clash.
+    - Escape on a source popup also closing the card; the canvas not focusable.
+  - **FPS** (software renderer, automatic quality, machine load ~6; `hero-r1/fps.txt`):
+    - Phone: 60 median everywhere.
+    - Desktop 1440×900: 60 median, except the two close-up states (iron card, deep zoom) at 30.
+    - The first build fell to 15 FPS on desktop because the table now fills about 2.8× more pixels. The software path therefore drops multisampling, renders big windows at about 0.75 MP and uses fewer bevel segments on the low tier. Measured back to back with the old build: both 60 at 1440×900 and 390×844. Real GPUs keep full quality.
+  - **Not done / known:**
+    - The phone table is small, with empty space above and below (width-bound; the loupe compensates).
+    - Old views keep their old dark look until rebuilt.
+    - Vietnamese strings are drafts for moony; Q17 (independent check of the 37 lines) is open.
+    - Sound deferred.
+    - "Other metals" may read as a label for the rare earths; it sits between the post-transition block and the f rows.

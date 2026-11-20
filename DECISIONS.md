@@ -118,3 +118,26 @@ Rule from moony: the builder (Claude) wins on code and design craft; the sourced
 
 **Design: kept as planned** (Claude)
 - Iron stays the *suggested* first tap and the wow example. *Why:* its two re-stackings (912 °C and 1,394 °C) and its glow make the richest sweep; other metals get the same forge.
+
+## Hero slice: build decisions (21 Nov 2026, Claude, within the approved style and plan)
+- **One tokens file:** `src/design/tokens.js`. The build writes it as CSS custom properties; the same values drive the 3D lights, tiles and printed labels. *Why:* later views, possibly built in parallel worktrees, share one source of truth.
+- **One shared kit:** `src/app/ui/kit.js` + `src/styles/kit.css`, with an `ui-` class prefix: button, chip, back link, icon button, segmented, door, fact, disclosure, banner, sheet, temperature slider, menu. *Why:* reuse and clear boundaries. The prefix avoids the kind of class clash that broke the parked quiz (`.lbl`, `.mark`).
+- **Places in their own files:** `places/home.js`, `places/elementCard.js`, `places/lenses.js`. The 3D table is `views/table.js` + `views/tableArt.js` (geometry and textures) + `views/tableRegions.js` (map labels). *Why:* view code stays separable.
+- **Legacy views are left alone on a dark stage** (`body.legacy`, `src/styles/legacy.css`, legacy variables renamed `--lg-*`). The card's doors lead to them, and a back link returns to the card. *Why:* they will be rebuilt against the tokens later; until then they must keep working (smoke tests cover them).
+- **Symbols and atomic numbers are printed on the tile glaze** (atlas texture), not floated as 118 DOM labels. *Why:* they read as real specimen labels, never vanish to overlap culling, and cost no layout per frame. Names stay screen-space labels ≥ 14 px (hover; the phone loupe). The tiny printed atomic number is decoration; the card shows it in full.
+- **Region labels on the desktop table only.** *Why:* phone tiles are about 20 px wide, so words would cover them. On phones the loupe and the card name the family.
+- **Group and period numbers are no longer drawn on the table.** *Why:* calmer first view. The card states row and column ("Group 8 · Period 4 · Block d" in "All numbers & sources").
+- **Tone mapping is Khronos PBR Neutral, not ACES** (STYLE.md updated). *Why:* ACES shifted the pigment hues.
+- **Card name at 40/32 px instead of display 56/40** (STYLE.md updated). *Why:* the card is 392 px wide, and long names (Rutherfordium) must fit.
+- **The melting fact gets a plain comparison instead of a mini ruler:** "Higher than copper (1,085 °C), lower than tungsten (3,422 °C)", built from a ladder of familiar metals in our data. *Why:* the ruler's labels collided; a sentence is clearer.
+- **Gas litre weights are computed at 20 °C,** scaled by the ideal-gas law from PubChem's 0 °C values (the method is shown in the source popup).
+- **Element lines:** 37 hand-written lines in our own words (`data/curated/element-lines.json`), each checked against the stored Wikipedia lead section. The text is fetched by the new step `node tools/fetch.mjs --only=wikipedia-intros`; revision ids are recorded. Every other element gets a sentence generated from data. Q17 asks for an independent check.
+- **Vietnamese sentences use the 13 GDPT-2018 familiar names (đồng, chì, nhôm…) and the IUPAC name otherwise** (tungsten, not the Wikidata "vonfram"). *Why:* it follows the GDPT-2018 rule recorded earlier.
+- **Software renderers keep their frame rate:**
+  - No multisampling on a detected software renderer.
+  - On the low tier, a big window renders at about 0.75 megapixels.
+  - Fewer bevel segments on the low tier.
+
+  *Why:* the redesign lets the table fill about 85 % of the width, roughly 2.8× more pixels than the old panel-squeezed table, and the headless baseline fell from 60 to 15 FPS. Real GPUs are unaffected and keep full quality.
+- **Review screenshots are taken with `?q=med`** (full resolution, anti-aliased), while FPS is reported on the automatic path. *Why:* the images should show the design; the FPS should show what a fallback machine gets.
+- **The Quiz tab and the 1–6 view keys are removed** (`VIEWS` no longer lists `quiz`). Keys now: arrows, `/`, Enter, Esc, `H` (next lens), `L` (other shapes), `F`.

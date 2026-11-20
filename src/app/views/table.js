@@ -1,15 +1,20 @@
-// Table view: 118 instanced columns; layouts 18-column, 32-column and helix (32 columns wrapped on
-// a cylinder, Z continuous, groups aligned — after de Chancourtois' 1862 "telluric screw").
-// Height = chosen property (linear from zero, or log); ghost = no data; stripes = predicted; dim = filtered.
+// Table view (home): 118 porcelain tiles on warm paper (STYLE.md §6). Layouts 18-column (home),
+// 32-column and helix (32 columns wrapped on a cylinder, after de Chancourtois' 1862 helix).
+// Lenses (places/lenses.js) set colour (family / state at T) and height (flat, or one property).
+// The symbol and number are printed on each tile's glaze (atlas texture); family names are written
+// on the table (region labels); the hovered tile lifts and shows its name; the selected tile lifts
+// and gets a verdigris outline. Everything renders on demand.
 import * as THREE from 'three';
-import { E, invalidate, animate, raycastFrom, tierConfig, freeFov } from '../engine.js';
-import { state, set } from '../state.js';
-import { elements, propValue, propRange, prop, stateAt, fmtProp, name, isPred } from '../data.js';
-import { CATEGORY_COLORS, CATEGORY_COLORS_CB, STATE_COLORS } from '../palette.js';
+import { E, invalidate, animate, raycastFrom, tierConfig, freeFov, toScreen } from '../engine.js';
+import { state } from '../state.js';
+import { elements, propValue, propRange, prop, stateAt, isPred, name } from '../data.js';
 import { LabelLayer } from '../labels.js';
 import { t } from '../i18n.js';
+import { pigment, pigmentCB, stateColor, color as TOK, light as LIGHT, tile as TILE, motion, font } from '../../design/tokens.js';
+import { roundedBox, softRectTexture, symbolAtlas, roundedOutline, luminance } from './tableArt.js';
+import { REGIONS } from './tableRegions.js';
 
-const COLW = 0.86, HMAX = 6, HMIN = 0.16, GHOST_H = 0.14;
+const W = TILE.width, H0 = TILE.thickness, HMAX = 4.6;
 const HELIX_R = (32 * 1.06) / (2 * Math.PI), HELIX_DY = 1.45, HELIX_H = 0.5; // radial columns are drawn at half height
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -33,6 +38,7 @@ export function layoutPose(e, layout, out = { pos: new THREE.Vector3(), quat: ne
 }
 
 export function matchesFilters(e) {
+  if (state.marks && !state.marks.has(e.Z)) return false;
   const F = state.filters;
   if (F.cats && !F.cats.has(e.f.cat[0])) return false;
   if (F.blocks && !F.blocks.has(e.f.block[0])) return false;
@@ -50,65 +56,136 @@ export function createTableView(hooks) {
   const scene = new THREE.Scene();
   const els = elements();
   const N = els.length;
-  scene.add(new THREE.HemisphereLight(0xdfe9ff, 0x1b2236, 1.25));
-  const key = new THREE.DirectionalLight(0xffffff, 2.4);
-  key.position.set(-9, 22, 15);
+
+  // ---- daylight studio --------------------------------------------------------------------
+  scene.add(new THREE.HemisphereLight(LIGHT.sky, LIGHT.ground, LIGHT.hemi));
+  const key = new THREE.DirectionalLight(LIGHT.key, LIGHT.keyIntensity);
+  key.position.set(...LIGHT.keyPos);
   key.shadow.mapSize.set(2048, 2048);
+  key.shadow.bias = -0.0004;
   Object.assign(key.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 70 });
-  const fill = new THREE.DirectionalLight(0x9cc2ff, 0.7);
-  fill.position.set(14, 9, -12);
-  scene.add(key, fill);
+  const rim = new THREE.DirectionalLight(LIGHT.rim, LIGHT.rimIntensity);
+  rim.position.set(...LIGHT.rimPos);
+  scene.add(key, rim);
 
-  // ---- columns -------------------------------------------------------------------------
-  const geo = new THREE.BoxGeometry(COLW, 1, COLW);
-  geo.translate(0, 0.5, 0);
-  const fx = new THREE.InstancedBufferAttribute(new Float32Array(N * 3), 3);
-  geo.setAttribute('aFx', fx);
-  const mat = new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.06 });
-  mat.onBeforeCompile = sh => {
-    sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute vec3 aFx;\nvarying vec3 vFx;\nvarying vec3 vWP;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFx = aFx;\nvWP = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;');
-    sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vFx;\nvarying vec3 vWP;')
-      .replace('#include <color_fragment>', `#include <color_fragment>
-        if (vFx.x > 0.5) { float s = step(0.5, fract((vWP.x + vWP.y + vWP.z) * 3.2)); diffuseColor.rgb *= mix(1.0, 0.42, s); }
-        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.11, 0.135, 0.19), vFx.y * 0.85);`)
-      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += diffuseColor.rgb * vFx.z * 0.45;');
+  // ---- porcelain tiles: one instanced rounded block; the shader stretches the middle for tall
+  // columns (bevels keep their shape), darkens the sides, prints the symbol on the glaze ----------
+  const atlas = symbolAtlas(els, { font: font.sans });
+  // anisotropic filtering keeps tilted symbols crisp; costly on software renderers, so it follows the tier
+  const aniso = tier => Math.min({ low: 1, med: 4, high: 8 }[tier] || 4, E.renderer.capabilities.getMaxAnisotropy());
+  atlas.tex.anisotropy = aniso(E.tier);
+  const geo = roundedBox(W, H0, W, TILE.bevel, E.tier === 'low' ? 1 : E.tier === 'med' ? 2 : 3);
+  geo.translate(0, H0 / 2, 0);
+  const aH = new THREE.InstancedBufferAttribute(new Float32Array(N).fill(H0), 1);
+  const aLift = new THREE.InstancedBufferAttribute(new Float32Array(N), 1);
+  const aCell = new THREE.InstancedBufferAttribute(new Float32Array(els.map((_, i) => i)), 1);
+  const aFx = new THREE.InstancedBufferAttribute(new Float32Array(N * 4), 4); // hatch, dim, hover, selected
+  const aInk = new THREE.InstancedBufferAttribute(new Float32Array(N * 3), 3);
+  for (const [k, a] of Object.entries({ aH, aLift, aCell, aFx, aInk })) { a.setUsage(THREE.DynamicDrawUsage); geo.setAttribute(k, a); }
+  const uni = {
+    uAtlas: { value: atlas.tex }, uGrid: { value: new THREE.Vector2(atlas.cols, atlas.rows) }, uH0: { value: H0 }, uW: { value: W },
+    uSide: { value: TILE.sideDarken }, uTopRough: { value: TILE.topRoughness }, uSideRough: { value: TILE.sideRoughness },
+    uPaper: { value: new THREE.Color(TOK.paper) }, uSweep: { value: -99 }, uSweepAmp: { value: 0 },
   };
-  const solid = new THREE.InstancedMesh(geo, mat, N);
-  solid.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  solid.castShadow = true; solid.receiveShadow = true;
-  solid.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(N * 3), 3);
-  const ghostGeo = new THREE.BoxGeometry(COLW, 1, COLW); ghostGeo.translate(0, 0.5, 0);
-  const ghostMat = new THREE.MeshBasicMaterial({ color: 0xc5d4ff, transparent: true, opacity: 0.17, depthWrite: false });
-  const ghost = new THREE.InstancedMesh(ghostGeo, ghostMat, N);
-  ghost.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  scene.add(solid, ghost);
+  const mat = new THREE.MeshStandardMaterial({ roughness: TILE.sideRoughness, metalness: 0 });
+  mat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, uni);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', `#include <common>
+        attribute float aH; attribute float aLift; attribute float aCell; attribute vec4 aFx; attribute vec3 aInk;
+        uniform float uH0;
+        varying vec3 vLocal; varying float vTop; varying vec4 vFx; varying vec3 vInk; varying float vCell; varying vec3 vWP;`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+        vLocal = position; vTop = normal.y; vFx = aFx; vInk = aInk; vCell = aCell;
+        if (position.y > uH0 * 0.5) transformed.y += max(aH - uH0, 0.0);
+        transformed.y += aLift;
+        vWP = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;`);
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>
+        uniform sampler2D uAtlas; uniform vec2 uGrid; uniform float uW; uniform float uSide; uniform float uTopRough; uniform float uSideRough;
+        uniform vec3 uPaper; uniform float uSweep; uniform float uSweepAmp;
+        varying vec3 vLocal; varying float vTop; varying vec4 vFx; varying vec3 vInk; varying float vCell; varying vec3 vWP;`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        float top = smoothstep(0.55, 0.95, vTop);
+        diffuseColor.rgb *= mix(1.0 - uSide, 1.0, top);
+        if (vFx.x > 0.5) { float s = step(0.5, fract((vWP.x - vWP.z) * 4.0)); diffuseColor.rgb *= mix(1.0, 0.8, s * top); }
+        if (vTop > 0.97) {
+          vec2 uv = vec2(vLocal.x / uW + 0.5, 0.5 - vLocal.z / uW);
+          float cy = floor((vCell + 0.5) / uGrid.x);
+          vec2 cell = vec2(vCell - cy * uGrid.x, cy);
+          vec2 auv = vec2((cell.x + uv.x) / uGrid.x, 1.0 - (cell.y + 1.0 - uv.y) / uGrid.y);
+          float ink = texture2D(uAtlas, auv).a;
+          diffuseColor.rgb = mix(diffuseColor.rgb, vInk, ink * 0.94);
+        }
+        diffuseColor.rgb = mix(diffuseColor.rgb, uPaper, vFx.y * 0.66);
+        diffuseColor.rgb += uSweepAmp * 0.16 * exp(-pow((vWP.x - uSweep) / 1.8, 2.0)) * top;`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = mix(uSideRough, uTopRough, smoothstep(0.55, 0.95, vTop));`)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        totalEmissiveRadiance += diffuseColor.rgb * (vFx.z * 0.08 + vFx.w * 0.05);`);
+  };
+  const tiles = new THREE.InstancedMesh(geo, mat, N);
+  tiles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  tiles.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(N * 3), 3);
+  tiles.castShadow = true; tiles.receiveShadow = true;
+  tiles.frustumCulled = false; // the shader moves vertices, so the CPU bounds are not exact
+  scene.add(tiles);
 
-  // base slab (flat layouts) and core cylinder (helix)
-  const slabMat = new THREE.MeshStandardMaterial({ color: 0x0f1a30, roughness: 0.9, metalness: 0.0 });
-  const slab = new THREE.Mesh(new THREE.BoxGeometry(1, 0.3, 1), slabMat);
-  slab.receiveShadow = true;
-  scene.add(slab);
-  const core = new THREE.Mesh(new THREE.CylinderGeometry(HELIX_R - 0.55, HELIX_R - 0.55, 11.2, 64, 1, true),
-    new THREE.MeshStandardMaterial({ color: 0x16243f, roughness: 0.85, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }));
+  // invisible boxes of the true column size, for picking (the GPU stretch is unknown to raycasts)
+  const pickGeo = new THREE.BoxGeometry(W, 1, W); pickGeo.translate(0, 0.5, 0);
+  const pick = new THREE.InstancedMesh(pickGeo, new THREE.MeshBasicMaterial(), N);
+  pick.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+  // ---- soft contact shadows (instanced gradient quads) + one soft ground shadow -------------------
+  const shTex = softRectTexture();
+  const shGeo = new THREE.PlaneGeometry(1, 1); shGeo.rotateX(-Math.PI / 2);
+  const aShade = new THREE.InstancedBufferAttribute(new Float32Array(N).fill(1), 1);
+  aShade.setUsage(THREE.DynamicDrawUsage);
+  shGeo.setAttribute('aShade', aShade);
+  const shMat = new THREE.MeshBasicMaterial({ color: TOK.shadow, map: shTex, transparent: true, opacity: TILE.shadowOpacity, depthWrite: false });
+  shMat.onBeforeCompile = sh => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aShade;\nvarying float vShade;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvShade = aShade;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vShade;')
+      .replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.a *= vShade;');
+  };
+  const shadows = new THREE.InstancedMesh(shGeo, shMat, N);
+  shadows.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  shadows.renderOrder = -1;
+  shadows.frustumCulled = false;
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: TOK.shadow, map: softRectTexture(256, 0.36, 0.14), transparent: true, opacity: 0.1, depthWrite: false }));
+  ground.renderOrder = -2;
+  scene.add(ground, shadows);
+
+  // helix core (other shapes of the table)
+  const core = new THREE.Mesh(new THREE.CylinderGeometry(HELIX_R - 0.6, HELIX_R - 0.6, 11.2, 64, 1, true),
+    new THREE.MeshStandardMaterial({ color: TOK.paperDeep, roughness: 0.9, side: THREE.DoubleSide }));
   scene.add(core);
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.78, 40), new THREE.MeshBasicMaterial({ color: 0xffcf6b, side: THREE.DoubleSide }));
-  scene.add(ring);
 
-  // ---- per-element animated pose -------------------------------------------------------
-  const cur = els.map(() => ({ pos: new THREE.Vector3(), quat: new THREE.Quaternion(), h: 0.0001, ghost: false }));
-  const tgt = els.map(() => ({ pos: new THREE.Vector3(), quat: new THREE.Quaternion(), h: 0.0001, ghost: false }));
-  const from = els.map(() => ({ pos: new THREE.Vector3(), quat: new THREE.Quaternion(), h: 0 }));
-  let tween = null;
-  const m4 = new THREE.Matrix4(), sc = new THREE.Vector3(), col = new THREE.Color();
+  // selection outline (verdigris) at the base of the selected tile
+  const sel = new THREE.Mesh(roundedOutline(W + 0.12, 0.1, 0.035), new THREE.MeshBasicMaterial({ color: TOK.verdigris, transparent: true, opacity: 0.9, depthWrite: false }));
+  sel.renderOrder = -1;
+  scene.add(sel);
 
+  // ---- per-element pose, height and lift --------------------------------------------------------
+  const cur = els.map(() => ({ pos: new THREE.Vector3(), quat: new THREE.Quaternion(), h: H0 }));
+  const tgt = els.map(() => ({ pos: new THREE.Vector3(), quat: new THREE.Quaternion(), h: H0, ghost: false }));
+  const from = els.map(() => ({ pos: new THREE.Vector3(), quat: new THREE.Quaternion(), h: H0 }));
+  const lift = new Float32Array(N), liftTo = new Float32Array(N);
+  let tween = null, initialised = false, hovered = 0, breathZ = 0, breathT = 0, scrubbing = false;
+  const m4 = new THREE.Matrix4(), v3 = new THREE.Vector3(), sv = new THREE.Vector3(), sc = new THREE.Vector3(1, 1, 1), col = new THREE.Color(), q0 = new THREE.Quaternion();
+  const INK = new THREE.Color(TOK.ink), CARD = new THREE.Color(TOK.card), L_INK = luminance(TOK.ink), L_CARD = luminance(TOK.card);
+
+  // ---- labels: family names on the table, the hovered tile's name, the "try" hint ---------------------
   const labels = new LabelLayer(document.getElementById('labels'));
-  const elLabels = els.map(e => labels.add({ pos: new THREE.Vector3(), text: e.sym, priority: 1, data: e }));
-  const axisLabels = [];
+  const regionLabels = REGIONS.map(r => ({ r, it: labels.add({ pos: new THREE.Vector3(r.x, 0.02, r.z), text: '', cls: `region ${r.anchor}`, priority: 5, anchor: r.anchor }) }));
+  const pop = labels.add({ pos: new THREE.Vector3(), text: '', cls: 'pop', priority: 100, anchor: 'bottom', dy: 8 });
+  const hint = labels.add({ pos: new THREE.Vector3(), text: '', cls: 'pop hint', priority: 90, anchor: 'bottom', dy: 8 });
+  pop.priority = -1; hint.priority = -1;
 
   function heightFor(e) {
+    if (state.flat) return H0;
     const v = propValue(e, state.prop);
     if (!v) return null;
     const p = prop(state.prop);
@@ -119,10 +196,10 @@ export function createTableView(hooks) {
     if (log) { if (!(x > 0)) return null; f = (Math.log10(x) - Math.log10(lo)) / Math.max(1e-9, Math.log10(hi) - Math.log10(lo)); }
     else if (p.key === 'year') f = (x - lo) / Math.max(1e-9, hi - lo);
     else { const base = Math.min(0, lo); f = (x - base) / Math.max(1e-9, hi - base); }
-    return HMIN + Math.max(0, Math.min(1, f)) * (HMAX - HMIN);
+    return H0 + Math.max(0, Math.min(1, f)) * (HMAX - H0);
   }
   const ranges = new Map();
-  function rangeCache(key, log) { const k = key + log; if (!ranges.has(k)) ranges.set(k, propRange(key, log)); return ranges.get(k); }
+  function rangeCache(k, log) { const id = k + log; if (!ranges.has(id)) ranges.set(id, propRange(k, log)); return ranges.get(id); }
 
   function computeTargets() {
     for (let i = 0; i < N; i++) {
@@ -130,189 +207,261 @@ export function createTableView(hooks) {
       layoutPose(e, state.layout, tgt[i]);
       const h = heightFor(e);
       tgt[i].ghost = h == null;
-      tgt[i].h = h == null ? GHOST_H : state.layout === 'helix' ? h * HELIX_H : h;
+      const hh = h == null ? H0 : h;
+      tgt[i].h = state.layout === 'helix' ? H0 + (hh - H0) * HELIX_H : hh;
     }
   }
   function writeInstances() {
     for (let i = 0; i < N; i++) {
       const c = cur[i];
-      sc.set(1, Math.max(0.0001, c.h), 1);
       m4.compose(c.pos, c.quat, sc);
-      if (c.ghost) { ghost.setMatrixAt(i, m4); m4.makeScale(0, 0, 0); solid.setMatrixAt(i, m4); }
-      else { solid.setMatrixAt(i, m4); m4.makeScale(0, 0, 0); ghost.setMatrixAt(i, m4); }
-      // label anchor: top of the column (outer end for the helix)
-      const lb = elLabels[i];
-      lb.pos.set(0, c.h + 0.12, 0).applyQuaternion(c.quat).add(c.pos);
-      (lb.nrm || (lb.nrm = new THREE.Vector3())).set(0, 1, 0).applyQuaternion(c.quat);
+      tiles.setMatrixAt(i, m4);
+      aH.setX(i, c.h); aLift.setX(i, lift[i]);
+      // picking box: true height and lift
+      v3.set(0, lift[i], 0).applyQuaternion(c.quat).add(c.pos);
+      m4.compose(v3, c.quat, sv.set(1, c.h, 1));
+      pick.setMatrixAt(i, m4);
+      // contact shadow on the paper (flat layouts only), fading as the tile lifts
+      if (state.layout === 'helix') { m4.makeScale(0, 0, 0); aShade.setX(i, 0); }
+      else {
+        const s = W * (1.46 + lift[i] * 1.2);
+        m4.compose(v3.set(c.pos.x + 0.05, 0.003, c.pos.z + 0.07), q0, sv.set(s, 1, s));
+        aShade.setX(i, Math.max(0, 1 - lift[i] * 2.2));
+      }
+      shadows.setMatrixAt(i, m4);
     }
-    solid.instanceMatrix.needsUpdate = true; ghost.instanceMatrix.needsUpdate = true;
-    solid.computeBoundingSphere(); ghost.computeBoundingSphere();
+    tiles.instanceMatrix.needsUpdate = true; pick.instanceMatrix.needsUpdate = true; shadows.instanceMatrix.needsUpdate = true;
+    aH.needsUpdate = true; aLift.needsUpdate = true; aShade.needsUpdate = true;
+    pick.computeBoundingSphere();
+    placeSelection();
   }
   function writeColours() {
-    const pal = state.cb ? CATEGORY_COLORS_CB : CATEGORY_COLORS;
+    const pal = state.cb ? pigmentCB : pigment;
+    const selZ = state.hideSel ? 0 : state.Z;
     for (let i = 0; i < N; i++) {
       const e = els[i];
       const st = state.color === 'state' ? stateAt(e, state.T) : null;
-      col.set(st ? STATE_COLORS[st.s] : pal[e.f.cat[0]]);
-      solid.setColorAt(i, col);
+      const hex = st ? stateColor[st.s] : pal[e.f.cat[0]];
+      col.set(hex);
+      tiles.setColorAt(i, col);
+      // printed symbol: dark ink, unless light text has more contrast on this glaze (e.g. "liquid" blue)
+      const L = luminance(hex);
+      const inkC = (L + 0.05) / (L_INK + 0.05) >= (L_CARD + 0.05) / (L + 0.05) ? INK : CARD;
+      aInk.setXYZ(i, inkC.r, inkC.g, inkC.b);
       const v = propValue(e, state.prop);
-      const hatch = (v && isPred(v)) || (st && st.p) ? 1 : 0;
-      const dim = matchesFilters(e) ? 0 : 1;
-      const sel = e.Z === state.Z ? 1 : hovered === e.Z ? 0.5 : 0;
-      fx.setXYZ(i, hatch, dim, sel);
-      const lbl = elLabels[i];
-      labels.setClass(lbl, (e.Z === state.Z ? 'sel' : '') + (dim ? ' dim' : ''));
-      lbl.priority = e.Z === state.Z ? 100 : hovered === e.Z ? 90 : dim ? 0.5 : 1 + (e.f.group[0] ? 0 : -0.1);
-      if (e.Z === state.Z) labels.setText(lbl, e.sym, v ? fmtProp(state.prop, v) : t('tip.nodata'));
-      else labels.setText(lbl, e.sym, '');
+      const hatch = (!state.flat && v && isPred(v)) || (st && st.p) ? 1 : 0;
+      const dim = matchesFilters(e) ? (tgt[i].ghost && !state.flat ? 0.55 : 0) : 1;
+      aFx.setXYZW(i, hatch, dim, hovered === e.Z ? 1 : 0, e.Z === selZ ? 1 : 0);
     }
-    solid.instanceColor.needsUpdate = true; fx.needsUpdate = true;
-  }
-  function placeSelectionRing() {
-    const i = state.Z - 1;
-    const c = cur[i];
-    ring.position.copy(c.pos).add(new THREE.Vector3(0, 0.02, 0).applyQuaternion(c.quat));
-    ring.quaternion.copy(c.quat).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2));
-  }
-  function rebuildAxisLabels() {
-    for (const a of axisLabels) { a.el.remove(); labels.items.splice(labels.items.indexOf(a), 1); }
-    axisLabels.length = 0;
-    if (state.layout === 'helix') return;
-    // group numbers along the back edge, period numbers along the left edge
-    const xs = new Map();
-    let zBack = Infinity, xLeft = Infinity;
-    for (const e of els) {
-      const p = layoutPose(e, state.layout).pos;
-      if (e.fIndex == null) { zBack = Math.min(zBack, p.z); xLeft = Math.min(xLeft, p.x); }
-      if (e.fIndex == null && e.f.group[0] && !xs.has(e.f.group[0])) xs.set(e.f.group[0], p.x);
-    }
-    for (const [g, x] of xs) axisLabels.push(labels.add({ pos: new THREE.Vector3(x, 0.02, zBack - 0.95), text: String(g), cls: 'axis', priority: 0.2, anchor: 'center' }));
-    for (let per = 1; per <= 7; per++) {
-      const e = els.find(x => x.f.period[0] === per && x.f.group[0] === 1);
-      const p = layoutPose(e, state.layout).pos;
-      axisLabels.push(labels.add({ pos: new THREE.Vector3(xLeft - 1.0, 0.02, p.z), text: String(per), cls: 'axis', priority: 0.2, anchor: 'center' }));
+    tiles.instanceColor.needsUpdate = true; aFx.needsUpdate = true; aInk.needsUpdate = true;
+    // family names on the table: home layout, families lens only; phones show the ones that fit
+    const phone = !!(hooks.isPhone && hooks.isPhone());
+    for (const { r, it } of regionLabels) {
+      labels.setText(it, t('fam.' + r.cat));
+      const show = state.layout === 's18' && state.color === 'cat' && state.flat && (!phone || r.phone !== false);
+      it.priority = show ? r.priority : -1;
+      const at = phone && r.phonePos ? r.phonePos : [r.x, r.z];
+      it.pos.set(at[0], 0.02, at[1]);
     }
   }
-  function layoutDecor() {
-    const flat = state.layout !== 'helix';
-    slab.visible = flat; core.visible = !flat;
-    if (flat) {
-      const w = state.layout === 's32' ? 33.4 : 19.4, d = state.layout === 's32' ? 8.6 : 11.2;
-      slab.scale.set(w, 1, d);
-      slab.position.set(0, -0.15, state.layout === 's32' ? 0 : 0.15);
+  function placeSelection() {
+    const i = state.Z - 1, c = cur[i];
+    sel.visible = !state.hideSel && state.layout !== 'helix';
+    sel.position.set(c.pos.x, 0.004, c.pos.z);
+  }
+  function setLiftTargets() {
+    for (let i = 0; i < N; i++) {
+      const Z = i + 1;
+      liftTo[i] = (Z === state.Z && !state.hideSel ? TILE.selectLift : 0) + (Z === hovered ? TILE.hoverLift : 0);
     }
+    invalidate();
   }
 
-  // ---- transitions --------------------------------------------------------------------
+  // ---- transitions --------------------------------------------------------------------------
   function morph() {
     computeTargets();
-    const dur = state.reduced ? 0 : 0.75;
-    for (let i = 0; i < N; i++) { from[i].pos.copy(cur[i].pos); from[i].quat.copy(cur[i].quat); from[i].h = cur[i].h; cur[i].ghost = tgt[i].ghost; }
+    const dur = state.reduced ? 0 : motion.lens / 1000;
+    for (let i = 0; i < N; i++) { from[i].pos.copy(cur[i].pos); from[i].quat.copy(cur[i].quat); from[i].h = cur[i].h; }
     layoutDecor();
     if (!dur || !initialised) {
       for (let i = 0; i < N; i++) { cur[i].pos.copy(tgt[i].pos); cur[i].quat.copy(tgt[i].quat); cur[i].h = tgt[i].h; }
-      writeInstances(); placeSelectionRing(); invalidate(); initialised = true; return;
+      writeInstances(); invalidate(); initialised = true; return;
     }
     if (tween) tween();
     let k = 0;
+    const stag = motion.lensStagger / motion.lens;
     tween = animate(dt => {
       k = Math.min(1, k + dt / dur);
-      const s = k < 0.5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2;
       for (let i = 0; i < N; i++) {
-        const d = Math.min(1, Math.max(0, s * 1.25 - (i / N) * 0.25)); // slight wave by Z
+        const d0 = Math.min(1, Math.max(0, (k - (i / N) * stag) / (1 - stag)));
+        const d = d0 < 0.5 ? 4 * d0 ** 3 : 1 - (-2 * d0 + 2) ** 3 / 2;
         cur[i].pos.lerpVectors(from[i].pos, tgt[i].pos, d);
         cur[i].quat.slerpQuaternions(from[i].quat, tgt[i].quat, d);
         cur[i].h = from[i].h + (tgt[i].h - from[i].h) * d;
       }
-      writeInstances(); placeSelectionRing();
+      writeInstances();
       if (k >= 1) { tween = null; return false; }
       return true;
     });
   }
-  let initialised = false;
-  let hovered = 0;
-
-  // ---- camera framing --------------------------------------------------------------------
-  function frame(dur = 0.9) {
-    const fov = freeFov();
-    const vfov = fov.v, hfov = fov.h;
-    const portrait = fov.aspect < 0.8;
-    if (state.layout === 'helix') {
-      const r = Math.max(10.5 / Math.tan(Math.min(vfov, hfov) / 2), 18);
-      E.rig.lim = { rMin: 6, rMax: 120, phiMin: 0.2, phiMax: Math.PI - 0.2 };
-      E.rig.flyTo({ target: new THREE.Vector3(0, 0.2, 0), r, theta: 0.35, phi: 1.12 }, dur);
-      return;
+  function layoutDecor() {
+    const flat = state.layout !== 'helix';
+    ground.visible = flat; core.visible = !flat;
+    if (flat) {
+      const w = state.layout === 's32' ? 36 : 22, d = state.layout === 's32' ? 11 : 14;
+      ground.scale.set(w, 1, d);
+      ground.position.set(0.3, 0.001, state.layout === 's32' ? 0.3 : 0.5);
     }
-    const halfW = state.layout === 's32' ? 17.6 : 10.4;
-    const halfD = state.layout === 's32' ? 4.8 : 6.2;
-    const phi = portrait ? 0.62 : state.layout === 's32' ? 0.62 : 0.95;
-    // fit both the width and the (foreshortened) depth into the view
-    const rW = halfW / Math.tan(hfov / 2);
-    const rD = (halfD * Math.cos(phi) + HMAX * 0.5 * Math.sin(phi)) / Math.tan(vfov / 2) + halfD * Math.sin(phi);
-    const r = Math.max(rW, rD) * 1.02;
-    E.rig.lim = { rMin: 3, rMax: 140, phiMin: 0.08, phiMax: 1.45 };
-    E.rig.flyTo({ target: new THREE.Vector3(0, portrait ? 0.4 : 1.0, state.layout === 's32' ? 0.2 : 0.6), r, theta: 0, phi }, dur);
   }
 
-  // ---- picking -------------------------------------------------------------------------
-  function pickAt(x, y) {
-    const hits = raycastFrom(x, y, [solid, ghost]);
-    for (const h of hits) if (h.instanceId != null) {
-      const c = cur[h.instanceId];
-      if ((h.object === ghost) !== c.ghost) continue; // skip zero-scaled twin
-      return els[h.instanceId];
+  // ---- camera ------------------------------------------------------------------------------------
+  let overview = null;
+  function frame(dur = motion.glide) {
+    const fov = freeFov();
+    const portrait = fov.aspect < 0.8;
+    if (state.layout === 'helix') {
+      const r = Math.max(10.5 / Math.tan(Math.min(fov.v, fov.h) / 2), 18);
+      E.rig.lim = { rMin: 6, rMax: 120, phiMin: 0.2, phiMax: Math.PI - 0.2 };
+      overview = { target: new THREE.Vector3(0, 0.2, 0), r, theta: 0.35, phi: 1.12 };
+      E.rig.flyTo(overview, state.reduced ? 0 : dur);
+      return;
     }
+    const s32 = state.layout === 's32';
+    const halfW = s32 ? 17.4 : 9.9, halfD = s32 ? 4.4 : 5.3;
+    const tall = !state.flat ? HMAX * 0.5 : 0;
+    // flat tiles: a low, museum-like angle; columns: look more from above so front rows hide less
+    const phi = portrait ? 0.36 : s32 ? 0.62 : state.flat ? 0.78 : 0.56;
+    const rW = halfW / Math.tan(fov.h / 2);
+    const rD = (halfD * Math.cos(phi) + (tall + 0.4) * Math.sin(phi)) / Math.tan(fov.v / 2) + halfD * Math.sin(phi);
+    const r = Math.max(rW, rD) * 1.03;
+    E.rig.lim = { rMin: 6.5, rMax: 140, phiMin: 0.08, phiMax: 1.35 };
+    overview = { target: new THREE.Vector3(0, tall * 0.35, s32 ? 0.1 : 0.15), r, theta: 0, phi };
+    E.rig.flyTo(overview, state.reduced ? 0 : dur);
+  }
+  /** Glide to an element so it sits in the middle of the free area (beside the card). */
+  function focus(Z, dur = motion.glide) {
+    const c = cur[Z - 1];
+    const top = new THREE.Vector3(0, c.h + TILE.selectLift, 0).applyQuaternion(c.quat).add(c.pos);
+    if (!overview) frame(0);
+    if (state.layout === 'helix') { E.rig.flyTo({ target: top, r: Math.min(E.rig.r, 12) }, state.reduced ? 0 : dur); return; }
+    const phone = hooks.isPhone && hooks.isPhone();
+    if (phone) { frame(dur); return; } // phones keep the whole table in view above the sheet
+    const r = Math.max(7.5, overview.r * 0.7);
+    E.rig.flyTo({ target: top, r, theta: overview.theta + (c.pos.x / 9) * 0.1, phi: Math.min(overview.phi, 0.86) }, state.reduced ? 0 : dur);
+  }
+
+  // ---- picking / hover / phone scrub ------------------------------------------------------------
+  function pickAt(x, y) {
+    const hits = raycastFrom(x, y, [pick]);
+    for (const hgt of hits) if (hgt.instanceId != null) return els[hgt.instanceId];
     return null;
+  }
+  function setHover(Z) {
+    if (Z === hovered) return;
+    hovered = Z;
+    setLiftTargets(); writeColours();
+    // phones show the loupe instead; the open card already names the selected element
+    if (!Z || scrubbing || (state.card && !state.hideSel && Z === state.Z)) { pop.priority = -1; return; }
+    const e = els[Z - 1];
+    labels.setText(pop, name(e), `${e.sym} · ${t('card.number', { Z: e.Z })}`);
+    pop.priority = 100;
+  }
+  const scrub = {
+    start(x, y) { scrubbing = true; const e = pickAt(x, y); setHover(e ? e.Z : 0); if (hooks.loupe) hooks.loupe(e, x, y); },
+    move(x, y) { const e = pickAt(x, y); setHover(e ? e.Z : 0); if (hooks.loupe) hooks.loupe(e, x, y); },
+    end(x, y, cancelled) {
+      scrubbing = false;
+      const e = cancelled ? null : pickAt(x, y);
+      setHover(0); if (hooks.loupe) hooks.loupe(null);
+      if (e) hooks.onSelect(e);
+    },
+    cancel() { scrubbing = false; setHover(0); if (hooks.loupe) hooks.loupe(null); },
+  };
+
+  // ---- the "try" hint and the intro sweep ---------------------------------------------------------
+  function showHint(Z, text) {
+    if (!Z) { hint.priority = -1; invalidate(); return; }
+    labels.setText(hint, text);
+    hint.data = Z; hint.priority = 90; invalidate();
+  }
+  let sweepT = -1;
+  function introSweep() {
+    if (state.reduced) return;
+    sweepT = 0;
+    invalidate();
   }
 
   const view = {
     scene,
-    init() { computeTargets(); morph(); rebuildAxisLabels(); writeColours(); },
+    init() { computeTargets(); morph(); writeColours(); },
     enter() {
       labels.enabled = true;
       key.castShadow = tierConfig().shadows;
       frame(state.reduced ? 0 : 0.8);
-      writeColours(); invalidate();
+      E.rig.parallaxOn = !hooks.isPhone || !hooks.isPhone();
+      E.rig.scrub = hooks.isPhone && hooks.isPhone() ? scrub : null;
+      writeColours(); setLiftTargets(); invalidate();
     },
-    exit() { labels.enabled = false; labels.hideAll(); hooks.tooltip(null); },
-    onTier(tier, cfg) { key.castShadow = cfg.shadows; mat.needsUpdate = true; invalidate(); },
-    resize() { if (view.ready) frame(0); },
+    exit() { labels.enabled = false; labels.hideAll(); E.rig.parallaxOn = false; E.rig.scrub = null; E.rig.parallax(0, 0, 0); setHover(0); },
+    onTier(tier, cfg) { key.castShadow = cfg.shadows; atlas.tex.anisotropy = aniso(tier); atlas.tex.needsUpdate = true; mat.needsUpdate = true; invalidate(); },
+    resize() {
+      if (!view.ready) return;
+      E.rig.scrub = hooks.isPhone && hooks.isPhone() && E.active === view ? scrub : null;
+      E.rig.parallaxOn = (!hooks.isPhone || !hooks.isPhone()) && E.active === view;
+      writeColours();
+      if (state.card && !state.hideSel) focus(state.Z, 0); else frame(0);
+    },
+    update(dt) {
+      let busy = false;
+      // lifts ease toward their targets (hover 160 ms feel, selection a little slower)
+      const k = 1 - Math.exp(-dt / 0.07);
+      let moved = false;
+      for (let i = 0; i < N; i++) {
+        let goal = liftTo[i];
+        if (breathZ === i + 1) goal += 0.05 * (0.5 - 0.5 * Math.cos((breathT * Math.PI * 2) / 2.6));
+        const d = goal - lift[i];
+        if (Math.abs(d) > 1e-4) { lift[i] += d * k; moved = true; }
+      }
+      if (breathZ) { breathT += dt; busy = true; }
+      if (sweepT >= 0) {
+        sweepT += dt;
+        const p = Math.min(1, sweepT / 1.3);
+        uni.uSweep.value = -12 + 24 * p;
+        uni.uSweepAmp.value = Math.sin(Math.PI * p);
+        if (p >= 1) { sweepT = -1; uni.uSweepAmp.value = 0; }
+        busy = true;
+      }
+      if (moved) { writeInstances(); busy = true; }
+      return busy;
+    },
     afterRender() {
-      if (state.layout === 'helix') { // hide labels on the far side of the cylinder
-        const cam = E.camera.position;
-        for (const lb of elLabels) {
-          const back = lb.nrm && (cam.x - lb.pos.x) * lb.nrm.x + (cam.z - lb.pos.z) * lb.nrm.z < 0;
-          if (back) lb.priority = -1;
-          else if (lb.priority < 0) lb.priority = lb.data.Z === state.Z ? 100 : 1;
-        }
-      } else for (const lb of elLabels) if (lb.priority < 0) lb.priority = lb.data.Z === state.Z ? 100 : 1;
+      if (hovered) { const c = cur[hovered - 1]; pop.pos.set(0, c.h + lift[hovered - 1], 0).applyQuaternion(c.quat).add(c.pos); }
+      if (hint.priority >= 0 && hint.data) { const i = hint.data - 1, c = cur[i]; hint.pos.set(0, c.h + lift[i], 0).applyQuaternion(c.quat).add(c.pos); }
       labels.update();
     },
     onState(ch) {
-      if ('layout' in ch) { morph(); rebuildAxisLabels(); frame(); writeColours(); }
-      else if ('prop' in ch || 'log' in ch) { morph(); writeColours(); }
-      if ('Z' in ch || 'color' in ch || 'T' in ch || 'filters' in ch || 'cb' in ch || 'lang' in ch) { writeColours(); placeSelectionRing(); }
+      if ('layout' in ch) { morph(); frame(); writeColours(); }
+      else if ('prop' in ch || 'log' in ch || 'flat' in ch) { morph(); writeColours(); if (!state.card) frame(); }
+      if (['Z', 'color', 'T', 'filters', 'cb', 'lang', 'marks', 'hideSel'].some(x => x in ch)) { writeColours(); setLiftTargets(); placeSelection(); }
+      if (['Z', 'card', 'hideSel'].some(x => x in ch) && hovered) { const z = hovered; hovered = 0; setHover(z); } // re-decide the hover label
       invalidate();
     },
     tap(x, y) {
       const e = pickAt(x, y);
-      if (e) { if (e.Z === state.Z && hooks.onOpen) hooks.onOpen(e); else hooks.onSelect(e); }
+      if (e) hooks.onSelect(e); else if (hooks.onEmpty) hooks.onEmpty();
     },
     hover(x, y) {
+      if (x != null && E.rig.parallaxOn) E.rig.parallax(x / window.innerWidth - 0.5, y / window.innerHeight - 0.5, (motion.parallaxMaxDeg * Math.PI) / 180);
       const e = x == null ? null : pickAt(x, y);
-      const z = e ? e.Z : 0;
       E.canvas.style.cursor = e ? 'pointer' : '';
-      if (z !== hovered) { hovered = z; writeColours(); invalidate(); }
-      hooks.tooltip(e ? { x, y, e, text: fmtProp(state.prop, propValue(e, state.prop)) } : null);
+      setHover(e ? e.Z : 0);
+      invalidate();
     },
-    focus(Z, dur = 0.7) {
-      const c = cur[Z - 1];
-      const top = new THREE.Vector3(0, c.h * 0.5, 0).applyQuaternion(c.quat).add(c.pos);
-      E.rig.flyTo({ target: top, r: Math.min(E.rig.r, 9) }, dur);
-    },
-    frame,
-    poseOf: Z => cur[Z - 1],
-    columnTop(Z) { const c = cur[Z - 1]; return new THREE.Vector3(0, c.h, 0).applyQuaternion(c.quat).add(c.pos); },
+    focus, frame, introSweep, showHint,
+    setBreath(Z) { breathZ = Z || 0; breathT = 0; invalidate(); },
+    columnTop(Z) { const c = cur[Z - 1]; return new THREE.Vector3(0, c.h + lift[Z - 1], 0).applyQuaternion(c.quat).add(c.pos); },
+    screenOf(Z) { return toScreen(view.columnTop(Z)); },
+    pickAt,
   };
   return view;
 }

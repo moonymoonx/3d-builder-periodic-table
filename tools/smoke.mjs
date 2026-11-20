@@ -20,105 +20,127 @@ const step = async (name, fn) => {
 const settle = () => page.waitForFunction(() => { const E = window.__pt?.E; return E && !E.rig.tween && E.anims.size === 0; }, null, { timeout: 20000 });
 const Z = () => page.evaluate(() => window.__pt.state.Z);
 
-await page.goto(`file://${ROOT}/index.html#v=table&el=Fe&lang=en`);
+await page.goto(`file://${ROOT}/index.html#v=table&lang=en`);
 await page.waitForFunction(() => window.__pt && window.__pt.E.active, null, { timeout: 30000 });
 await settle();
 
-await step('tap a column selects it (H)', async () => {
-  const pt = await page.evaluate(() => {
-    const v = window.__pt.E.views.table, cam = window.__pt.E.camera;
-    const p = v.columnTop(1).clone(); p.y -= 0.4; p.project(cam);
-    return { x: (p.x * 0.5 + 0.5) * innerWidth, y: (-p.y * 0.5 + 0.5) * innerHeight };
-  });
-  await page.mouse.click(pt.x, pt.y);
-  await page.waitForTimeout(200);
-  const z = await Z();
-  if (z !== 1) throw new Error(`state.Z = ${z} after clicking H at ${Math.round(pt.x)},${Math.round(pt.y)}`);
-  return `clicked at ${Math.round(pt.x)},${Math.round(pt.y)}`;
+const tileTop = Zt => page.evaluate(z => { const s = window.__pt.table.screenOf(z); return { x: s.x, y: s.y + 3 }; }, Zt);
+const S = () => page.evaluate(() => ({ Z: window.__pt.state.Z, card: window.__pt.state.card, view: window.__pt.state.view, lens: window.__pt.state.lens }));
+
+await step('landing: one prompt, lens chips; no tabs, legend or data sheet', async () => {
+  const n = await page.evaluate(() => ({ tabs: document.querySelectorAll('.tab').length, legend: document.querySelectorAll('.legend').length,
+    prompt: !!document.querySelector('.hero-prompt:not([hidden])'), chips: document.querySelectorAll('.hero-lenses .ui-chip').length,
+    sheet: !document.querySelector('.side.right') || document.querySelector('.side.right').hidden }));
+  if (n.tabs || n.legend || !n.prompt || n.chips !== 7 || !n.sheet) throw new Error(JSON.stringify(n));
+  return `${n.chips} lens chips`;
 });
-await step('hover shows a tooltip', async () => {
-  const pt = await page.evaluate(() => {
-    const v = window.__pt.E.views.table, cam = window.__pt.E.camera;
-    const p = v.columnTop(79).clone(); p.y -= 0.3; p.project(cam);
-    return { x: (p.x * 0.5 + 0.5) * innerWidth, y: (-p.y * 0.5 + 0.5) * innerHeight };
-  });
-  await page.mouse.move(pt.x, pt.y);
-  await page.waitForTimeout(150);
-  const tip = await page.evaluate(() => { const t = document.querySelector('.tooltip'); return t && !t.hidden ? t.textContent : null; });
-  if (!tip || !/Au/.test(tip)) throw new Error('tooltip: ' + tip);
-  return tip;
+await step('hover a tile shows its name', async () => {
+  const p = await tileTop(79);
+  await page.mouse.move(p.x, p.y); await page.waitForTimeout(250);
+  const txt = await page.evaluate(() => [...document.querySelectorAll('.lbl.pop')].find(l => l.style.visibility === 'visible')?.textContent || '');
+  if (!/Gold/.test(txt)) throw new Error('pop: ' + txt);
+  return txt;
+});
+await step('tap a tile opens the element card (H)', async () => {
+  const p = await tileTop(1);
+  await page.mouse.click(p.x, p.y); await settle(); await page.waitForTimeout(300);
+  const st = await S(); const nm = await page.locator('.card-name').textContent();
+  if (st.Z !== 1 || !st.card || nm !== 'Hydrogen') throw new Error(JSON.stringify({ ...st, nm }));
+  return `clicked at ${Math.round(p.x)},${Math.round(p.y)}`;
 });
 await step('accent-insensitive search: "sat" -> iron (sắt)', async () => {
-  await page.fill('.search input', 'sat');
-  await page.keyboard.press('Enter');
-  await page.waitForTimeout(150);
-  if (await Z() !== 26) throw new Error('Z=' + await Z());
+  await page.locator('.hero-find input').fill('sat');
+  const first = await page.locator('.hero-result').first().textContent();
+  if (!/Iron/.test(first)) throw new Error(first);
+  await page.locator('.hero-find input').press('Enter'); await settle();
+  if ((await S()).Z !== 26) throw new Error('enter did not open iron');
 });
 await step('search "natri" -> sodium', async () => {
-  await page.fill('.search input', 'natri');
-  await page.keyboard.press('Enter');
-  await page.waitForTimeout(150);
-  if (await Z() !== 11) throw new Error('Z=' + await Z());
+  await page.locator('.hero-find input').fill('natri');
+  const first = await page.locator('.hero-result').first().textContent();
+  await page.locator('.hero-find input').fill('');
+  if (!/Sodium/.test(first)) throw new Error(first);
 });
 await step('search "79" -> gold', async () => {
-  await page.fill('.search input', '79');
-  await page.keyboard.press('Enter');
-  if (await Z() !== 79) throw new Error('Z=' + await Z());
+  await page.locator('.hero-find input').fill('79');
+  const first = await page.locator('.hero-result').first().textContent();
+  await page.locator('.hero-find input').press('Escape');
+  if (!/Gold/.test(first)) throw new Error(first);
 });
-await step('keyboard → next element', async () => {
+await step('keyboard → next element updates the card', async () => {
   await page.locator('#gl').focus();
-  await page.keyboard.press('ArrowRight');
-  if (await Z() !== 80) throw new Error('Z=' + await Z());
-  await page.keyboard.press('ArrowUp');
-  if (await Z() !== 48) throw new Error('ArrowUp: Z=' + await Z());
+  await page.keyboard.press('ArrowRight'); await page.waitForTimeout(250);
+  const st = await S(); const nm = await page.locator('.card-name').textContent();
+  if (st.Z !== 27 || nm !== 'Cobalt') throw new Error(JSON.stringify({ ...st, nm }));
 });
-await step('tap a value shows its source', async () => {
-  await page.locator('dl.facts button.v').nth(6).click();
+await step('tap a card value shows its source', async () => {
+  await page.locator('.card-v').nth(1).click();
   const txt = await page.locator('.popover').textContent();
-  if (!/Source/.test(txt)) throw new Error(txt);
   await page.keyboard.press('Escape');
-  return txt.slice(0, 80);
+  if (!/Source/.test(txt)) throw new Error(txt.slice(0, 80));
+  return txt.slice(0, 60);
 });
-await step('layout 32 columns + helix morph without errors', async () => {
-  await page.getByRole('button', { name: '32 columns' }).click(); await settle();
-  await page.getByRole('button', { name: 'Helix' }).click(); await settle();
-  const lay = await page.evaluate(() => window.__pt.state.layout);
-  if (lay !== 'helix') throw new Error(lay);
-  await page.getByRole('button', { name: '18 columns' }).click(); await settle();
+await step('"All numbers & sources" keeps every sourced field', async () => {
+  await page.locator('.ui-disclosure__summary').click(); await page.waitForTimeout(150);
+  const n = await page.locator('.card-facts .v').count();
+  if (n < 15) throw new Error(`${n} values`);
+  return `${n} sourced values`;
 });
-await step('category filter dims others', async () => {
-  await page.getByRole('button', { name: /Noble gas/ }).click();
-  const f = await page.evaluate(() => [...(window.__pt.state.filters.cats || [])]);
-  if (f.join() !== 'noble-gas') throw new Error(JSON.stringify(f));
-  await page.getByRole('button', { name: 'Show all' }).click();
+await step('lens chips: heat map follows the temperature, melting point raises columns', async () => {
+  await page.locator('.hero-lenses .ui-chip', { hasText: 'Heat map' }).click(); await settle();
+  await page.evaluate(() => window.__pt.set({ T: 2000 }));
+  const a = await page.evaluate(() => ({ lens: window.__pt.state.lens, color: window.__pt.state.color, T: window.__pt.state.T, slider: !!document.querySelector('.hero-heat input[type=range]') }));
+  await page.locator('.hero-lenses .ui-chip', { hasText: 'Melting point' }).click(); await settle();
+  const b = await page.evaluate(() => ({ lens: window.__pt.state.lens, flat: window.__pt.state.flat, prop: window.__pt.state.prop, T: window.__pt.state.T }));
+  await page.locator('.hero-lenses .ui-chip', { hasText: 'Families' }).click(); await settle();
+  if (a.lens !== 'heat' || a.color !== 'state' || !a.slider || b.lens !== 'mp' || b.flat || b.prop !== 'mp' || b.T !== 293.15) throw new Error(JSON.stringify({ a, b }));
 });
-await step('switch to Vietnamese', async () => {
-  await page.click('#btn-lang');
-  await page.waitForTimeout(150);
-  const lang = await page.evaluate(() => document.documentElement.lang);
-  const tab = await page.locator('.tab').first().textContent();
-  if (lang !== 'vi' || tab !== 'Bảng') throw new Error(`${lang} ${tab}`);
+await step('menu: other shapes of the table (32 columns, helix) without errors', async () => {
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: '32 columns (wide)' }).click(); await settle();
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: /Helix/ }).click(); await settle();
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: '18 columns (standard)' }).click(); await settle();
 });
-await step('credits modal lists sources', async () => {
-  await page.click('#btn-credits');
+await step('back link closes the card', async () => {
+  await page.locator('[data-back=home]').click(); await settle();
+  const st = await S();
+  if (st.card) throw new Error(JSON.stringify(st));
+});
+await step('switch to Vietnamese and back', async () => {
+  await page.locator('.hero-lang button', { hasText: 'VI' }).click(); await page.waitForTimeout(200);
+  const w = await page.locator('.hero-word b').textContent();
+  await page.locator('.hero-lang button', { hasText: 'EN' }).click(); await page.waitForTimeout(200);
+  if (w !== 'Bảng tuần hoàn') throw new Error(w);
+  return w;
+});
+await step('credits (menu) list the sources', async () => {
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'Sources & credits' }).click();
   const rows = await page.locator('.modal tr').count();
   await page.keyboard.press('Escape');
-  if (rows < 10) throw new Error('rows ' + rows);
+  if (rows < 10) throw new Error(`${rows} rows`);
   return `${rows - 1} sources`;
 });
-await step('URL hash is shareable', async () => {
-  await page.waitForTimeout(400);
-  const h = await page.evaluate(() => location.hash);
-  if (!/el=Cd/.test(h) || !/lang=vi/.test(h)) throw new Error(h);
-  return h;
+await step('URL hash is shareable (lens + open card)', async () => {
+  await page.evaluate(() => window.__pt.set({ lens: 'heat', color: 'state', T: 1000 }));
+  const p = await tileTop(79); await page.mouse.click(p.x, p.y); await page.waitForTimeout(600);
+  const hash = await page.evaluate(() => location.hash);
+  await page.evaluate(() => window.__pt.set({ lens: 'families', color: 'cat', T: 293.15 }));
+  if (!/lens=heat/.test(hash) || !/card=1/.test(hash) || !/el=Au/.test(hash)) throw new Error(hash);
+  return hash;
 });
-
-await step('atom view: open from the data sheet', async () => {
-  await page.click('#btn-lang'); // back to English
-  await page.evaluate(() => window.__pt.set({ Z: 23 }));
-  await page.getByRole('button', { name: 'See its atom' }).click();
-  await page.waitForFunction(() => window.__pt.E.active === window.__pt.E.views.atom, null, { timeout: 10000 });
-  await settle();
+await step('atom view: a door from the card, and the back link returns to the card', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'table' }));
+  const p = await tileTop(23); await page.mouse.click(p.x, p.y); await settle();
+  await page.locator('.ui-door', { hasText: 'Look inside the atom' }).click(); await settle();
+  const v = await S();
+  if (v.view !== 'atom' || v.Z !== 23) throw new Error(JSON.stringify(v));
+  await page.locator('[data-back=card]').click(); await settle();
+  const w = await S();
+  if (w.view !== 'table' || !w.card || w.Z !== 23) throw new Error('back: ' + JSON.stringify(w));
+  await page.locator('.ui-door', { hasText: 'Look inside the atom' }).click(); await settle();
 });
 await step('atom view: + proton V -> Cr reports the 3d/4s exception', async () => {
   await page.getByRole('button', { name: '+ proton' }).click();

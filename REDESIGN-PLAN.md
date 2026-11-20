@@ -175,6 +175,7 @@ Answered in PLAN-CRITIQUE.md (21 Nov):
 - **Story lenses move from "Later" to step 4** (In your phone first, since its source is public domain). Each ships only once its data is fetched, cited and validated, with no placeholders on a default surface.
 
 ## 8. Work order: the HERO slice first, at full polish
+> **Status 21 Nov 2026:** step 1 (HERO slice) is built: review set in `/workspace/out/redesign/hero-r1/`, details in LOG.md. Waiting for Gemini's first-visitor review before step 2.
 1. **HERO slice: landing + table + first interaction.** Acceptance:
    - DESIGN-RULES checklist passes.
    - AFTER screenshots at 1440×900 and 390×844 are taken with the same tool and flags as BEFORE (`/workspace/out/redesign/shots-tool.patch`).

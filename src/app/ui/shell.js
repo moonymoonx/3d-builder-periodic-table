@@ -1,55 +1,14 @@
-// App shell: top bar (tabs, search, buttons), side panels, phone bottom bar, tooltip, modals, FPS meter.
+// Shell for the views not yet rebuilt (side panels, phone bottom bar, tooltip) plus the dialogs
+// (help/keys, credits, settings) and the FPS meter. The top bar now lives in places/home.js.
 import { h, $, clear, replace, toast, isPhone } from '../dom.js';
 import { t, getLang, fmtNum } from '../i18n.js';
 import { state, set, VIEWS, shareURL } from '../state.js';
 import { search, name, altName, data, source } from '../data.js';
 import { E, frameStats, setTier } from '../engine.js';
 
-export function buildShell({ onPick }) {
+export function buildShell() {
   const ui = $('#ui');
   const S = {};
-
-  // ---- top bar ------------------------------------------------------------------------------
-  const tabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Views' });
-  S.tabBtns = VIEWS.map(v => {
-    const b = h('button', { class: 'tab', role: 'tab', 'data-view': v, onclick: () => set({ view: v }) });
-    tabs.append(b);
-    return b;
-  });
-  const input = h('input', { type: 'search', autocomplete: 'off', spellcheck: 'false', 'aria-label': '', enterkeyhint: 'go' });
-  const results = h('div', { class: 'results', role: 'listbox', hidden: true });
-  const searchBox = h('div', { class: 'search' }, input, results);
-  let active = 0, found = [];
-  const renderResults = () => {
-    clear(results);
-    if (!input.value.trim()) { results.hidden = true; return; }
-    found = search(input.value);
-    if (!found.length) results.append(h('div', { class: 'result' }, h('span', null, t('search.none'))));
-    found.forEach((e, i) => results.append(h('button', {
-      class: 'result' + (i === active ? ' active' : ''), role: 'option', onmousedown: ev => { ev.preventDefault(); choose(e); },
-    }, h('b', null, e.sym), name(e), h('span', null, `${altName(e) ? altName(e) + ' · ' : ''}Z = ${e.Z}`))));
-    results.hidden = false;
-  };
-  const choose = e => { input.value = ''; results.hidden = true; input.blur(); onPick(e); };
-  input.addEventListener('input', () => { active = 0; renderResults(); });
-  input.addEventListener('keydown', ev => {
-    if (ev.key === 'ArrowDown') { active = Math.min(found.length - 1, active + 1); renderResults(); ev.preventDefault(); }
-    else if (ev.key === 'ArrowUp') { active = Math.max(0, active - 1); renderResults(); ev.preventDefault(); }
-    else if (ev.key === 'Enter') { if (found[active]) choose(found[active]); }
-    else if (ev.key === 'Escape') { input.value = ''; results.hidden = true; input.blur(); }
-    ev.stopPropagation();
-  });
-  input.addEventListener('blur', () => setTimeout(() => { results.hidden = true; }, 150));
-  S.search = input;
-
-  const btn = (id, label, onclick) => h('button', { class: 'iconbtn', id, onclick, 'aria-label': label }, label);
-  S.langBtn = btn('btn-lang', '', () => set({ lang: getLang() === 'vi' ? 'en' : 'vi' }));
-  S.helpBtn = btn('btn-help', '?', () => openModal('help'));
-  S.credBtn = h('button', { class: 'iconbtn', id: 'btn-credits', onclick: () => openModal('credits') }, h('span', { class: 'wide' }), h('span', { class: 'narrow', 'aria-hidden': 'true' }, 'i'));
-  S.setBtn = btn('btn-settings', '⚙', () => openModal('settings'));
-  const brand = h('div', { class: 'brand' }, h('b'), h('span'));
-  S.brand = brand;
-  ui.append(h('header', { class: 'topbar' }, brand, tabs, h('div', { class: 'spacer' }), searchBox, S.langBtn, S.credBtn, S.helpBtn, S.setBtn));
 
   // ---- side panels + phone bar ------------------------------------------------------------
   S.left = h('aside', { class: 'side left', 'aria-label': 'Controls' });
@@ -101,8 +60,8 @@ export function buildShell({ onPick }) {
     box.append(close, h('h2', null, t('help.title')));
     for (const p of t('help.body')) box.append(h('p', null, p));
     box.append(h('h3', null, t('help.keys')));
-    const keys = [['← →  [ ]', t('key.prevnext')], ['↑ ↓', t('key.updown')], ['1–6', t('key.views')], ['/', t('key.search')],
-      ['L', t('key.layout')], ['H', t('key.height')], ['Enter', t('key.enter')], ['F', t('key.fps')], ['Esc', t('key.esc')]];
+    const keys = [['← →  [ ]', t('key.prevnext')], ['↑ ↓', t('key.updown')], ['/', t('key.search')],
+      ['H', t('key.height')], ['L', t('key.layout')], ['Enter', t('key.enter')], ['Esc', t('key.esc')], ['F', t('key.fps')]];
     box.append(h('table', null, keys.map(([k, d]) => h('tr', null, h('td', null, ...k.split('  ').map(x => h('kbd', null, x))), h('td', null, d)))));
   }
   function fillCredits(box, close) {
@@ -148,14 +107,6 @@ export function buildShell({ onPick }) {
   }, 500);
 
   S.relabel = () => {
-    replace(brand.children[0], t('app.title')); replace(brand.children[1], t('app.sub'));
-    S.tabBtns.forEach(b => { b.textContent = t('view.' + b.dataset.view); b.setAttribute('aria-selected', String(b.dataset.view === state.view)); });
-    // phone: the tab row scrolls sideways; keep the active tab fully in view
-    const act = S.tabBtns.find(b => b.dataset.view === state.view);
-    if (act && tabs.scrollWidth > tabs.clientWidth) tabs.scrollLeft = Math.max(0, act.offsetLeft - (tabs.clientWidth - act.offsetWidth) / 2);
-    input.placeholder = t('search.ph'); input.setAttribute('aria-label', t('search.label'));
-    S.langBtn.textContent = getLang() === 'vi' ? 'EN' : 'VI'; S.langBtn.setAttribute('aria-label', t('btn.lang'));
-    S.credBtn.firstChild.textContent = t('btn.credits'); S.credBtn.setAttribute('aria-label', t('btn.credits')); S.helpBtn.setAttribute('aria-label', t('btn.help')); S.setBtn.setAttribute('aria-label', t('btn.settings'));
     S.mobBtns.left.textContent = t('btn.controls'); S.mobBtns.right.textContent = t('btn.data');
   };
   S.relabel();

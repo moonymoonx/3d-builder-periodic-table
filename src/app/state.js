@@ -1,6 +1,8 @@
 // Global app state + shareable URL hash (#v=table&el=Fe&p=ie1&lay=s18&lang=vi ...).
 const listeners = new Set();
-export const VIEWS = ['table', 'atom', 'sample', 'trends', 'compare', 'quiz'];
+// 'table' is home; the other views are reached through the element card (the quiz is parked on a branch)
+export const VIEWS = ['table', 'atom', 'sample', 'trends', 'compare'];
+export const LENSES = ['families', 'heat', 'mp', 'density', 'rCov', 'ie1', 'en', 'year', 'abund', 'bp', 'ea', 'aw', 'rVdw', 'zeff'];
 export const LAYOUTS = ['s18', 's32', 'helix'];
 
 export const state = {
@@ -10,6 +12,9 @@ export const state = {
   filters: { cats: null, blocks: null, group: 0, period: 0, state: '', origin: '' },
   quality: 'auto', tier: 'med', reduced: false, cb: false, fps: false,
   orbital: null, density: 'orbital', surf: true, allotrope: null, trendLine: 'period', cmpR: 'cov',
+  // home: the lens on the table, whether the element card is open; table staging (equal heights,
+  // selection hidden until something is chosen, highlighted subset)
+  lens: 'families', card: false, flat: true, hideSel: true, marks: null,
 };
 
 export function set(patch, { silent = false } = {}) {
@@ -22,7 +27,7 @@ export function set(patch, { silent = false } = {}) {
 export function on(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
 // ---- URL hash ---------------------------------------------------------------------------
-const HASH_KEYS = { v: 'view', el: 'Z', el2: 'Z2', p: 'prop', log: 'log', lay: 'layout', col: 'color', T: 'T', lang: 'lang', orb: 'orbital', den: 'density', alt: 'allotrope', line: 'trendLine', rad: 'cmpR' };
+const HASH_KEYS = { v: 'view', el: 'Z', el2: 'Z2', p: 'prop', log: 'log', lay: 'layout', T: 'T', lang: 'lang', orb: 'orbital', den: 'density', alt: 'allotrope', line: 'trendLine', rad: 'cmpR', lens: 'lens', card: 'card' };
 let hashTimer = 0, symOf = Z => Z, zOf = s => s;
 export function initHash(symbolOf, zFromSymbol) { symOf = symbolOf; zOf = zFromSymbol; }
 export function readHash() {
@@ -40,17 +45,20 @@ export function readHash() {
     else if (k === 'density') { if (raw === 'total' || raw === 'orbital') out.density = raw; }
     else if (k === 'trendLine') { if (raw === 'period' || raw === 'group') out.trendLine = raw; }
     else if (k === 'cmpR') { if (raw === 'cov' || raw === 'vdw') out.cmpR = raw; }
+    else if (k === 'lens') { if (LENSES.includes(raw)) out.lens = raw; }
+    else if (k === 'card') out.card = raw === '1';
     else out[k] = raw;
   }
   return out;
 }
 function writeHash() {
   const q = new URLSearchParams();
-  q.set('v', state.view); q.set('el', symOf(state.Z));
+  q.set('v', state.view);
+  if (state.view !== 'table' || state.card) q.set('el', symOf(state.Z));
   if (state.view === 'compare') q.set('el2', symOf(state.Z2));
-  if (state.view === 'table' || state.view === 'trends') { q.set('p', state.prop); if (state.log) q.set('log', '1'); }
-  if (state.view === 'table') { q.set('lay', state.layout); if (state.color !== 'cat') q.set('col', state.color); }
-  if (state.view === 'sample' || state.color === 'state') q.set('T', String(Math.round(state.T * 100) / 100));
+  if (state.view === 'trends') { q.set('p', state.prop); if (state.log) q.set('log', '1'); }
+  if (state.view === 'table') { if (state.lens !== 'families') q.set('lens', state.lens); if (state.card) q.set('card', '1'); if (state.layout !== 's18') q.set('lay', state.layout); }
+  if (state.view === 'sample' || (state.view === 'table' && state.lens === 'heat')) q.set('T', String(Math.round(state.T * 100) / 100));
   if (state.view === 'atom') { if (state.orbital) q.set('orb', state.orbital); if (state.density !== 'orbital') q.set('den', state.density); }
   if (state.view === 'sample' && state.allotrope) q.set('alt', state.allotrope);
   if (state.view === 'trends' && state.trendLine !== 'period') q.set('line', state.trendLine);

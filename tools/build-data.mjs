@@ -30,6 +30,7 @@ const accessedOf = prefix => {
 const curated = f => JSON.parse(fs.readFileSync(path.join(ROOT, 'data/curated', f), 'utf8'));
 const placeholders = curated('placeholders.json');
 const FIX = curated('factcheck-fixes.json');
+const LINES = curated('element-lines.json').lines;
 const HIT = curated('phases-highT.json');
 const warnings = [];
 const warn = (...a) => warnings.push(a.join(' '));
@@ -86,6 +87,7 @@ const SOURCES = {
   model: { name: 'Modelling assumption of this app (stated in the note)', url: '', licence: 'n/a' },
   sym: { name: 'Atomic positions fixed by space-group symmetry (no measured parameter needed)', url: '', licence: 'n/a' },
   spec: { name: 'Project scope decision (SPEC.md §5: molecular and complex solids later)', url: '', licence: 'n/a' },
+  lines: { name: 'Our own one-line descriptions (data/curated/element-lines.json), each checked against the Wikipedia lead section of the element (revision in the note); Vietnamese drafted for moony', url: 'https://en.wikipedia.org/', accessed: accessedOf('wikipedia/intros'), licence: 'our text; facts from CC BY-SA 4.0 pages (no text copied)' },
   placeholder: { name: 'PLACEHOLDER — unverified value awaiting a source (see QUESTIONS.md)', url: '', licence: 'n/a' },
   none: { name: 'No value in our sources (reason given)', url: '', licence: 'n/a' },
 };
@@ -629,7 +631,10 @@ for (const Z of ZS) {
   const ln = linesFor(Z, sym);
   const lines = ln.none ? { none: ln.none } : { basis: ln.basis, n: ln.total, v: ln.v };
 
-  elements.push({ Z, sym, names, f, cfg: subs.map(s => [s.n, s.l, s.occ]), zeff, ph, lat: lat.out, lines, wpRev: wp ? wp.revid : null, col32: L.col32, fIndex: L.fIndex });
+  // the element card's first line: our own words, checked against the Wikipedia lead (REDESIGN-PLAN §2, QUESTIONS Q17)
+  const ln1 = LINES[sym];
+  const line = ln1 ? V({ en: ln1.en, vi: ln1.vi }, 'lines', { n: `checked against Wikipedia: ${ln1.wiki} (revision ${ln1.rev})`, url: `https://en.wikipedia.org/w/index.php?oldid=${ln1.rev}`, check: ln1.check }) : undefined;
+  elements.push({ Z, sym, names, f, cfg: subs.map(s => [s.n, s.l, s.occ]), zeff, ph, lat: lat.out, lines, ...(line ? { line } : {}), wpRev: wp ? wp.revid : null, col32: L.col32, fIndex: L.fIndex });
 }
 
 // ---------------------------------------------------------------------------------------------

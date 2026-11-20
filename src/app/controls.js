@@ -10,6 +10,9 @@ export class OrbitRig {
     this.lim = { rMin: 0.5, rMax: 200, phiMin: 0.05, phiMax: Math.PI - 0.05 };
     this.enabled = true; this.onChange = onChange; this.onTap = onTap; this.onHover = onHover;
     this.pointers = new Map(); this.tween = null; this.damping = 6; this.reduced = false;
+    // pointer parallax (a depth cue on desktop, STYLE.md §6) and an optional one-finger "scrub" mode
+    // for touch screens (the phone loupe): { start(x, y), move(x, y), end(x, y), cancel() }
+    this.par = { x: 0, y: 0, tx: 0, ty: 0 }; this.parallaxOn = false; this.scrub = null;
     this._attach();
     this.apply();
   }
@@ -20,11 +23,14 @@ export class OrbitRig {
     d.addEventListener('contextmenu', e => e.preventDefault());
     d.addEventListener('pointerdown', e => {
       if (!this.enabled) return;
-      d.setPointerCapture(e.pointerId);
+      try { d.setPointerCapture(e.pointerId); } catch { /* synthetic or already released pointer */ }
       this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       this.tween = null;
-      if (this.pointers.size === 1) down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0, button: e.button, shift: e.shiftKey };
-      if (this.pointers.size === 2) { pinch = this._pinchState(); down = null; }
+      if (this.pointers.size === 1) {
+        down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0, button: e.button, shift: e.shiftKey, scrub: false };
+        if (this.scrub && e.pointerType === 'touch') { down.scrub = true; this.scrub.start(e.clientX, e.clientY); }
+      }
+      if (this.pointers.size === 2) { if (down && down.scrub && this.scrub) this.scrub.cancel(); pinch = this._pinchState(); down = null; }
     });
     d.addEventListener('pointermove', e => {
       const p = this.pointers.get(e.pointerId);
@@ -33,6 +39,7 @@ export class OrbitRig {
       p.x = e.clientX; p.y = e.clientY;
       if (this.pointers.size === 1 && down) {
         down.moved += Math.abs(dx) + Math.abs(dy);
+        if (down.scrub) { this.scrub.move(e.clientX, e.clientY); return; }
         if (down.button === 2 || down.shift) this.pan(dx, dy); else this.rotate(dx, dy);
       } else if (this.pointers.size === 2 && pinch) {
         const s = this._pinchState();
@@ -44,6 +51,7 @@ export class OrbitRig {
     const up = e => {
       if (!this.pointers.has(e.pointerId)) return;
       this.pointers.delete(e.pointerId);
+      if (down && down.scrub && this.pointers.size === 0) { this.scrub.end(e.clientX, e.clientY, e.type === 'pointercancel'); down = null; return; }
       if (down && this.pointers.size === 0 && down.moved < 7 && performance.now() - down.t < 600 && this.onTap) this.onTap(e.clientX, e.clientY, e);
       if (this.pointers.size < 2) pinch = null;
       if (this.pointers.size === 0) down = null;
@@ -78,8 +86,21 @@ export class OrbitRig {
     this.apply(); this._kick();
   }
   _kick() { this.moving = true; if (this.onChange) this.onChange(); }
+  /** Lean the camera slightly toward the pointer: nx, ny in [-0.5, 0.5]; max in radians. */
+  parallax(nx, ny, max) {
+    if (!this.parallaxOn || this.reduced) { this.par.tx = this.par.ty = 0; } else { this.par.tx = -nx * 2 * max; this.par.ty = -ny * 2 * max * 0.6; }
+    this._kick();
+  }
   /** Advance damping; returns true while still moving. */
   update(dt) {
+    const pa = this.par;
+    let parMoving = false;
+    if (Math.abs(pa.tx - pa.x) + Math.abs(pa.ty - pa.y) > 1e-5) {
+      const k = 1 - Math.exp(-dt / 0.1);
+      pa.x += (pa.tx - pa.x) * k; pa.y += (pa.ty - pa.y) * k;
+      parMoving = true;
+      if (!this.tween) this.apply();
+    }
     if (this.tween) {
       const tw = this.tween;
       tw.t = Math.min(1, tw.t + dt / tw.dur);
@@ -95,7 +116,7 @@ export class OrbitRig {
     const v = this.v;
     const decay = Math.exp(-this.damping * dt);
     const any = Math.abs(v.theta) + Math.abs(v.phi) + Math.abs(v.px) + Math.abs(v.py) > 1e-5;
-    if (!any) { this.moving = false; return false; }
+    if (!any) { this.moving = false; return parMoving; }
     this.theta += v.theta * dt; this.phi += v.phi * dt;
     const right = new THREE.Vector3().setFromMatrixColumn(this.camera.matrix, 0);
     const upv = new THREE.Vector3().setFromMatrixColumn(this.camera.matrix, 1);
@@ -108,11 +129,12 @@ export class OrbitRig {
     this.phi = THREE.MathUtils.clamp(this.phi, this.lim.phiMin, this.lim.phiMax);
     this.r = THREE.MathUtils.clamp(this.r, this.lim.rMin, this.lim.rMax);
     if (this.lim.box) this.target.clamp(this.lim.box.min, this.lim.box.max);
-    const sp = Math.sin(this.phi);
+    const th = this.theta + this.par.x, ph = THREE.MathUtils.clamp(this.phi + this.par.y, 0.02, Math.PI - 0.02);
+    const sp = Math.sin(ph);
     this.camera.position.set(
-      this.target.x + this.r * sp * Math.sin(this.theta),
-      this.target.y + this.r * Math.cos(this.phi),
-      this.target.z + this.r * sp * Math.cos(this.theta));
+      this.target.x + this.r * sp * Math.sin(th),
+      this.target.y + this.r * Math.cos(ph),
+      this.target.z + this.r * sp * Math.cos(th));
     this.camera.lookAt(this.target);
     this.camera.updateMatrixWorld();
   }

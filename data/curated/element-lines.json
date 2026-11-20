@@ -1,0 +1,264 @@
+{
+ "_note": "Our own one-line descriptions for the element card (REDESIGN-PLAN §2). Each was written from and checked against the Wikipedia lead section saved in data/raw/wikipedia/intros-*.json (revision given). Vietnamese is a draft for moony. QUESTIONS Q17: independent check pending.",
+ "lines": {
+  "H": {
+   "en": "The lightest element, and about three-quarters of all ordinary matter in the universe.",
+   "vi": "Nguyên tố nhẹ nhất, chiếm khoảng ba phần tư lượng vật chất thông thường trong vũ trụ.",
+   "wiki": "Hydrogen",
+   "rev": 1386699448,
+   "check": "pending"
+  },
+  "He": {
+   "en": "Named after the Sun: it was first spotted in sunlight, during an eclipse in 1868.",
+   "vi": "Được đặt theo tên Mặt Trời: người ta nhận ra nó lần đầu trong ánh sáng Mặt Trời, khi có nhật thực năm 1868.",
+   "wiki": "Helium",
+   "rev": 1385904773,
+   "check": "pending"
+  },
+  "Li": {
+   "en": "The lightest metal of all; batteries use more than three-quarters of the lithium produced.",
+   "vi": "Kim loại nhẹ nhất; pin dùng hơn ba phần tư lượng lithium được sản xuất.",
+   "wiki": "Lithium",
+   "rev": 1384415425,
+   "check": "pending"
+  },
+  "C": {
+   "en": "The common element of all known life; diamond and graphite are both pure carbon.",
+   "vi": "Nguyên tố chung của mọi sự sống đã biết; kim cương và than chì đều là carbon tinh khiết.",
+   "wiki": "Carbon",
+   "rev": 1382887589,
+   "check": "pending"
+  },
+  "N": {
+   "en": "About 78 % of the air you breathe.",
+   "vi": "Chiếm khoảng 78 % không khí bạn hít thở.",
+   "wiki": "Nitrogen",
+   "rev": 1382698290,
+   "check": "pending"
+  },
+  "O": {
+   "en": "The gas in every breath, and almost half of Earth’s crust.",
+   "vi": "Khí trong mỗi hơi thở, và chiếm gần một nửa vỏ Trái Đất.",
+   "wiki": "Oxygen",
+   "rev": 1382172978,
+   "check": "pending"
+  },
+  "F": {
+   "en": "So reactive it combines with almost every other element; as fluoride, it protects teeth.",
+   "vi": "Phản ứng mạnh đến mức kết hợp với gần như mọi nguyên tố khác; ở dạng fluoride, nó bảo vệ răng.",
+   "wiki": "Fluorine",
+   "rev": 1385401167,
+   "check": "pending"
+  },
+  "Ne": {
+   "en": "The reddish-orange glow of neon signs.",
+   "vi": "Ánh sáng đỏ cam của biển hiệu đèn neon.",
+   "wiki": "Neon",
+   "rev": 1386652904,
+   "check": "pending"
+  },
+  "Na": {
+   "en": "A soft, highly reactive metal; joined with chlorine, it becomes table salt.",
+   "vi": "Kim loại mềm, phản ứng rất mạnh; kết hợp với chlorine, nó thành muối ăn.",
+   "wiki": "Sodium",
+   "rev": 1384983594,
+   "check": "pending"
+  },
+  "Mg": {
+   "en": "A light metal that burns with a brilliant white light.",
+   "vi": "Kim loại nhẹ, cháy với ánh sáng trắng chói lọi.",
+   "wiki": "Magnesium",
+   "rev": 1382020134,
+   "check": "pending"
+  },
+  "Al": {
+   "en": "Shines like silver, yet a block of it weighs only a third as much as the same block of steel.",
+   "vi": "Sáng như bạc, nhưng một khối nhôm chỉ nặng bằng một phần ba khối thép cùng cỡ.",
+   "wiki": "Aluminium",
+   "rev": 1386723999,
+   "check": "pending"
+  },
+  "Si": {
+   "en": "The semiconductor at the heart of computer chips and solar cells.",
+   "vi": "Chất bán dẫn ở trung tâm của chip máy tính và pin mặt trời.",
+   "wiki": "Silicon",
+   "rev": 1386715773,
+   "check": "pending"
+  },
+  "P": {
+   "en": "First isolated in 1669; its name means “light-bearer”, for the faint glow of white phosphorus.",
+   "vi": "Được tách ra lần đầu năm 1669; tên của nó nghĩa là “mang ánh sáng”, vì phosphorus trắng phát sáng mờ.",
+   "wiki": "Phosphorus",
+   "rev": 1386072599,
+   "check": "pending"
+  },
+  "S": {
+   "en": "Bright yellow crystals; a sulfur compound gives rotten eggs their smell.",
+   "vi": "Tinh thể màu vàng tươi; một hợp chất của lưu huỳnh tạo nên mùi trứng thối.",
+   "wiki": "Sulfur",
+   "rev": 1386783085,
+   "check": "pending"
+  },
+  "Cl": {
+   "en": "A yellow-green gas; joined with sodium, it becomes table salt.",
+   "vi": "Chất khí màu vàng lục; kết hợp với natri, nó thành muối ăn.",
+   "wiki": "Chlorine",
+   "rev": 1384241911,
+   "check": "pending"
+  },
+  "K": {
+   "en": "Named after potash, the ashes of plants; your nerves need it to send signals.",
+   "vi": "Được đặt tên theo bồ tạt (potash), tro của thực vật; dây thần kinh cần nó để truyền tín hiệu.",
+   "wiki": "Potassium",
+   "rev": 1380812822,
+   "check": "pending"
+  },
+  "Ca": {
+   "en": "Your bones need it; as calcium carbonate, it is limestone.",
+   "vi": "Xương của bạn cần nó; ở dạng calcium carbonate, nó là đá vôi.",
+   "wiki": "Calcium",
+   "rev": 1380108526,
+   "check": "pending"
+  },
+  "Ti": {
+   "en": "Light, strong and corrosion-resistant: jet engines and bone implants.",
+   "vi": "Nhẹ, bền và chống ăn mòn: dùng trong động cơ phản lực và cấy ghép xương.",
+   "wiki": "Titanium",
+   "rev": 1384300593,
+   "check": "pending"
+  },
+  "Fe": {
+   "en": "The metal of steel, and of the haemoglobin that carries oxygen in your blood.",
+   "vi": "Kim loại của thép, và của hemoglobin vận chuyển oxy trong máu bạn.",
+   "wiki": "Iron",
+   "rev": 1385905612,
+   "check": "pending"
+  },
+  "Cu": {
+   "en": "Pinkish-orange, and a superb carrier of heat and electricity.",
+   "vi": "Màu cam hồng, dẫn nhiệt và dẫn điện rất tốt.",
+   "wiki": "Copper",
+   "rev": 1385901401,
+   "check": "pending"
+  },
+  "Zn": {
+   "en": "Mostly used to coat iron and steel so they do not rust (galvanising).",
+   "vi": "Chủ yếu được dùng để mạ lên sắt thép cho khỏi gỉ (mạ kẽm).",
+   "wiki": "Zinc",
+   "rev": 1386002101,
+   "check": "pending"
+  },
+  "Ga": {
+   "en": "A metal that melts in your hand, at 29.76 °C.",
+   "vi": "Kim loại tan chảy trong lòng bàn tay, ở 29,76 °C.",
+   "wiki": "Gallium",
+   "rev": 1385890117,
+   "check": "pending"
+  },
+  "Br": {
+   "en": "A red-brown liquid at room temperature: with mercury, one of only two liquid elements.",
+   "vi": "Chất lỏng màu nâu đỏ ở nhiệt độ phòng: cùng với thuỷ ngân, là một trong hai nguyên tố duy nhất ở thể lỏng.",
+   "wiki": "Bromine",
+   "rev": 1380933663,
+   "check": "pending"
+  },
+  "Sr": {
+   "en": "Named after Strontian, a village in Scotland; its flame burns crimson red.",
+   "vi": "Được đặt theo tên Strontian, một ngôi làng ở Scotland; ngọn lửa của nó có màu đỏ thẫm.",
+   "wiki": "Strontium",
+   "rev": 1383415235,
+   "check": "pending"
+  },
+  "Ag": {
+   "en": "Of all metals, the best at carrying electricity and heat, and the most reflective.",
+   "vi": "Trong mọi kim loại, bạc dẫn điện và dẫn nhiệt tốt nhất, và phản chiếu ánh sáng tốt nhất.",
+   "wiki": "Silver",
+   "rev": 1382710933,
+   "check": "pending"
+  },
+  "Sn": {
+   "en": "Soft enough to bend by hand; mixed with copper, it makes bronze, used since about 3000 BC.",
+   "vi": "Mềm đến mức bẻ cong được bằng tay; trộn với đồng, nó tạo thành đồng thiếc (bronze), được dùng từ khoảng năm 3000 TCN.",
+   "wiki": "Tin",
+   "rev": 1382716511,
+   "check": "pending"
+  },
+  "I": {
+   "en": "Your thyroid needs it to make its hormones.",
+   "vi": "Tuyến giáp của bạn cần nó để tạo hormone.",
+   "wiki": "Iodine",
+   "rev": 1386246064,
+   "check": "pending"
+  },
+  "Cs": {
+   "en": "The atom of atomic clocks: since 1967, the second has been defined by caesium.",
+   "vi": "Nguyên tử của đồng hồ nguyên tử: từ năm 1967, giây được định nghĩa dựa trên caesium.",
+   "wiki": "Caesium",
+   "rev": 1384245169,
+   "check": "pending"
+  },
+  "Nd": {
+   "en": "The key to strong, small magnets in speakers, hard drives and electric-car motors.",
+   "vi": "Thành phần chính của những nam châm nhỏ mà mạnh trong loa, ổ cứng và động cơ xe điện.",
+   "wiki": "Neodymium",
+   "rev": 1386702698,
+   "check": "pending"
+  },
+  "W": {
+   "en": "The highest melting point of any element (3,422 °C): once the glowing wire in light bulbs.",
+   "vi": "Có nhiệt độ nóng chảy cao nhất trong các nguyên tố (3.422 °C): từng là dây tóc phát sáng trong bóng đèn.",
+   "wiki": "Tungsten",
+   "rev": 1385406139,
+   "check": "pending"
+  },
+  "Pt": {
+   "en": "A rare, highly unreactive precious metal: a key part of car catalytic converters.",
+   "vi": "Kim loại quý hiếm, rất trơ: thành phần quan trọng của bộ chuyển đổi xúc tác trên ô tô.",
+   "wiki": "Platinum",
+   "rev": 1385958347,
+   "check": "pending"
+  },
+  "Au": {
+   "en": "Bright yellow and almost untouched by corrosion: coins and jewellery throughout recorded history.",
+   "vi": "Vàng óng và gần như không bị ăn mòn: dùng làm tiền xu và trang sức suốt lịch sử loài người.",
+   "wiki": "Gold",
+   "rev": 1382997983,
+   "check": "pending"
+  },
+  "Hg": {
+   "en": "The only metal that is liquid at room temperature.",
+   "vi": "Kim loại duy nhất ở thể lỏng ở nhiệt độ phòng.",
+   "wiki": "Mercury (element)",
+   "rev": 1382286341,
+   "check": "pending"
+  },
+  "Pb": {
+   "en": "Soft and heavy: once in pipes, paint and petrol, until its toxicity was widely recognised.",
+   "vi": "Mềm và nặng: từng có trong ống nước, sơn và xăng, cho đến khi độc tính của nó được thừa nhận rộng rãi.",
+   "wiki": "Lead",
+   "rev": 1385895330,
+   "check": "pending"
+  },
+  "U": {
+   "en": "Its uranium-235 can split in a chain reaction: the fuel of nuclear power stations.",
+   "vi": "Đồng vị uranium-235 của nó có thể phân hạch dây chuyền: nhiên liệu của các nhà máy điện hạt nhân.",
+   "wiki": "Uranium",
+   "rev": 1386491364,
+   "check": "pending"
+  },
+  "Pu": {
+   "en": "First made in 1940–41 by bombarding uranium; its heat powers some spacecraft.",
+   "vi": "Được tạo ra lần đầu năm 1940–41 bằng cách bắn phá uranium; nhiệt của nó cấp điện cho một số tàu vũ trụ.",
+   "wiki": "Plutonium",
+   "rev": 1383149198,
+   "check": "pending"
+  },
+  "Og": {
+   "en": "The heaviest element known, named in 2016 after the nuclear physicist Yuri Oganessian.",
+   "vi": "Nguyên tố nặng nhất đã biết, được đặt tên năm 2016 theo nhà vật lý hạt nhân Yuri Oganessian.",
+   "wiki": "Oganesson",
+   "rev": 1386316120,
+   "check": "pending"
+  }
+ }
+}

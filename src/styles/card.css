@@ -1,0 +1,38 @@
+/* ELEMENT CARD (places/elementCard.js): calm and plain first, every value tappable for its source. */
+.card-head { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; padding-right: 40px; }
+.card-tile { position: relative; width: 64px; height: 64px; border-radius: 14px; display: grid; place-items: center; font: 600 28px/1 var(--font-sans); color: var(--ink);
+  box-shadow: inset 0 -7px 0 rgba(28, 26, 23, 0.16), 0 6px 14px rgba(28, 26, 23, 0.12); }
+.card-tile small { position: absolute; top: 6px; left: 7px; font: 500 11px/1 var(--font-sans); }
+.card-title { min-width: 0; }
+.card-name { margin: 0; font: 600 40px/1.08 var(--font-serif); letter-spacing: -0.005em; overflow-wrap: anywhere; }
+.card-meta { margin: 4px 0 0; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
+.card-family { margin: 6px 0 0; display: grid; grid-template-columns: 14px 1fr; column-gap: 8px; align-items: center; font: 600 14px/1.35 var(--font-sans); }
+.card-family__cap { grid-column: 2; font-weight: 400; font-size: 13px; color: var(--ink-2); }
+.card-hint { margin: 2px 0 6px; font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+.card-line { margin: 16px 0 6px; font: 400 19px/1.5 var(--font-serif); color: var(--ink); }
+.card-src { border: 0; background: transparent; padding: 0 2px; color: var(--verdigris); font: 600 15px/1 var(--font-serif); vertical-align: super; min-width: 20px; min-height: 20px; }
+.card-factlist { margin: 6px 0 4px; }
+.card-v { border: 0; background: transparent; padding: 0; color: inherit; font: inherit; text-align: left; border-bottom: 1px dotted var(--ink-3); cursor: pointer; }
+.card-v:hover { color: var(--verdigris); border-bottom-color: var(--verdigris); }
+.card-v.is-est { font-style: italic; }
+.card-v.is-none { border: 0; color: var(--ink-3); font-weight: 400; font-style: italic; cursor: default; }
+.card-across { border: 0; background: transparent; padding: 4px 2px; color: var(--verdigris); font: 600 13px/1.2 var(--font-sans); margin-left: auto; white-space: nowrap; }
+.card-across:hover { text-decoration: underline; text-underline-offset: 2px; }
+.card-doors { display: grid; gap: 8px; margin: 18px 0 14px; }
+.card-facts { margin: 4px 0 8px; display: grid; grid-template-columns: minmax(110px, 42%) 1fr; }
+.card-facts dt, .card-facts dd { margin: 0; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+.card-facts dt { color: var(--ink-2); padding-right: 10px; }
+.ui-sheet .v { border: 0; background: transparent; padding: 0; text-align: left; color: var(--ink); border-bottom: 1px dotted var(--ink-3); font-size: 14px; line-height: 1.45; }
+.ui-sheet .v:hover { color: var(--verdigris); }
+.ui-sheet .v.pred { font-style: italic; }
+.ui-sheet .v.pred::after { content: " ≈"; color: var(--ember); }
+.ui-sheet .v.none { color: var(--ink-3); border-bottom-style: none; }
+.ui-sheet .badge { display: inline-block; font-size: 13px; padding: 0 6px; border-radius: 6px; background: rgba(185, 62, 18, 0.1); color: var(--ember); margin-left: 4px; }
+.card-nav { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); padding-top: 6px; }
+.card-nav .ui-btn { padding: 0 6px; font-weight: 600; }
+@media (max-width: 760px) {
+  .card-head { grid-template-columns: 52px 1fr; gap: 12px; }
+  .card-tile { width: 52px; height: 52px; font-size: 23px; border-radius: 12px; }
+  .card-name { font-size: 32px; }
+  .card-line { font-size: 17px; margin-top: 12px; }
+}

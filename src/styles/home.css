@@ -1,0 +1,75 @@
+/* HOME — the chrome around the table (places/home.js). The canvas owns the screen; the chrome is a
+   quiet top bar, one prompt, one row of lens chips. */
+.hero-top { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; pointer-events: none !important; }
+.hero-top > * { pointer-events: auto; }
+.hero-top__left, .hero-top__right { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hero-word { display: flex; flex-direction: column; line-height: 1.15; padding: 2px 4px; user-select: none; text-shadow: 0 0 8px var(--paper), 0 0 2px var(--paper); }
+.hero-word b { font: 600 22px/1.15 var(--font-serif); letter-spacing: 0.005em; }
+.hero-word span { font: 500 12px/1.4 var(--font-sans); color: var(--ink-2); letter-spacing: 0.06em; text-transform: uppercase; }
+body.legacy .hero-word b { color: var(--text); }
+body.legacy .hero-word span { color: var(--muted); }
+
+.hero-find { position: relative; display: flex; align-items: center; width: 300px; min-height: 44px; border-radius: var(--r-pill); background: var(--card);
+  border: 1px solid var(--line); box-shadow: var(--elev-paper); }
+.hero-find:focus-within { border-color: var(--verdigris); }
+.hero-find__icon { position: absolute; left: 14px; font-size: 19px; color: var(--ink-2); pointer-events: none; }
+.hero-find input { width: 100%; height: 42px; border: 0; background: transparent; padding: 0 16px 0 40px; border-radius: var(--r-pill); outline: none; color: var(--ink); font-size: 15px; }
+.hero-find input::placeholder { color: var(--ink-3); }
+.hero-results { position: absolute; top: 50px; left: 0; right: 0; min-width: 260px; padding: 6px; background: var(--card); border-radius: var(--r-card); box-shadow: var(--elev-float); max-height: 60vh; overflow: auto; z-index: 46; }
+.hero-result { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 4px 8px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--ink); text-align: left; }
+.hero-result.is-active, .hero-result:hover { background: var(--verdigris-soft); }
+.hero-result.is-empty { display: block; color: var(--ink-2); padding: 10px; }
+.hero-result__sym { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; font: 600 15px/1 var(--font-sans); color: var(--ink); }
+.hero-result__name { font: 600 16px/1.2 var(--font-serif); }
+.hero-result__meta { font-size: 13px; color: var(--ink-2); }
+
+/* soft paper scrims keep the chrome legible when tiles pass under it (zoomed in, tall columns) */
+.hero-scrim { position: absolute; left: 0; right: 0; pointer-events: none !important; }
+.hero-scrim.is-top { top: 0; height: 96px; background: linear-gradient(var(--paper) 10%, rgba(245, 240, 230, 0)); }
+.hero-scrim.is-bottom { bottom: 0; height: 210px; background: linear-gradient(rgba(245, 240, 230, 0), rgba(245, 240, 230, 0.9) 55%, var(--paper)); }
+@media (max-width: 760px) { .hero-scrim.is-top { height: 70px; } .hero-scrim.is-bottom { height: 190px; } }
+
+/* bottom: the one prompt, the lens banner, the lens chips */
+.hero-bottom { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(980px, calc(100% - 32px)); display: flex; flex-direction: column;
+  align-items: center; gap: 12px; pointer-events: none !important; transition: left var(--d-card-in) var(--ease), width var(--d-card-in) var(--ease); }
+.hero-bottom > * { pointer-events: auto; }
+.hero-bottom.is-card { left: calc((100% - 424px) / 2); width: min(820px, calc(100% - 456px)); }
+.hero-bottom.is-card .hero-lenses { flex-wrap: nowrap; justify-content: flex-start; max-width: 100%; overflow-x: auto; scrollbar-width: none; padding: 2px; -webkit-mask: linear-gradient(90deg, #000 90%, transparent); }
+.hero-bottom.is-card .hero-lenses::-webkit-scrollbar { display: none; }
+.hero-prompt { text-align: center; max-width: 660px; animation: hero-rise 700ms var(--ease) both 300ms; }
+.hero-prompt__line { margin: 0; font: italic 400 var(--t-lead)/var(--lh-lead) var(--font-serif); color: var(--ink); text-wrap: balance; }
+.hero-prompt__tap { margin: 6px 0 0; font: 600 15px/1.4 var(--font-sans); color: var(--verdigris); }
+.hero-lenses { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; animation: hero-rise 700ms var(--ease) both 500ms; }
+.hero-banner { width: min(760px, 100%); }
+.hero-banner .ui-banner { gap: 4px; }
+.hero-heat { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+@keyframes hero-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* the "Try iron" tag (a 3D label) and the hovered tile's name */
+.lbl.pop.hint { background: var(--verdigris); color: #fff; font: 600 14px/1 var(--font-sans); padding: 8px 12px; border-radius: var(--r-pill); }
+.lbl.pop { font: 600 17px/1.2 var(--font-serif); }
+
+/* phone loupe while a thumb scrubs across the table */
+.hero-loupe { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 10px; border-radius: 18px;
+  background: var(--card); box-shadow: var(--elev-float); pointer-events: none !important; z-index: 44; will-change: transform; }
+.hero-loupe__tile { position: relative; width: 60px; height: 60px; border-radius: 14px; display: grid; place-items: center; font: 600 28px/1 var(--font-sans); color: var(--ink);
+  box-shadow: inset 0 -6px 0 rgba(28, 26, 23, 0.14); }
+.hero-loupe__tile small { position: absolute; top: 5px; left: 7px; font: 500 12px/1 var(--font-sans); }
+.hero-loupe__name { font: 600 22px/1.2 var(--font-serif); }
+.hero-loupe__name small { display: block; font: 400 14px/1.3 var(--font-sans); color: var(--ink-2); }
+
+@media (max-width: 760px) {
+  .hero-top { padding: 10px 10px 0; gap: 8px; }
+  .hero-word b { font-size: 18px; }
+  .hero-word span { display: none; }
+  .hero-find { width: auto; flex: 1; min-width: 0; }
+  .hero-top__right { flex: 1; justify-content: flex-end; }
+  .hero-bottom { bottom: calc(10px + env(safe-area-inset-bottom)); width: calc(100% - 20px); gap: 10px; }
+  .hero-prompt__line { font-size: 17px; line-height: 25px; }
+  .hero-prompt__tap { font-size: 14px; }
+  .hero-lenses { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; width: 100%; padding: 2px 2px 4px; scrollbar-width: none; -webkit-mask: linear-gradient(90deg, #000 88%, transparent); }
+  .hero-lenses::-webkit-scrollbar { display: none; }
+  .hero-banner .ui-banner__title { font-size: 15px; line-height: 1.4; }
+}

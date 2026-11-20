@@ -5,7 +5,8 @@ import { source } from '../data.js';
 
 let pop = null;
 export function closeSource() { if (pop) { pop.remove(); pop = null; } }
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closeSource(); });
+// Escape closes an open source popup first (and only that: the card behind it stays open)
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && pop) { closeSource(); ev.stopPropagation(); } });
 document.addEventListener('pointerdown', ev => { if (pop && !pop.contains(ev.target) && !ev.target.closest('.v')) closeSource(); }, true);
 
 /** Show where a value comes from, anchored to the element that was tapped. */

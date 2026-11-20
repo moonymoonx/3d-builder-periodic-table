@@ -3,10 +3,11 @@
 //   * three.js r170 (node_modules/three/build/three.module.min.js) inlined, wrapped in an IIFE
 //   * our ES modules (src/app/main.js and everything it imports) bundled in dependency order
 //   * data/elements.json embedded as ONE <script type="application/json" id="pt-data"> block
-//   * CSS inlined; no fonts, images, models or network requests at runtime
+//   * CSS inlined (design tokens -> custom properties + src/styles/*.css); no fonts, images, models or network requests
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const rel = p => path.relative(ROOT, p);
@@ -95,7 +96,11 @@ let commit = 'unknown';
 try { commit = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim(); } catch { /* not a git checkout */ }
 data.build = { date: new Date().toISOString().slice(0, 10), commit, three: three.version };
 const dataJSON = JSON.stringify(data).replace(/</g, '\\u003c');
-const css = squeezeCSS(fs.readFileSync(path.join(ROOT, 'src/styles.css'), 'utf8'));
+// CSS: design tokens (src/design/tokens.js -> custom properties) + stylesheet modules in a fixed order.
+// base (page, type, 3D labels) -> kit (shared components) -> places (home, card) -> legacy (views not yet rebuilt).
+const tokens = await import(pathToFileURL(path.join(ROOT, 'src/design/tokens.js')).href);
+const CSS_ORDER = ['base.css', 'kit.css', 'home.css', 'card.css', 'legacy.css'];
+const css = squeezeCSS([tokens.cssVars(), ...CSS_ORDER.map(f => fs.readFileSync(path.join(ROOT, 'src/styles', f), 'utf8'))].join('\n'));
 const template = fs.readFileSync(path.join(ROOT, 'src/index.html'), 'utf8');
 const js = `${three.code}\n${appJS}`.replace(/<\/script/gi, '<\\/script');
 const html = template

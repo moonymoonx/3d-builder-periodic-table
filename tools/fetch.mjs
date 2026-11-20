@@ -326,9 +326,30 @@ async function viGdpt2() {
   });
 }
 
+// ---- 10. Wikipedia lead sections (plain text) for the elements with a hand-written card line ----
+// Used only to check our own one-line descriptions (data/curated/element-lines.json); no text is copied.
+export const LINE_TITLES = ['Hydrogen', 'Helium', 'Lithium', 'Carbon', 'Nitrogen', 'Oxygen', 'Fluorine', 'Neon', 'Sodium', 'Magnesium',
+  'Aluminium', 'Silicon', 'Phosphorus', 'Sulfur', 'Chlorine', 'Potassium', 'Calcium', 'Titanium', 'Iron', 'Copper',
+  'Zinc', 'Gallium', 'Bromine', 'Strontium', 'Silver', 'Tin', 'Iodine', 'Caesium', 'Neodymium', 'Tungsten',
+  'Platinum', 'Gold', 'Mercury (element)', 'Lead', 'Uranium', 'Plutonium', 'Oganesson'];
+async function wikipediaIntros() {
+  console.log('Wikipedia lead sections for card lines');
+  for (let i = 0; i < LINE_TITLES.length; i += 19) {
+    const url = 'https://en.wikipedia.org/w/api.php?' + new URLSearchParams({
+      action: 'query', prop: 'extracts|revisions', rvprop: 'ids', exintro: '1', explaintext: '1', exlimit: '20', format: 'json',
+      formatversion: '2', redirects: '1', titles: LINE_TITLES.slice(i, i + 19).join('|'),
+    });
+    await fetchTo('wikipedia', `wikipedia/intros-${i / 19 + 1}.json`, url, {
+      validate: b => { const j = JSON.parse(b); return j.query?.pages?.every(p => p.extract && p.extract.length > 200) ? null : 'missing extracts'; },
+    });
+    await sleep(500);
+  }
+}
+
 // ---- run ----------------------------------------------------------------------------------
 const steps = [['pubchem', pubchem], ['ciaaw', ciaaw], ['nist-ie', nistIE], ['nist-lines', nistLines], ['wikipedia', wikipedia],
-  ['codata', codata], ['colour', colour], ['vi-gdpt', viGdpt], ['wikidata', wikidata], ['mendeleev', mendeleev], ['nubase', nubase], ['cod', cod], ['cod-hiT', codHighT], ['vi-gdpt2', viGdpt2]];
+  ['codata', codata], ['colour', colour], ['vi-gdpt', viGdpt], ['wikidata', wikidata], ['mendeleev', mendeleev], ['nubase', nubase], ['cod', cod], ['cod-hiT', codHighT], ['vi-gdpt2', viGdpt2],
+  ['wikipedia-intros', wikipediaIntros]];
 fs.mkdirSync(RAW, { recursive: true });
 for (const [id, fn] of steps) {
   if (!want(id)) continue;

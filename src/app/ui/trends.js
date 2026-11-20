@@ -7,6 +7,7 @@ import { state, set } from '../state.js';
 import { elements, byZ, name, PROPS, prop, propValue, propRange, fmtProp, isPred } from '../data.js';
 import { CATEGORY_COLORS, CATEGORY_COLORS_CB } from '../palette.js';
 import { matchesFilters } from '../views/table.js';
+import { lensSettings } from '../places/lenses.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const S = (tag, attrs, text) => { const el = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v); if (text != null) el.textContent = text; return el; };
@@ -46,7 +47,7 @@ export function buildTrends(ui, left) {
     const p = prop(state.prop);
     const pal = state.cb ? CATEGORY_COLORS_CB : CATEGORY_COLORS;
     replace(head, h('div', { class: 'chart-title' }, h('h2', null, `${t('prop.' + p.key)}${p.unit ? ` (${p.unit})` : ''}${state.log ? ` · ${t('ctl.log').toLowerCase()}` : ''}`),
-      h('button', { class: 'btn', onclick: () => set({ view: 'table', layout: state.layout || 's18' }) }, t('tr.onTable'))), h('p', { class: 'why' }, t('why.' + p.key)));
+      h('button', { class: 'btn', onclick: () => { const l = lensSettings(state.prop); set({ view: 'table', lens: state.prop, color: l.color, flat: l.flat, prop: state.prop, log: !!l.log }); } }, t('tr.onTable'))), h('p', { class: 'why' }, t('why.' + p.key)));
     const W = Math.max(320, svgWrap.clientWidth || 800), H = Math.max(240, svgWrap.clientHeight || 420);
     const m = { l: isPhone() ? 46 : 70, r: 14, t: 14, b: 44 };
     const els = elements();

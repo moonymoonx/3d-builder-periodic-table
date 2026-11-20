@@ -45,6 +45,7 @@ export function runValidation({ report = false, quiet = false } = {}) {
     for (const [k, v] of Object.entries(e.f)) visit(`${e.sym}.f.${k}`, v);
     for (const [k, v] of Object.entries(e.names)) if (v) visit(`${e.sym}.names.${k}`, v);
     for (const [k, v] of Object.entries(e.zeff)) visit(`${e.sym}.zeff.${k}`, v);
+    if (e.line) visit(`${e.sym}.line`, e.line);
     for (const [k, v] of Object.entries(e.ph)) {
       if (k === 'trans') v.forEach((t, i) => visit(`${e.sym}.ph.trans${i}`, t.T));
       else visit(`${e.sym}.ph.${k}`, v);

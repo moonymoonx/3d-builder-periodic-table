@@ -1,17 +1,19 @@
-# Periodic Table 3D — real data, real shapes
+# Periodic Table 3D — the elements up close
 
-An interactive 3D periodic table in **one offline HTML file** (`index.html`): three.js r170 and all data are
-inlined, every shape is made in code, nothing is fetched at runtime. English and Vietnamese.
-Every number carries a source tag — tap a value in the data sheet to see where it comes from.
+A calm 3D periodic table in **one offline HTML file** (`index.html`): three.js r170 and all data are inlined,
+every shape is made in code, nothing is fetched at runtime. English and Vietnamese. Tap an element to open its
+card (plain facts, then doors to look inside the atom, hold a piece and heat it, or compare it). Every number
+carries a source — tap it to see where it comes from.
 
-Specification: [SPEC.md](SPEC.md) · build plan: [PLAN.md](PLAN.md) · progress and honest status: [LOG.md](LOG.md) ·
-decisions: [DECISIONS.md](DECISIONS.md) · open questions: [QUESTIONS.md](QUESTIONS.md) · fact-check: [FACTCHECK.md](FACTCHECK.md)
+Specification: [SPEC.md](SPEC.md) (§0 Feel) · style: [STYLE.md](STYLE.md) · redesign plan: [REDESIGN-PLAN.md](REDESIGN-PLAN.md) ·
+progress and honest status: [LOG.md](LOG.md) · decisions: [DECISIONS.md](DECISIONS.md) · open questions: [QUESTIONS.md](QUESTIONS.md) ·
+fact-check: [FACTCHECK.md](FACTCHECK.md) · design study: [DESIGN-STUDY.md](DESIGN-STUDY.md) and its critique [PLAN-CRITIQUE.md](PLAN-CRITIQUE.md)
 
 ## Use it
 Open `index.html` in a recent browser (Chrome, Edge, Firefox, Safari), straight from disk or any static server
-(`python3 -m http.server`). Keys: `←/→` element, `↑/↓` up/down a column, `1–6` views, `/` search,
-`L` layout, `H` column height, `Enter` atom, `F` FPS meter, `Esc` close. Add `?stats` to the URL for the FPS meter.
-The URL hash (e.g. `#v=table&el=Fe&p=ie1&lay=helix&lang=vi`) is a shareable link to the current view.
+(`python3 -m http.server`). Keys: `←/→` element, `↑/↓` up/down a column, `/` find, `Enter` open the card,
+`Esc` back / close, `H` next lens, `L` other table shapes, `F` FPS meter. Add `?stats` for the FPS meter, `?q=low|med|high`
+to force a quality tier. The URL hash (e.g. `#v=table&el=Au&card=1&lens=heat&T=1300&lang=vi`) is a shareable link.
 
 ## Build it
 ```bash
@@ -23,7 +25,15 @@ node --test tests/*.test.mjs     # unit tests (orbitals, configurations, lattice
 node tools/build.mjs             # -> index.html (single file, checked <= 2 MB, no runtime fetches)
 ```
 `data/elements.json` and `index.html` are committed, so only `npm install` + `node tools/build.mjs` is needed to
-rebuild the page from the committed data. Some raw sources are not redistributed (see below); `tools/fetch.mjs`
+rebuild the page from the committed data.
+
+**Code layout (redesign).** `src/design/tokens.js` is the one source of design tokens (colour, type, space, motion,
+3D light and tile); the build writes them as CSS custom properties. Styles live in `src/styles/` in a fixed order:
+`base.css` (page, type, 3D labels, overlays) → `kit.css` (shared `ui-` components from `src/app/ui/kit.js`: button,
+chip, back link, icon button, segmented, door, fact, disclosure, banner, sheet, temperature slider, menu) →
+`home.css`, `card.css` (places) → `legacy.css` (views not rebuilt yet, on a dark stage). Places are in
+`src/app/places/` (home, element card, lenses); 3D views in `src/app/views/` (table + `tableArt.js`, `tableRegions.js`).
+Later rebuilds of atom, sample, trends and compare should use the tokens and the kit and keep to their own files. Some raw sources are not redistributed (see below); `tools/fetch.mjs`
 downloads them again and `MANIFEST.json` records their URL, access date and sha256.
 
 ### Browser checks (optional)
@@ -33,7 +43,10 @@ interaction smoke test (headless Chromium with software WebGL; frame rates there
 mkdir -p ../tools-env && cd ../tools-env && npm init -y && npm i playwright@1.49.1 \
   && PLAYWRIGHT_BROWSERS_PATH=$PWD/browsers npx playwright install chromium && cd -
 node tools/shots.mjs     # -> screenshots/*.jpg (1920×1080 and 390×844, EN + VI), fails on console errors
-node tools/smoke.mjs     # clicks, search, keyboard, source popovers, layouts, language, credits
+node tools/smoke.mjs     # landing, tile -> card, sources, search, keyboard, lenses, menu, back links, views
+# review sets for the redesign (outside the repo), e.g. the hero slice at 1440×900 + 390×844 with frame statistics:
+node tools/shots.mjs --set=hero --serve --desk=1440x900 --phone=390x844 --png --query=q=med --out=/tmp/hero
+node tools/shots.mjs --set=views --serve --desk=1440x900 --phone=390x844 --png --fps=4 --out=/tmp/views
 ```
 
 ## Data sources and licences

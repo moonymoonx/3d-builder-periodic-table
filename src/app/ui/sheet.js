@@ -33,69 +33,73 @@ export function summary(e) {
   return s;
 }
 
+/** A sourced value as a button: tap it to see its source, notes and other sources. */
+export const valueBtn = (label, v, e, text) => {
+  if (!v) return h('span', { class: 'v none' }, '—');
+  const shown = text ?? (v[0] == null ? (v[2]?.n ? '—' : t('src.none')) : fmtField(label.key, v));
+  const b = h('button', { class: 'v' + (v[2]?.p ? ' pred' : '') + (v[0] == null ? ' none' : ''), type: 'button' }, shown);
+  b.addEventListener('click', () => showSource(b, label.text, v, e));
+  if (v[0] == null && v[2]?.n) b.title = v[2].n;
+  return b;
+};
+
+/** Every sourced fact about an element, in display order (more = adult details). */
+export function rowsFor(e) {
+  const f = e.f;
+  const st = stateAt(e, 293.15);
+  const rows = [];
+  const add = (key, v, opts = {}) => rows.push({ key, label: opts.label || t('f.' + key), v, text: opts.text, more: !!opts.more, extra: opts.extra });
+  add('Z', [e.Z, 'pc'], { text: String(e.Z) });
+  add('cat', f.cat);
+  add('place', f.period, { text: [f.group[0] ? `${t('group')} ${f.group[0]}` : null, `${t('period')} ${f.period[0]}`, `${t('block')} ${f.block[0]}`].filter(Boolean).join(' · ') });
+  if (f.aw[0] != null) add('aw', f.aw); else if (f.massNumber) add('massNumber', f.massNumber);
+  add('config', f.config, { text: prettyConfig(f.config[0]), extra: f.madelung[0] === 'exception' ? h('span', { class: 'badge', title: f.madelung[2].n }, t('madelung.exception', { d: f.madelung[2].d.join(', ') })) : null });
+  const stV = [st.s, 'calc', { n: getLang() === 'vi' ? 'suy ra từ nhiệt độ nóng chảy / sôi ở 1 atm' : 'from the 1-atm melting and boiling points', p: st.p ? 1 : undefined }];
+  add('state', stV, { text: t('state.' + st.s) });
+  add('mp', f.mp); add('bp', f.bp);
+  if (f.sub) add('sub', f.sub);
+  add('density', f.density);
+  add('en', f.en); add('ie1', f.ie1);
+  add('rCov', f.rCov);
+  add('crystal', f.crystal);
+  add('year', f.year);
+  add('natural', f.natural);
+  // adult details
+  if (f.term) add('term', f.term, { more: true, text: prettyTerm(f.term[0]) });
+  add('madelung', f.madelung, { more: true, text: f.madelung[0] === 'exception' ? t('madelung.exception', { d: f.madelung[2].d.join(', ') }) : t('madelung.follows') });
+  if (f.ie2) add('ie2', f.ie2, { more: true });
+  if (f.ie3) add('ie3', f.ie3, { more: true });
+  add('ea', f.ea, { more: true });
+  add('rVdw', f.rVdw, { more: true });
+  add('ox', f.ox, { more: true });
+  if (f.latticeText) add('latticeText', f.latticeText, { more: true });
+  add('abund', f.abund, { more: true });
+  if (f.discoverers) add('discoverers', f.discoverers, { more: true });
+  add('nStable', f.nStable, { more: true });
+  if (f.isoMain) add('isoMain', f.isoMain, { more: true });
+  if (f.halfLife) add('halfLife', f.halfLife, { more: true });
+  if (f.rNuc) add('rNuc', f.rNuc, { more: true });
+  const zo = outerZeff(e);
+  if (zo) add('zeff', zo, { more: true, text: `${fmtNum(zo[0], 2)} (${zo[2].n.split(' ')[0]})` });
+  if (f.awStd) add('awStd', f.awStd, { more: true, label: `${t('f.aw')} (CIAAW)` });
+  const ln = e.lines;
+  const lv = ln.none ? [null, 'none', { n: ln.none }] : [ln.v.length, 'nist-lines', { n: `${ln.n} lines listed by NIST in 380–750 nm; the ${ln.v.length} strongest are used` }];
+  let sw = null;
+  if (!ln.none) {
+    const g = glowColour(ln.v, data().cmfFit.v, data().srgb.v);
+    if (g.ok) sw = h('span', { class: 'sw', style: { display: 'inline-block', verticalAlign: 'middle', marginLeft: '6px', background: toHex(g.rgb) }, title: 'approximate glow colour' });
+  }
+  add('lines', lv, { more: true, text: ln.none ? t('lines.none') : t('lines.count', { n: ln.n, k: ln.v.length }), extra: sw });
+  return rows;
+}
+
 export function buildSheet(container, { onView }) {
   const panel = h('section', { class: 'panel', 'aria-label': t('sh.data') });
   container.append(panel);
   const openSource = (btn, label, v, e) => showSource(btn, label, v, e);
   const closePop = closeSource;
 
-  const valueBtn = (label, v, e, text) => {
-    if (!v) return h('span', { class: 'v none' }, '—');
-    const shown = text ?? (v[0] == null ? (v[2]?.n ? '—' : t('src.none')) : fmtField(label.key, v));
-    const b = h('button', { class: 'v' + (v[2]?.p ? ' pred' : '') + (v[0] == null ? ' none' : ''), type: 'button' }, shown);
-    b.addEventListener('click', () => openSource(b, label.text, v, e));
-    if (v[0] == null && v[2]?.n) b.title = v[2].n;
-    return b;
-  };
 
-  function rowsFor(e) {
-    const f = e.f;
-    const st = stateAt(e, 293.15);
-    const rows = [];
-    const add = (key, v, opts = {}) => rows.push({ key, label: opts.label || t('f.' + key), v, text: opts.text, more: !!opts.more, extra: opts.extra });
-    add('Z', [e.Z, 'pc'], { text: String(e.Z) });
-    add('cat', f.cat);
-    add('place', f.period, { text: [f.group[0] ? `${t('group')} ${f.group[0]}` : null, `${t('period')} ${f.period[0]}`, `${t('block')} ${f.block[0]}`].filter(Boolean).join(' · ') });
-    if (f.aw[0] != null) add('aw', f.aw); else if (f.massNumber) add('massNumber', f.massNumber);
-    add('config', f.config, { text: prettyConfig(f.config[0]), extra: f.madelung[0] === 'exception' ? h('span', { class: 'badge', title: f.madelung[2].n }, t('madelung.exception', { d: f.madelung[2].d.join(', ') })) : null });
-    const stV = [st.s, 'calc', { n: getLang() === 'vi' ? 'suy ra từ nhiệt độ nóng chảy / sôi ở 1 atm' : 'from the 1-atm melting and boiling points', p: st.p ? 1 : undefined }];
-    add('state', stV, { text: t('state.' + st.s) });
-    add('mp', f.mp); add('bp', f.bp);
-    if (f.sub) add('sub', f.sub);
-    add('density', f.density);
-    add('en', f.en); add('ie1', f.ie1);
-    add('rCov', f.rCov);
-    add('crystal', f.crystal);
-    add('year', f.year);
-    add('natural', f.natural);
-    // adult details
-    if (f.term) add('term', f.term, { more: true, text: prettyTerm(f.term[0]) });
-    add('madelung', f.madelung, { more: true, text: f.madelung[0] === 'exception' ? t('madelung.exception', { d: f.madelung[2].d.join(', ') }) : t('madelung.follows') });
-    if (f.ie2) add('ie2', f.ie2, { more: true });
-    if (f.ie3) add('ie3', f.ie3, { more: true });
-    add('ea', f.ea, { more: true });
-    add('rVdw', f.rVdw, { more: true });
-    add('ox', f.ox, { more: true });
-    if (f.latticeText) add('latticeText', f.latticeText, { more: true });
-    add('abund', f.abund, { more: true });
-    if (f.discoverers) add('discoverers', f.discoverers, { more: true });
-    add('nStable', f.nStable, { more: true });
-    if (f.isoMain) add('isoMain', f.isoMain, { more: true });
-    if (f.halfLife) add('halfLife', f.halfLife, { more: true });
-    if (f.rNuc) add('rNuc', f.rNuc, { more: true });
-    const zo = outerZeff(e);
-    if (zo) add('zeff', zo, { more: true, text: `${fmtNum(zo[0], 2)} (${zo[2].n.split(' ')[0]})` });
-    if (f.awStd) add('awStd', f.awStd, { more: true, label: `${t('f.aw')} (CIAAW)` });
-    const ln = e.lines;
-    const lv = ln.none ? [null, 'none', { n: ln.none }] : [ln.v.length, 'nist-lines', { n: `${ln.n} lines listed by NIST in 380–750 nm; the ${ln.v.length} strongest are used` }];
-    let sw = null;
-    if (!ln.none) {
-      const g = glowColour(ln.v, data().cmfFit.v, data().srgb.v);
-      if (g.ok) sw = h('span', { class: 'sw', style: { display: 'inline-block', verticalAlign: 'middle', marginLeft: '6px', background: toHex(g.rgb) }, title: 'approximate glow colour' });
-    }
-    add('lines', lv, { more: true, text: ln.none ? t('lines.none') : t('lines.count', { n: ln.n, k: ln.v.length }), extra: sw });
-    return rows;
-  }
 
   function render() {
     closePop();

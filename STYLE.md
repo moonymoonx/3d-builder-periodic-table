@@ -50,7 +50,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 
 | Step | Size / line height (desktop · phone) | Font / weight | Used for |
 |---|---|---|---|
-| Display | 56/60 · 40/44 | serif 600 | element name on the card, landing line |
+| Display | 40/44 · 32/38 | serif 600 | the element's name on its card (a 392 px card fits names up to 13 letters) |
 | Title | 30/36 · 24/30 | serif 600 | view titles ("Inside iron") |
 | Lead | 20/30 · 18/27 | serif 400 | one-line hooks, "why it matters" |
 | Body | 16/25 · 16/24 | sans 400 | text, facts |
@@ -58,7 +58,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 | Caption | 13/18 | sans 400, `--ink-2` | jargon secondary labels, units, source hints |
 
 **Rules:**
-- Body and labels are never under 14 px.
+- Body and labels are never under 14 px (the tiny atomic number printed on each tile is decoration; the card shows it in full).
 - Jargon is always a *caption after* a human phrase: "Grip on electrons · *ionization energy*".
 - Temperatures show °C first and K only in the details.
 - Never use all caps for more than 3 words.
@@ -75,7 +75,8 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
   - a hemisphere light (sky `#FFF7EC`, ground `#D9CFC0`, 0.9);
   - one warm key light from the top left (`#FFF1DE`, 2.0);
   - a faint cool rim light from behind (`#DCE6F5`, 0.5).
-  - Tone mapping: ACES filmic, exposure 1.0.
+  - Tone mapping: Khronos PBR Neutral, exposure 1.0 (it keeps the glazes' hues; ACES shifted them).
+- **Scrims:** soft paper gradients at the top and bottom of the screen keep the chrome legible when tiles pass under it (zoomed in, tall columns).
 - **Shadows:**
   - Soft *baked* contact shadows: an instanced quad under each tile with a blurred gradient texture generated in code. Real shadow maps only on High on desktop.
   - No post-processing by default: no bloom, no depth-of-field.
@@ -85,7 +86,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
     - The top face is the family pigment under a satin glaze (`roughness 0.42`) that catches the key light as a soft highlight.
     - The sides are matte (`roughness 0.75`) and **38 % darker**.
     - `metalness 0` throughout.
-  - The symbol is a crisp screen-space ink label.
+  - The symbol and the atomic number are **printed on the glaze** (an atlas texture drawn with the system sans when the scene is built), so every tile always carries its label, like a specimen tray. The hovered tile's *name* pops up as a screen-space label (≥ 14 px); on phones a loupe shows it under the thumb.
   - Default height is equal for all tiles. Height means something only inside a numbers lens.
   - Pointer parallax on desktop: the camera leans at most 1.2° toward the cursor (300 ms ease-out), as a depth cue. It is off on touch screens and with reduced motion.
 - **Specimen stage (Heat it):**
