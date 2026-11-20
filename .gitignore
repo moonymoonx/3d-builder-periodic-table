@@ -1,2 +1,8 @@
 node_modules/
 *.log
+
+# private / third-party, kept local only
+claude-sessions/
+ref/*.mp4
+ref/*.webp
+ref/*.png
