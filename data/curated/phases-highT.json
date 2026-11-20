@@ -1,31 +1,213 @@
 {
   "_note": "Solid-solid transitions at 1 atm and the high-temperature solid phases (RESEARCH.md › Answers Q8 = Gemini batch 2, and FACTCHECK.md §3.2). Temperatures as given there with their citations; lattices only from the listed COD entries (fetched, verified: element, space group, cell). A phase with 'card' is shown as an honest card instead of a lattice. T_C may be a [min, max] range (drawn at the middle).",
-  "Ti": { "steps": [{ "T_C": 882, "to": "β-Ti", "cod": "9008554", "cite": "NIST-JANAF (Chase 1998) via NIST WebBook; FACTCHECK §3.2" }] },
-  "Zr": { "steps": [{ "T_C": 863, "to": "β-Zr", "cod": "9008559", "cite": "NIST-JANAF (Chase 1998) via NIST WebBook; FACTCHECK §3.2" }] },
-  "Hf": { "steps": [{ "T_C": [1742, 1760], "to": "β-Hf", "cod": "1522789", "cite": "FACTCHECK §3.2 (range); COD cell temperature not recorded" }] },
-  "Co": { "steps": [{ "T_C": 422, "to": "β-Co (fcc)", "cod": "9012926", "cite": "equilibrium value; about 450 °C is seen on heating (strong hysteresis) — RESEARCH.md Answers Q8" }] },
-  "La": { "steps": [
-    { "T_C": 310, "to": "β-La", "cod": "1523533", "cite": "CRC via Wikipedia (RESEARCH.md Answers Q8)" },
-    { "T_C": 865, "to": "γ-La", "card": "body-centred cubic; lattice constants not in our sources", "cite": "CRC via Wikipedia (RESEARCH.md Answers Q8)" }] },
-  "Ca": { "steps": [{ "T_C": 443, "to": "β-Ca", "cod": "9011034", "cite": "FACTCHECK §3.2; NIST-JANAF via NIST WebBook" }] },
-  "Sr": { "steps": [{ "T_C": 547, "to": "β-Sr", "cod": "9008551", "cite": "Peterson & Colburn 1966, doi:10.1021/j100874a023 (the 215 °C 'hcp' form reported earlier is a hydrogen-impurity effect); NIST-JANAF" }] },
-  "Th": { "steps": [{ "T_C": 1360, "to": "β-Th", "cod": "9008553", "cite": "FACTCHECK §3.2; Wikipedia: Thorium" }] },
-  "U": { "steps": [
-    { "T_C": 668, "to": "β-U", "card": "tetragonal, 30 atoms per cell (COD 2106190): too complex for v1", "cite": "FACTCHECK §3.2; RESEARCH.md Answers Q8" },
-    { "T_C": [775, 776], "to": "γ-U", "cod": "1539778", "cite": "RESEARCH.md Answers Q8" }] },
-  "Np": { "steps": [
-    { "T_C": 280, "to": "β-Np", "cod": "9008586", "cite": "FACTCHECK §3.2; RESEARCH.md Answers Q8" },
-    { "T_C": [576, 577], "to": "γ-Np", "cod": "9008547", "cite": "RESEARCH.md Answers Q8" }] },
-  "Pu": { "steps": [
-    { "T_C": 122, "to": "β-Pu", "card": "monoclinic, 34 atoms per cell (COD 2311043): too complex for v1", "cite": "FACTCHECK §3.2" },
-    { "T_C": 207, "to": "γ-Pu", "cod": "9008588", "cite": "FACTCHECK §3.2" },
-    { "T_C": 319, "to": "δ-Pu", "cod": "9008481", "cite": "FACTCHECK §3.2; δ range 319–452 °C confirmed in RESEARCH.md Answers Q8" },
-    { "T_C": 452, "to": "δ′-Pu", "card": "body-centred tetragonal; lattice constants not in our sources", "cite": "FACTCHECK §3.2" },
-    { "T_C": 480, "to": "ε-Pu", "cod": "9008548", "cite": "FACTCHECK §3.2" }] },
-  "Ce": { "steps": [{ "T_C": 726, "to": "δ-Ce", "card": "body-centred cubic; lattice constants not in our sources", "cite": "Wikipedia: Cerium (δ-cerium, bcc, above 726 °C)" }] },
-  "Be": { "steps": [{ "T_C": [1254, 1269], "to": "β-Be", "card": "body-centred cubic; lattice constants not in our sources", "cite": "FACTCHECK §3.2" }] },
-  "Tl": { "steps": [{ "T_C": 230, "to": "β-Tl", "card": "body-centred cubic; lattice constants not in our sources", "cite": "FACTCHECK §3.2" }] },
-  "Po": { "steps": [{ "T_C": 36, "to": "β-Po", "card": "rhombohedral; lattice constants not in our sources", "cite": "FACTCHECK §3.2 (about 36 °C)" }] },
-  "Sc": { "note": "A high-temperature crystal form is not in our sources." },
-  "Y": { "note": "A high-temperature crystal form is not in our sources." }
+  "Ti": {
+    "steps": [
+      {
+        "T_C": 882,
+        "to": "β-Ti",
+        "cod": "9008554",
+        "cite": "NIST-JANAF (Chase 1998) via NIST WebBook; FACTCHECK §3.2"
+      }
+    ]
+  },
+  "Zr": {
+    "steps": [
+      {
+        "T_C": 863,
+        "to": "β-Zr",
+        "cod": "9008559",
+        "cite": "NIST-JANAF (Chase 1998) via NIST WebBook; FACTCHECK §3.2"
+      }
+    ]
+  },
+  "Hf": {
+    "steps": [
+      {
+        "T_C": [
+          1742,
+          1760
+        ],
+        "to": "β-Hf",
+        "cod": "1522789",
+        "cite": "FACTCHECK §3.2 (range); COD cell temperature not recorded"
+      }
+    ]
+  },
+  "Co": {
+    "steps": [
+      {
+        "T_C": 422,
+        "to": "β-Co (fcc)",
+        "cod": "9012926",
+        "cite": "equilibrium value; about 450 °C is seen on heating (strong hysteresis) — RESEARCH.md Answers Q8"
+      }
+    ]
+  },
+  "La": {
+    "steps": [
+      {
+        "T_C": 310,
+        "to": "β-La",
+        "cod": "1523533",
+        "cite": "CRC via Wikipedia (RESEARCH.md Answers Q8)"
+      },
+      {
+        "T_C": 865,
+        "to": "γ-La",
+        "card": "body-centred cubic; lattice constants not in our sources",
+        "cite": "CRC via Wikipedia (RESEARCH.md Answers Q8)"
+      }
+    ]
+  },
+  "Ca": {
+    "steps": [
+      {
+        "T_C": 443,
+        "to": "β-Ca",
+        "cod": "9011034",
+        "cite": "FACTCHECK §3.2; NIST-JANAF via NIST WebBook"
+      }
+    ]
+  },
+  "Sr": {
+    "steps": [
+      {
+        "T_C": 547,
+        "to": "β-Sr",
+        "cod": "9008551",
+        "cite": "Peterson & Colburn 1966, doi:10.1021/j100874a023 (the 215 °C 'hcp' form reported earlier is a hydrogen-impurity effect); NIST-JANAF"
+      }
+    ]
+  },
+  "Th": {
+    "steps": [
+      {
+        "T_C": 1360,
+        "to": "β-Th",
+        "cod": "9008553",
+        "cite": "FACTCHECK §3.2; Wikipedia: Thorium"
+      }
+    ]
+  },
+  "U": {
+    "steps": [
+      {
+        "T_C": 668,
+        "to": "β-U",
+        "card": "tetragonal, 30 atoms per cell (COD 2106190): too complex to draw in this version",
+        "cite": "FACTCHECK §3.2; RESEARCH.md Answers Q8"
+      },
+      {
+        "T_C": [
+          775,
+          776
+        ],
+        "to": "γ-U",
+        "cod": "1539778",
+        "cite": "RESEARCH.md Answers Q8"
+      }
+    ]
+  },
+  "Np": {
+    "steps": [
+      {
+        "T_C": 280,
+        "to": "β-Np",
+        "cod": "9008586",
+        "cite": "FACTCHECK §3.2; RESEARCH.md Answers Q8"
+      },
+      {
+        "T_C": [
+          576,
+          577
+        ],
+        "to": "γ-Np",
+        "cod": "9008547",
+        "cite": "RESEARCH.md Answers Q8"
+      }
+    ]
+  },
+  "Pu": {
+    "steps": [
+      {
+        "T_C": 122,
+        "to": "β-Pu",
+        "card": "monoclinic, 34 atoms per cell (COD 2311043): too complex to draw in this version",
+        "cite": "FACTCHECK §3.2"
+      },
+      {
+        "T_C": 207,
+        "to": "γ-Pu",
+        "cod": "9008588",
+        "cite": "FACTCHECK §3.2"
+      },
+      {
+        "T_C": 319,
+        "to": "δ-Pu",
+        "cod": "9008481",
+        "cite": "FACTCHECK §3.2; δ range 319–452 °C confirmed in RESEARCH.md Answers Q8"
+      },
+      {
+        "T_C": 452,
+        "to": "δ′-Pu",
+        "card": "body-centred tetragonal; lattice constants not in our sources",
+        "cite": "FACTCHECK §3.2"
+      },
+      {
+        "T_C": 480,
+        "to": "ε-Pu",
+        "cod": "9008548",
+        "cite": "FACTCHECK §3.2"
+      }
+    ]
+  },
+  "Ce": {
+    "steps": [
+      {
+        "T_C": 726,
+        "to": "δ-Ce",
+        "card": "body-centred cubic; lattice constants not in our sources",
+        "cite": "Wikipedia: Cerium (δ-cerium, bcc, above 726 °C)"
+      }
+    ]
+  },
+  "Be": {
+    "steps": [
+      {
+        "T_C": [
+          1254,
+          1269
+        ],
+        "to": "β-Be",
+        "card": "body-centred cubic; lattice constants not in our sources",
+        "cite": "FACTCHECK §3.2"
+      }
+    ]
+  },
+  "Tl": {
+    "steps": [
+      {
+        "T_C": 230,
+        "to": "β-Tl",
+        "card": "body-centred cubic; lattice constants not in our sources",
+        "cite": "FACTCHECK §3.2"
+      }
+    ]
+  },
+  "Po": {
+    "steps": [
+      {
+        "T_C": 36,
+        "to": "β-Po",
+        "card": "rhombohedral; lattice constants not in our sources",
+        "cite": "FACTCHECK §3.2 (about 36 °C)"
+      }
+    ]
+  },
+  "Sc": {
+    "note": "A high-temperature crystal form is not in our sources."
+  },
+  "Y": {
+    "note": "A high-temperature crystal form is not in our sources."
+  }
 }

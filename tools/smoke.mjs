@@ -147,6 +147,43 @@ await step('atom view: tap a spectrum line shows its wavelength', async () => {
   return txt.slice(0, 60);
 });
 
+await step('sample view: Fe chips jump past each transition (γ-Fe, melts) and reset works', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'sample', Z: 26, T: 293.15, allotrope: null }));
+  await settle();
+  await page.locator('.chip.ev', { hasText: 'γ-Fe' }).click(); await page.waitForTimeout(300);
+  const ph = await page.locator('.dock-phase').textContent();
+  if (!/γ-Fe/.test(ph)) throw new Error('phase label: ' + ph);
+  await page.locator('.chip.ev', { hasText: 'melts' }).click(); await page.waitForTimeout(300);
+  const badge = await page.locator('.dock-state').textContent();
+  if (!/liquid/i.test(badge)) throw new Error('badge: ' + badge);
+  await page.getByRole('button', { name: 'Room temperature' }).click(); await page.waitForTimeout(200);
+  if (await page.evaluate(() => window.__pt.state.T) !== 293.15) throw new Error('reset');
+  return ph;
+});
+await step('sample view: carbon graphite <-> diamond toggle', async () => {
+  await page.evaluate(() => window.__pt.set({ Z: 6, T: 293.15 }));
+  await page.waitForTimeout(300);
+  await page.locator('.side.left .seg button', { hasText: 'diamond' }).click(); await page.waitForTimeout(300);
+  const ph = await page.locator('.dock-phase').textContent();
+  if (!/diamond/i.test(ph)) throw new Error(ph);
+  await page.locator('.side.left .seg button', { hasText: 'graphite' }).click();
+});
+await step('sample view: helium stays liquid near 0 K, boils at 4.22 K', async () => {
+  await page.evaluate(() => window.__pt.set({ Z: 2, T: 2, allotrope: null })); await page.waitForTimeout(300);
+  const a = await page.locator('.dock-state').textContent();
+  await page.evaluate(() => window.__pt.set({ T: 10 })); await page.waitForTimeout(300);
+  const b = await page.locator('.dock-state').textContent();
+  if (!/liquid/i.test(a) || !/gas/i.test(b)) throw new Error(`${a} / ${b}`);
+});
+await step('sample view: "Heat it" raises the temperature', async () => {
+  await page.evaluate(() => window.__pt.set({ Z: 80, T: 293.15 })); await page.waitForTimeout(200);
+  await page.getByRole('button', { name: /Heat it/ }).click(); await page.waitForTimeout(1500);
+  const T = await page.evaluate(() => window.__pt.state.T);
+  await page.getByRole('button', { name: /Stop/ }).click();
+  if (!(T > 300)) throw new Error('T=' + T);
+  return `T rose to ${Math.round(T)} K`;
+});
+
 for (const [ok, name, info] of results) console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`);
 console.log(errors.length ? `console errors:\n  ${errors.join('\n  ')}` : 'no console errors');
 await browser.close();

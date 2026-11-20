@@ -175,3 +175,40 @@ kbd { font-family: var(--mono); font-size: 14px; border: 1px solid var(--line2);
 .specline:focus rect:last-child, .specline:hover rect:last-child { stroke: #fff; stroke-width: 1; }
 @media (max-width: 1100px) and (min-width: 761px) { .spectrum { width: min(640px, calc(100vw - 360px)); left: calc(50% + 150px); } }
 @media (max-width: 760px) { .spectrum { width: calc(100vw - 12px); bottom: 54px; padding: 6px 10px; } .spectrum svg { max-height: 70px; } .stats { grid-template-columns: repeat(2, 1fr); } }
+
+/* sample view: the temperature dock is the one main control */
+.dock { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(760px, calc(100vw - 720px)); padding: 12px 16px 10px; pointer-events: auto; }
+.dock-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.dock-temp { font-size: 30px; font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.dock-c { font-size: 16px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dock-mid { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.dock-state { align-self: flex-start; font-weight: 800; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; color: #06101e; transition: background 0.3s ease-out; }
+.dock-state.s-solid { background: #9fb7e6; } .dock-state.s-liquid { background: #3fa7ff; } .dock-state.s-gas { background: #ffcf6b; } .dock-state.s-unknown { background: #59647d; color: #fff; }
+.dock-state.pred { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.35) 0 4px, transparent 4px 8px); }
+.dock-phase { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dock-btns { display: flex; gap: 8px; }
+.dock-btns .btn { min-height: 44px; padding: 0 16px; font-size: 15px; }
+.thermo-wrap { position: relative; margin-top: 8px; }
+.marks { position: absolute; left: 18px; right: 18px; top: 0; height: 44px; pointer-events: none; }
+.ev-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip.ev { min-height: 34px; font-size: 14px; }
+.chip.ev.m-melt { border-color: #6fbfff; } .chip.ev.m-boil, .chip.ev.m-sub { border-color: #ffcf6b; } .chip.ev.m-trans { border-color: #f4a3d6; }
+.chip.ev[aria-pressed="true"] { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+.chip.ev.pred { font-style: italic; }
+.mark { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+.mark em { font-style: normal; font-size: 14px; color: var(--text); white-space: nowrap; line-height: 1.1; }
+.mark i { position: absolute; top: 9px; width: 3px; height: 26px; background: rgba(255, 255, 255, 0.9); border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4); }
+.mark.m-melt em { color: #8fd3ff; } .mark.m-boil em, .mark.m-sub em { color: #ffcf6b; } .mark.m-trans em { color: #f4a3d6; }
+.mark.pred em { font-style: italic; }
+input.thermo { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; background: transparent; margin: 0; cursor: pointer; }
+input.thermo::-webkit-slider-runnable-track { height: 14px; border-radius: 7px; background: linear-gradient(90deg, #2f6bff, #6fd3ff 35%, #9fe0a6 50%, #ffd27f 66%, #ff8a3c 82%, #fff3e0); }
+input.thermo::-moz-range-track { height: 14px; border-radius: 7px; background: linear-gradient(90deg, #2f6bff, #6fd3ff 35%, #9fe0a6 50%, #ffd27f 66%, #ff8a3c 82%, #fff3e0); }
+input.thermo::-webkit-slider-thumb { -webkit-appearance: none; width: 36px; height: 36px; margin-top: -11px; border-radius: 50%; background: #fff; border: 3px solid #06101e; box-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: transform 0.15s ease-out; }
+input.thermo:active::-webkit-slider-thumb { transform: scale(1.12); }
+input.thermo::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 3px solid #06101e; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.dock-hint { margin: 6px 0 0; font-size: 14px; color: var(--accent2); text-align: center; }
+.sample-card { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); width: min(420px, calc(100vw - 40px)); padding: 18px 20px; text-align: center; }
+.sample-card h3 { margin: 0 0 8px; font-size: 19px; line-height: 1.3; }
+.sample-card p { margin: 0; font-size: 15px; color: var(--text); }
+@media (max-width: 1100px) and (min-width: 761px) { .dock { width: min(680px, calc(100vw - 360px)); left: calc(50% + 150px); } }
+@media (max-width: 760px) { .dock { width: calc(100vw - 12px); bottom: 54px; padding: 8px 10px; } .dock-temp { font-size: 24px; } .dock-phase { display: none; } .dock-btns .btn { padding: 0 10px; font-size: 14px; } .sample-card { top: 36%; } }

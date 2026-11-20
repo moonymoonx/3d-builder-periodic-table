@@ -28,6 +28,18 @@ cases.push({ name: 'atom-Fe-total-en-desk', hash: 'v=atom&el=Fe&den=total&lang=e
 cases.push({ name: 'atom-Fe-3dz2-en-desk', hash: 'v=atom&el=Fe&orb=3d:0&lang=en', vp: SIZES.desk });
 cases.push({ name: 'atom-C-2p-surface-med-en-desk', query: 'q=med', hash: 'v=atom&el=C&orb=2p:1&lang=en', vp: SIZES.desk });
 cases.push({ name: 'atom-Au-5dxy-surface-high-vi-desk', query: 'q=high', hash: 'v=atom&el=Au&orb=5d:-2&lang=vi', vp: SIZES.desk });
+for (const sym of ['H', 'C', 'Fe', 'Au', 'U']) for (const lang of ['en', 'vi']) for (const [sz, vp] of Object.entries(SIZES)) {
+  cases.push({ name: `sample-${sym}-${lang}-${sz}`, hash: `v=sample&el=${sym}&T=293.15&lang=${lang}`, vp });
+}
+cases.push({ name: 'sample-Fe-gamma-1300K-en-desk', hash: 'v=sample&el=Fe&T=1300&lang=en', vp: SIZES.desk });
+cases.push({ name: 'sample-Fe-liquid-2200K-en-desk', hash: 'v=sample&el=Fe&T=2200&lang=en', vp: SIZES.desk });
+cases.push({ name: 'sample-Fe-gas-3600K-vi-desk', hash: 'v=sample&el=Fe&T=3600&lang=vi', vp: SIZES.desk });
+cases.push({ name: 'sample-W-glow-3200K-en-desk', hash: 'v=sample&el=W&T=3200&lang=en', vp: SIZES.desk });
+cases.push({ name: 'sample-C-diamond-en-desk', hash: 'v=sample&el=C&T=293.15&alt=p1&lang=en', vp: SIZES.desk });
+cases.push({ name: 'sample-He-2K-en-desk', hash: 'v=sample&el=He&T=2&lang=en', vp: SIZES.desk });
+cases.push({ name: 'sample-N-gas-en-phone', hash: 'v=sample&el=N&T=300&lang=en', vp: SIZES.phone });
+cases.push({ name: 'sample-Pu-beta-card-en-desk', hash: 'v=sample&el=Pu&T=420&lang=en', vp: SIZES.desk });
+cases.push({ name: 'sample-Og-card-vi-desk', hash: 'v=sample&el=Og&T=293.15&lang=vi', vp: SIZES.desk });
 cases.push({ name: 'table-layout32-en-desk', hash: 'v=table&el=Fe&p=rCov&lay=s32&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-helix-en-desk', hash: 'v=table&el=Fe&p=en&lay=helix&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-state-vi-desk', hash: 'v=table&el=Hg&p=mp&lay=s18&col=state&T=300&lang=vi', vp: SIZES.desk });

@@ -3,9 +3,10 @@
 import { h, replace, clear, isPhone } from '../dom.js';
 import { t, getLang, fmtNum, cap } from '../i18n.js';
 import { state, set } from '../state.js';
-import { data, byZ, name, altName, source, fmtField, fmtTemp, stateAt, outerZeff, K0 } from '../data.js';
+import { data, byZ, name, altName, fmtField, fmtTemp, stateAt, outerZeff } from '../data.js';
 import { CATEGORY_COLORS, CATEGORY_COLORS_CB } from '../palette.js';
 import { glowColour, toHex } from '../../physics/color.js';
+import { showSource, closeSource } from './source.js';
 
 const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
 export const prettyConfig = s => String(s).replace(/([spdf])(\d+)/g, (_, l, n) => l + n.split('').map(c => SUP[c]).join(''));
@@ -25,7 +26,8 @@ export function summary(e) {
   else if (ph.mp?.[0] != null && ph.bp?.[0] != null) s += t('sum.melts', { mp: fmtTemp(ph.mp[0]), bp: fmtTemp(ph.bp[0]) });
   else if (ph.mp?.[0] != null) s += t('sum.meltsOnly', { mp: fmtTemp(ph.mp[0]) });
   const cat = t('cat.' + e.f.cat[0]).toLowerCase();
-  s += e.f.group[0] ? t('sum.family', { cat, g: e.f.group[0], p: e.f.period[0] }) : t('sum.familyF', { cat, p: e.f.period[0] });
+  const a = /^[aeiou]/i.test(cat) ? 'an' : 'a';
+  s += e.f.group[0] ? t('sum.family', { a, cat, g: e.f.group[0], p: e.f.period[0] }) : t('sum.familyF', { a, cat, p: e.f.period[0] });
   if (e.f.madelung[0] === 'exception') s += t('sum.exception');
   if (e.lat.kind === 'predicted' && e.Z >= 100) s += t('sum.fewAtoms');
   return s;
@@ -34,42 +36,8 @@ export function summary(e) {
 export function buildSheet(container, { onView }) {
   const panel = h('section', { class: 'panel', 'aria-label': t('sh.data') });
   container.append(panel);
-  let pop = null;
-
-  const closePop = () => { if (pop) { pop.remove(); pop = null; } };
-  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closePop(); });
-  document.addEventListener('pointerdown', ev => { if (pop && !pop.contains(ev.target) && !ev.target.closest('.v')) closePop(); }, true);
-
-  function openSource(btn, label, v, e) {
-    closePop();
-    const [value, key, fl = {}] = v;
-    const src = source(key);
-    const body = [h('button', { class: 'close', 'aria-label': t('sh.close'), onclick: closePop }, '×'), h('h4', null, label)];
-    if (value != null) body.push(h('p', null, h('b', null, btn.textContent)));
-    if (key === 'placeholder') body.push(h('p', { class: 'badge' }, t('src.placeholder')));
-    if (fl.p) body.push(h('p', null, '≈ ', t('src.pred')));
-    if (fl.th) body.push(h('p', null, t('src.th')));
-    if (fl.n) body.push(h('p', null, h('b', null, t('src.note') + ': '), Array.isArray(fl.d) ? `${fl.n} (${fl.d.join(', ')})` : fl.n));
-    if (fl.alt) body.push(h('p', null, h('b', null, t('src.other') + ': '), fl.alt));
-    if (fl.u != null) body.push(h('p', null, `${t('src.unc')}: ± ${fl.u}`));
-    if (fl.r) body.push(h('p', null, `${t('src.ref')}: ${fl.r}`));
-    body.push(h('p', null, h('b', null, t('src.source') + ': '), src.name));
-    if (src.url) body.push(h('p', null, h('a', { href: src.url, target: '_blank', rel: 'noopener noreferrer' }, t('src.open'))));
-    if (key === 'wp' && e && e.wpRev) body.push(h('p', null, h('a', { href: `https://en.wikipedia.org/w/index.php?oldid=${e.wpRev}`, target: '_blank', rel: 'noopener noreferrer' }, `Wikipedia revision ${e.wpRev}`)));
-    if (src.accessed) body.push(h('p', { class: 'small' }, `${t('src.accessed')}: ${src.accessed}`));
-    if (src.licence) body.push(h('p', { class: 'small' }, `${t('src.licence')}: ${src.licence}`));
-    pop = h('div', { class: 'popover', role: 'dialog' }, body);
-    document.getElementById('ui').append(pop);
-    const r = btn.getBoundingClientRect();
-    const pw = Math.min(420, window.innerWidth - 20);
-    let left = Math.min(Math.max(10, r.left - pw / 2), window.innerWidth - pw - 10);
-    pop.style.left = left + 'px';
-    const below = r.bottom + 8;
-    pop.style.top = below + 'px';
-    const ph = pop.offsetHeight;
-    if (below + ph > window.innerHeight - 10) pop.style.top = Math.max(10, r.top - ph - 8) + 'px';
-    pop.querySelector('.close').focus();
-  }
+  const openSource = (btn, label, v, e) => showSource(btn, label, v, e);
+  const closePop = closeSource;
 
   const valueBtn = (label, v, e, text) => {
     if (!v) return h('span', { class: 'v none' }, '—');

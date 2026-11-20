@@ -8,6 +8,8 @@ import { createTableView } from './views/table.js';
 import { createAtomView } from './views/atom.js';
 import { buildAtomPanel } from './ui/atomPanel.js';
 import { buildSpectrum } from './ui/spectrum.js';
+import { createSampleView } from './views/sample.js';
+import { buildSampleUI } from './ui/samplePanel.js';
 import { buildShell } from './ui/shell.js';
 import { buildSheet } from './ui/sheet.js';
 import { buildTablePanel } from './ui/tablePanel.js';
@@ -49,6 +51,7 @@ function boot() {
   const stubPanel = h('section', { class: 'panel' });
   const spectrum = buildSpectrum(document.getElementById('ui'));
   spectrum.box.hidden = true;
+  const sampleUI = buildSampleUI(document.getElementById('ui'), shell.left);
 
   const table = createTableView({
     onSelect: e => select(e.Z),
@@ -58,6 +61,11 @@ function boot() {
   registerView('table', table);
   const atom = createAtomView({ onBuilt: info => { if (state.view === 'atom') atomPanel.render(info); } });
   registerView('atom', atom);
+  const sample = createSampleView({
+    onState: info => { if (state.view === 'sample') sampleUI.render(info); },
+    onEvent: (a, b, e) => { if (state.view === 'sample') sampleUI.onEvent(a, b, e); },
+  });
+  registerView('sample', sample);
   for (const v of VIEWS) if (!E.views[v]) registerView(v, stubView(v));
 
   function select(Z, fly = false) {
@@ -66,10 +74,11 @@ function boot() {
     shell.openPanel('right');
   }
 
-  const leftPanels = { table: tablePanel, atom: atomPanel };
+  const leftPanels = { table: tablePanel, atom: atomPanel, sample: { panel: sampleUI.panel, render: () => sampleUI.render() } };
   function renderLeft() {
     for (const [v, p] of Object.entries(leftPanels)) if (v !== state.view && p.panel.parentNode) p.panel.remove();
     spectrum.box.hidden = state.view !== 'atom';
+    sampleUI.show(state.view === 'sample');
     if (state.view === 'atom') spectrum.render(byZ(state.Z));
     if (leftPanels[state.view]) {
       if (stubPanel.parentNode) stubPanel.remove();
@@ -91,7 +100,7 @@ function boot() {
     for (const v of Object.values(E.views)) if (v.ready && v.onState) v.onState(ch);
     if ('lang' in ch || 'view' in ch) renderAll();
     else {
-      if (['prop', 'log', 'layout', 'color', 'filters', 'cb', 'T', 'Z', 'density', 'orbital', 'surf', 'tier'].some(k => k in ch)) renderLeft();
+      if (['prop', 'log', 'layout', 'color', 'filters', 'cb', 'T', 'Z', 'density', 'orbital', 'surf', 'tier', 'allotrope'].some(k => k in ch)) renderLeft();
       if (['Z', 'more', 'cb', 'T'].some(k => k in ch)) sheet.render();
     }
     invalidate();

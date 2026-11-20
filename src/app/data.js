@@ -130,9 +130,12 @@ const STRUCT_VI = {
 };
 const FAM_VI = { cubic: 'lập phương', hexagonal: 'lục phương', orthorhombic: 'trực thoi', tetragonal: 'tứ phương', monoclinic: 'đơn tà', triclinic: 'tam tà' };
 const CEN_VI = { primitive: 'đơn giản', 'body-centred': 'tâm khối', 'face-centred': 'tâm mặt', 'base-centred': 'tâm đáy', rhombohedral: 'mặt thoi' };
+const PHRASE_VI = [['lattice constants not in our sources', 'hằng số mạng chưa có trong nguồn dữ liệu'], ['too complex to draw in this version', 'quá phức tạp để vẽ trong phiên bản này'],
+  ['atoms per cell', 'nguyên tử mỗi ô'], ['body-centred cubic', 'lập phương tâm khối'], ['tetragonal', 'tứ phương'], ['monoclinic', 'đơn tà'], ['rhombohedral', 'mặt thoi']];
 export function structText(s) {
   if (!s || getLang() !== 'vi') return s;
   if (STRUCT_VI[s]) return STRUCT_VI[s];
+  if (/not in our sources|too complex/.test(s)) { let r = s; for (const [a, b] of PHRASE_VI) r = r.split(a).join(b); return r; }
   const m = s.match(/^(\S+) (\S+) lattice, (\d+) atoms per cell \((\w+)\)$/);
   return m ? `mạng ${FAM_VI[m[2]] || m[2]} ${CEN_VI[m[1]] || m[1]}, ${m[3]} nguyên tử mỗi ô (${m[4]})` : s;
 }
