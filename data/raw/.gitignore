@@ -1,0 +1,6 @@
+# Raw dumps without a clear open licence: kept locally, re-fetch with tools/fetch.mjs
+ciaaw/
+nist-asd/
+iaea/
+nist-codata/
+vi-gdpt/

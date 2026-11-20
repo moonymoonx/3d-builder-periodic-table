@@ -1,15 +1,20 @@
 {
   "name": "periodic-table",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Better 3D Periodic Table: single offline three.js page with real, cited data",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "fetch": "node tools/fetch.mjs",
+    "data": "node tools/build-data.mjs",
+    "validate": "node tools/validate.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "node tools/build.mjs",
+    "all": "node tools/build-data.mjs && node tools/validate.mjs && node --test tests/*.test.mjs && node tools/build.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "three": "0.170.0"
   }
