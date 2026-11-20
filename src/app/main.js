@@ -21,6 +21,10 @@ import { buildSheet } from './ui/sheet.js';
 import { buildHome } from './places/home.js';
 import { buildElementCard } from './places/elementCard.js';
 import { buildHeat, forgeable } from './places/heat.js';
+// strings of the places built in parallel (PARALLEL.md); each session edits only its own file
+import { ATOM_KEYS } from './content/strings-atom.js';
+import { SAMPLE_KEYS } from './content/strings-sample.js';
+import { PATTERNS_KEYS } from './content/strings-patterns.js';
 import { pigment, pigmentCB } from '../design/tokens.js';
 import { TOP as TOP_LENSES, lensSettings } from './places/lenses.js';
 import { h, isPhone } from './dom.js';
@@ -304,7 +308,7 @@ function boot() {
     }
   }));
   for (const evName of ['pointerdown', 'wheel']) E.canvas.addEventListener(evName, firstTouch, { passive: true });
-  window.__pt = { state, set, E, table, home, card, heat, forge, diveIntoHeat }; // debugging / scripted screenshots
+  window.__pt = { state, set, E, table, home, card, heat, forge, diveIntoHeat, strings: { atom: ATOM_KEYS, sample: SAMPLE_KEYS, patterns: PATTERNS_KEYS } }; // debugging / scripted screenshots
 }
 
 boot();

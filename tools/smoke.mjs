@@ -136,6 +136,7 @@ await step('URL hash is shareable (lens + open card)', async () => {
 });
 await step('atom view: a door from the card, and the back link returns to the card', async () => {
   await page.evaluate(() => window.__pt.set({ view: 'table' }));
+  await page.waitForTimeout(250); await settle(); // the previous step's lens change re-frames the table first
   const p = await tileTop(23); await page.mouse.click(p.x, p.y); await settle();
   await page.locator('.ui-door', { hasText: 'Look inside the atom' }).click(); await settle();
   const v = await S();

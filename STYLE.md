@@ -1,5 +1,7 @@
 # STYLE — "Porcelain & Ink" (redesign, 21 Nov 2026)
 
+> **LOCKED (21 Nov 2026).** This style card is shared by the parallel view sessions (PARALLEL.md). Only the main session (design owner) changes it; anyone else proposes a change in their branch's `PROPOSALS.md` and waits for review.
+
 The style card for the redesign (DESIGN-RULES.md Layer 2). It is made for this topic and this audience. It is not a house style and not a copy of the dark, bloom-heavy photoreal showroom we compared against (DESIGN-STUDY.md §1).
 
 ## 1. Audience and feeling

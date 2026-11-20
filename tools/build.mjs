@@ -99,7 +99,7 @@ const dataJSON = JSON.stringify(data).replace(/</g, '\\u003c');
 // CSS: design tokens (src/design/tokens.js -> custom properties) + stylesheet modules in a fixed order.
 // base (page, type, 3D labels) -> kit (shared components) -> places (home, card) -> legacy (views not yet rebuilt).
 const tokens = await import(pathToFileURL(path.join(ROOT, 'src/design/tokens.js')).href);
-const CSS_ORDER = ['base.css', 'kit.css', 'home.css', 'card.css', 'heat.css', 'legacy.css'];
+const CSS_ORDER = ['base.css', 'kit.css', 'home.css', 'card.css', 'heat.css', 'atom.css', 'sample.css', 'patterns.css', 'legacy.css']; // atom/sample/patterns: PARALLEL.md
 const css = squeezeCSS([tokens.cssVars(), ...CSS_ORDER.map(f => fs.readFileSync(path.join(ROOT, 'src/styles', f), 'utf8'))].join('\n'));
 const template = fs.readFileSync(path.join(ROOT, 'src/index.html'), 'utf8');
 const js = `${three.code}\n${appJS}`.replace(/<\/script/gi, '<\\/script');
