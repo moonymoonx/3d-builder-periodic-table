@@ -14,7 +14,7 @@ import { pigment, pigmentCB, stateColor, color as TOK, light as LIGHT, tile as T
 import { roundedBox, symbolAtlas, roundedOutline, luminance, bakeContactShadows, GLAZE } from './tableArt.js';
 import { REGIONS } from './tableRegions.js';
 
-const W = TILE.width, H0 = TILE.thickness, HMAX = 4.6;
+const W = TILE.width, H0 = TILE.thickness, HMAX = 3.6; // tallest column: lower = fewer rows hidden behind it
 const HELIX_R = (32 * 1.06) / (2 * Math.PI), HELIX_DY = 1.45, HELIX_H = 0.5; // radial columns are drawn at half height
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -89,7 +89,7 @@ export function createTableView(hooks) {
   const uni = {
     uAtlas: { value: atlas.tex }, uGrid: { value: new THREE.Vector2(atlas.cols, atlas.rows) }, uH0: { value: H0 }, uW: { value: W },
     uSide: { value: TILE.sideDarken }, uTopRough: { value: TILE.topRoughness }, uSideRough: { value: TILE.sideRoughness },
-    uPaper: { value: new THREE.Color(TOK.paper) }, uSweep: { value: -99 }, uSweepAmp: { value: 0 }, uJitter: { value: TILE.tintJitter }, uHatch: { value: 0.8 }, uGlaze: { value: TILE.glaze }, uFloorAO: { value: 1 },
+    uPaper: { value: new THREE.Color(TOK.paper) }, uSweep: { value: -99 }, uSweepAmp: { value: 0 }, uJitter: { value: TILE.tintJitter }, uHatch: { value: 0.8 }, uHatchF: { value: 4 }, uGlaze: { value: TILE.glaze }, uFloorAO: { value: 1 },
   };
   const mat = new THREE.MeshStandardMaterial({ roughness: TILE.sideRoughness, metalness: 0 });
   mat.onBeforeCompile = sh => {
@@ -107,7 +107,7 @@ export function createTableView(hooks) {
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
         uniform sampler2D uAtlas; uniform vec2 uGrid; uniform float uW; uniform float uSide; uniform float uTopRough; uniform float uSideRough;
-        uniform vec3 uPaper; uniform float uSweep; uniform float uSweepAmp; uniform float uJitter; uniform float uHatch; uniform float uGlaze; uniform float uFloorAO;
+        uniform vec3 uPaper; uniform float uSweep; uniform float uSweepAmp; uniform float uJitter; uniform float uHatch; uniform float uHatchF; uniform float uGlaze; uniform float uFloorAO;
         ${GLAZE}
         varying vec3 vLocal; varying float vTop; varying vec4 vFx; varying vec3 vInk; varying float vCell; varying vec3 vWP;`)
       .replace('#include <color_fragment>', `#include <color_fragment>
@@ -117,16 +117,17 @@ export function createTableView(hooks) {
         diffuseColor.rgb *= mix(1.0 - uSide, 1.0, top);
         // a little occlusion where a resting tile meets the paper (fades as it lifts)
         diffuseColor.rgb *= mix(1.0 - 0.2 * uFloorAO * (1.0 - smoothstep(0.0, 0.16, vWP.y)), 1.0, top);
-        if (vFx.x > 0.5) { float s = step(0.5, fract((vWP.x - vWP.z) * 4.0)); diffuseColor.rgb *= mix(1.0, uHatch, s * top); }
+        if (vFx.x > 0.5) { float s = step(0.5, fract((vWP.x - vWP.z) * uHatchF)); diffuseColor.rgb *= mix(1.0, uHatch, s * top); }
+        // unknown values: the glaze fades toward the paper, the ink stays readable (ink-2, >= 4.5:1)
+        diffuseColor.rgb = mix(diffuseColor.rgb, uPaper, vFx.y * 0.66);
         if (vTop > 0.97) {
           vec2 uv = vec2(vLocal.x / uW + 0.5, 0.5 - vLocal.z / uW);
           float cy = floor((vCell + 0.5) / uGrid.x);
           vec2 cell = vec2(vCell - cy * uGrid.x, cy);
           vec2 auv = vec2((cell.x + uv.x) / uGrid.x, 1.0 - (cell.y + 1.0 - uv.y) / uGrid.y);
           float ink = texture2D(uAtlas, auv).a;
-          diffuseColor.rgb = mix(diffuseColor.rgb, vInk, ink * 0.94);
+          diffuseColor.rgb = mix(diffuseColor.rgb, mix(vInk, vec3(0.095, 0.085, 0.07), step(0.01, vFx.y) * 0.5), ink * 0.94 * (1.0 - 0.6 * step(0.99, vFx.y)));
         }
-        diffuseColor.rgb = mix(diffuseColor.rgb, uPaper, vFx.y * 0.66);
         diffuseColor.rgb += uSweepAmp * 0.16 * exp(-pow((vWP.x - uSweep) / 1.8, 2.0)) * top;`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
         roughnessFactor = mix(uSideRough, uTopRough, smoothstep(0.55, 0.95, vTop));`)
@@ -167,9 +168,11 @@ export function createTableView(hooks) {
   scene.add(core);
 
   // selection outline (verdigris) at the base of the selected tile
-  const sel = new THREE.Mesh(roundedOutline(W + 0.12, 0.1, 0.035), new THREE.MeshBasicMaterial({ color: TOK.verdigris, transparent: true, opacity: 0.9, depthWrite: false }));
-  sel.renderOrder = -1;
-  scene.add(sel);
+  // it rings the lifted tile's top edge (a floor ring under a lifted tile read as a stray wireframe)
+  const ringGeo = roundedOutline(W + 0.05, 0.09, 0.04);
+  const sel = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: TOK.verdigris, transparent: true, opacity: 0.95, depthWrite: false }));
+  const scrubRing = new THREE.Mesh(ringGeo, sel.material); // the tile under a scrubbing thumb (phones)
+  scene.add(sel, scrubRing);
 
   // ---- per-element pose, height and lift --------------------------------------------------------
   const cur = els.map(() => ({ pos: new THREE.Vector3(), quat: new THREE.Quaternion(), h: H0 }));
@@ -191,8 +194,9 @@ export function createTableView(hooks) {
   // straight into gas, and say so
   // (the caption names them all; only the tallest gets a tag, so tags never cover the columns)
   const SUBLIME = els.filter(e => e.ph.sub && !propValue(e, 'mp'));
-  const subTags = SUBLIME.filter(e => e.ph.sub[0] === Math.max(...SUBLIME.map(x => x.ph.sub[0])))
-    .map(e => ({ e, it: labels.add({ pos: new THREE.Vector3(), text: '', cls: 'pop note', priority: -1, anchor: 'bottom', dy: 6 }) }));
+  // helium never freezes at 1 atm: its flat tile says so instead of passing for "not measured"
+  const subTags = [...SUBLIME.filter(e => e.ph.sub[0] === Math.max(...SUBLIME.map(x => x.ph.sub[0]))), ...els.filter(e => e.ph.noSolid)]
+    .map(e => ({ e, it: labels.add({ pos: new THREE.Vector3(), text: '', cls: e.ph.noSolid ? 'pop note left' : 'pop note', priority: -1, anchor: e.ph.noSolid ? 'bottomleft' : 'bottom', dy: 6 }) }));
   const backTop = (i, out) => out.set(0, cur[i].h + lift[i], -W / 2).applyQuaternion(cur[i].quat).add(cur[i].pos);
 
   function heightFor(e) {
@@ -265,7 +269,10 @@ export function createTableView(hooks) {
       const dim = matchesFilters(e) ? (tgt[i].ghost && !state.flat ? 0.55 : 0) : 1;
       aFx.setXYZW(k, hatch, dim, hovered === e.Z ? 1 : 0, e.Z === selZ ? 1 : 0);
     }
-    uni.uHatch.value = state.color === 'state' ? 0.62 : 0.8;
+    // stripes: stronger in the heat map; on phones (tiles ~20 px) wider and softer so symbols stay legible
+    const ph = !!(hooks.isPhone && hooks.isPhone());
+    uni.uHatch.value = ph ? (state.color === 'state' ? 0.78 : 0.86) : state.color === 'state' ? 0.62 : 0.8;
+    uni.uHatchF.value = ph ? 2.4 : 4;
     tiles.instanceColor.needsUpdate = true; aFx.needsUpdate = true; aInk.needsUpdate = true;
     // family names on the table: home layout, families lens only; phones show the ones that fit
     const phone = !!(hooks.isPhone && hooks.isPhone());
@@ -278,14 +285,15 @@ export function createTableView(hooks) {
     }
   }
   function placeSelection() {
-    const i = state.Z - 1, c = cur[i];
-    sel.visible = !state.hideSel && state.layout !== 'helix';
-    sel.position.set(c.pos.x, 0.004, c.pos.z);
+    const flat = state.layout !== 'helix';
+    const ring = (m, i, on) => { m.visible = on && flat; if (on && flat) { const c = cur[i]; m.position.set(c.pos.x, c.h + lift[i] + 0.004, c.pos.z); } };
+    ring(sel, state.Z - 1, !state.hideSel);
+    ring(scrubRing, Math.max(0, hovered - 1), scrubbing && hovered > 0 && (state.hideSel || hovered !== state.Z));
   }
   function setLiftTargets() {
     for (let i = 0; i < N; i++) {
       const Z = i + 1;
-      liftTo[i] = (Z === state.Z && !state.hideSel ? TILE.selectLift : 0) + (Z === hovered ? TILE.hoverLift : 0);
+      liftTo[i] = (Z === state.Z && !state.hideSel ? TILE.selectLift : 0) + (Z === hovered ? (scrubbing ? TILE.selectLift * 0.85 : TILE.hoverLift) : 0);
     }
     invalidate();
   }
@@ -335,14 +343,14 @@ export function createTableView(hooks) {
   // dur 0 while a glide is under way (e.g. the card sheet settling and changing the free area) moves
   // the glide's goal instead of jumping, so the glide still lands smoothly
   const fly = (goal, dur) => (dur > 0 ? E.rig.flyTo(goal, dur) : E.rig.retarget(goal));
-  function frame(dur = motion.glide) {
+  function frame(dur = motion.glide, keepCamera = false) {
     const fov = freeFov();
     const portrait = fov.aspect < 0.8;
     if (state.layout === 'helix') {
       const r = Math.max(10.5 / Math.tan(Math.min(fov.v, fov.h) / 2), 18);
       E.rig.lim = { rMin: 6, rMax: 120, phiMin: 0.2, phiMax: Math.PI - 0.2 };
       overview = { target: new THREE.Vector3(0, 0.2, 0), r, theta: 0.35, phi: 1.12 };
-      fly(overview, state.reduced ? 0 : dur);
+      if (!keepCamera) fly(overview, state.reduced ? 0 : dur);
       return;
     }
     const s32 = state.layout === 's32';
@@ -356,7 +364,16 @@ export function createTableView(hooks) {
     const r = Math.max(rW, rD) * 1.03;
     E.rig.lim = { rMin: 6.5, rMax: 140, phiMin: 0.08, phiMax: 1.35 };
     overview = { target: new THREE.Vector3(0, tall * 0.35, s32 ? 0.1 : 0.15), r, theta: 0, phi };
-    fly(overview, state.reduced ? 0 : dur);
+    E.homeR = r; // the engine lowers a software renderer's resolution early when the camera gets much closer
+    if (!keepCamera) fly(overview, state.reduced ? 0 : dur);
+  }
+  /** Has the user zoomed or turned the table away from its home framing? (shows "Whole table") */
+  let away = false;
+  function checkAway() {
+    const o = overview, rg = E.rig;
+    const now = !!o && !state.card && state.view === 'table' && !rg.tween &&
+      (rg.r < o.r * 0.8 || rg.r > o.r * 1.4 || rg.target.distanceTo(o.target) > 2 || Math.abs(rg.theta - o.theta) > 0.3 || Math.abs(rg.phi - o.phi) > 0.25);
+    if (now !== away) { away = now; if (hooks.onAway) hooks.onAway(away); }
   }
   /** Glide to an element so it sits in the middle of the free area (beside the card). */
   function focus(Z, dur = motion.glide) {
@@ -413,7 +430,7 @@ export function createTableView(hooks) {
   function placeSubTags() {
     const on = state.prop === 'mp' && !state.flat && !state.log && state.layout !== 'helix';
     for (const { e, it } of subTags) {
-      labels.setText(it, t('lens.mp.subTag', { name: name(e), T: `${fmtNum(e.ph.sub[0] - 273.15, 0)} °C` }));
+      labels.setText(it, e.ph.noSolid ? t('lens.mp.heTag', { name: name(e) }) : t('lens.mp.subTag', { name: name(e), T: `${fmtNum(e.ph.sub[0] - 273.15, 0)} °C` }));
       it.priority = on ? 60 - e.Z / 200 : -1;
     }
     invalidate();
@@ -443,7 +460,8 @@ export function createTableView(hooks) {
       E.rig.scrub = hooks.isPhone && hooks.isPhone() && E.active === view ? scrub : null;
       E.rig.parallaxOn = (!hooks.isPhone || !hooks.isPhone()) && E.active === view;
       writeColours();
-      if (state.card && !state.hideSel) focus(state.Z, 0); else frame(0);
+      // keep a camera the user has zoomed or turned (only the home framing is recomputed)
+      if (state.card && !state.hideSel) focus(state.Z, 0); else frame(0, away);
     },
     update(dt) {
       let busy = false;
@@ -476,6 +494,7 @@ export function createTableView(hooks) {
       if (hint.priority >= 0 && hint.data) backTop(hint.data - 1, hint.pos);
       for (const { e, it } of subTags) if (it.priority >= 0) backTop(e.Z - 1, it.pos);
       labels.update();
+      checkAway();
     },
     onState(ch) {
       if ('layout' in ch) { morph(); frame(); writeColours(); }

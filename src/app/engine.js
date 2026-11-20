@@ -97,6 +97,8 @@ function pixelRatioFor(cfg) {
 let resWin = [], resFail = null;
 function adaptResolution(dt) {
   if (!(E.software && E.tier === 'low' && state.quality === 'auto')) return;
+  // proactive: tiles will fill the screen when the camera is much closer than the home framing
+  if (E.homeR && E.rig.r < E.homeR * 0.55 && E.mp > 0.45) { resFail = { r: E.rig.r }; E.mp = 0.45; E.renderer.setPixelRatio(pixelRatioFor(TIERS.low)); invalidate(); }
   resWin.push(dt);
   if (resWin.length < 24) return;
   const w = resWin.sort((a, b) => a - b), med = w[w.length >> 1];

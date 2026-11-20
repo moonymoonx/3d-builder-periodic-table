@@ -85,8 +85,12 @@ export function sheet({ label, onClose, closeLabel = 'Close' }) {
   const close = h('button', { type: 'button', class: 'ui-icon ui-sheet__close', 'aria-label': closeLabel, title: closeLabel, onclick: () => onClose && onClose() }, h('span', { 'aria-hidden': 'true' }, '×'));
   // a compact title bar that slides in once the body scrolls, so content never runs under the close button
   const bar = h('div', { class: 'ui-sheet__bar', 'aria-hidden': 'true' });
-  const el = h('section', { class: 'ui-sheet', 'aria-label': label, hidden: true }, handle, bar, close, body);
-  body.addEventListener('scroll', () => el.classList.toggle('is-scrolled', body.scrollTop > 6), { passive: true });
+  const foot = h('div', { class: 'ui-sheet__foot', hidden: true }); // always-visible footer (e.g. previous / next)
+  const el = h('section', { class: 'ui-sheet', 'aria-label': label, hidden: true }, handle, bar, close, body, foot);
+  // a soft fade at the bottom edge whenever more content waits below
+  const more = () => el.classList.toggle('has-more', body.scrollHeight - body.scrollTop - body.clientHeight > 8);
+  body.addEventListener('scroll', () => { el.classList.toggle('is-scrolled', body.scrollTop > 6); more(); }, { passive: true });
+  new ResizeObserver(more).observe(body);
   const api = {
     el, body,
     isOpen: () => !el.hidden,
@@ -94,6 +98,8 @@ export function sheet({ label, onClose, closeLabel = 'Close' }) {
     close() { el.classList.remove('is-in', 'is-full', 'is-scrolled'); el.hidden = true; },
     setFull(f) { el.classList.toggle('is-full', !!f); },
     setBar(node) { replace(bar, node); },
+    setFoot(node) { replace(foot, node); foot.hidden = !node; },
+    updateMore: more,
     /** Phone: how tall the sheet stands before it is pulled up (px; null = the default). */
     setPeek(px) { if (px == null) el.style.removeProperty('--peek'); else el.style.setProperty('--peek', `${Math.round(px)}px`); },
   };

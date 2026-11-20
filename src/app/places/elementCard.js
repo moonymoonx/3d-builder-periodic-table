@@ -156,15 +156,19 @@ export function buildElementCard(ui, hooks) {
     const phone = isPhone();
     const pal = state.cb ? pigmentCB : pigment;
     const swatch = pal[e.f.cat[0]];
-    const alt = altName(e);
+    // Vietnamese: the 13 familiar names kept by GDPT-2018 head the card (Sắt), the international name follows
+    const gdpt = getLang() === 'vi' && e.names.viAlt && e.names.viAlt[1] === 'gdpt';
+    const title = gdpt ? cap(e.names.viAlt[0]) : name(e);
+    const alt = gdpt ? name(e) : altName(e);
     const famName = oneLine(t('fam.' + e.f.cat[0]));
     const meta = [alt, `${e.sym} · ${t('card.number', { Z: e.Z })}`].filter(Boolean).join(' · ');
     const head = h('div', { class: 'card-head' },
       h('div', { class: 'card-tile', style: { background: swatch }, 'aria-hidden': 'true' }, h('small', null, String(e.Z)), e.sym),
       h('div', { class: 'card-title' },
-        h('h2', { class: 'card-name' }, name(e)),
+        h('h2', { class: 'card-name' }, title),
         phone
-          ? h('p', { class: 'card-meta' }, `${meta} · `, h('span', { class: 'card-meta__fam' }, h('span', { class: 'ui-swatch', style: { background: swatch } }), famName))
+          ? [h('p', { class: 'card-meta' }, `${meta} · `, h('span', { class: 'card-meta__fam' }, h('span', { class: 'ui-swatch', style: { background: swatch } }), famName)),
+            h('p', { class: 'card-meta card-meta__cap' }, t('famCap.' + e.f.cat[0]))]
           : [h('p', { class: 'card-meta' }, meta),
             h('p', { class: 'card-family' }, h('span', { class: 'ui-swatch', style: { background: swatch } }), h('span', null, famName), h('span', { class: 'card-family__cap' }, t('famCap.' + e.f.cat[0])))]));
     const lead = h('p', { class: 'card-line' }, lineFor(e));
@@ -187,17 +191,21 @@ export function buildElementCard(ui, hooks) {
     const doorBox = doors(e);
     if (phone) {
       const strip = h('div', { class: 'card-strip' }, F.map(f => h('div', { class: 'card-strip__cell' }, h('span', { class: 'card-strip__label' }, f.short), valueOf(f, true))));
+      const tapHint = h('p', { class: 'card-hint card-hint--strip' }, t('card.tapSource'));
       const notes = F.map(f => f.phoneNote || f.note).filter(Boolean).map(n => h('p', { class: 'card-note' }, n));
       const links = [...new Set(F.map(f => f.across).filter(Boolean))].map(p => across(p, t(acrossKey[p])));
-      replace(sh.body, head, lead, strip, doorBox, h('div', { class: 'card-notes' }, notes, links), all, nav);
+      replace(sh.body, head, lead, strip, tapHint, doorBox, h('div', { class: 'card-notes' }, notes, links), all, nav);
+      sh.setFoot(null);
     } else {
       const list = h('div', { class: 'card-factlist' }, F.map(f => fact({ label: f.label, value: valueOf(f, false), note: f.note || null, link: f.across ? across(f.across) : null })));
-      replace(sh.body, head, lead, list, doorBox, all, nav);
+      replace(sh.body, head, lead, list, doorBox, all);
+      sh.setFoot(nav); // previous / next stay visible however long the card is
     }
-    sh.setBar(h('span', { class: 'card-bar' }, h('span', { class: 'card-bar__tile', style: { background: swatch } }, e.sym), h('b', null, name(e)), h('span', null, `${e.Z}`)));
+    sh.setBar(h('span', { class: 'card-bar' }, h('span', { class: 'card-bar__tile', style: { background: swatch } }, e.sym), h('b', null, title), h('span', null, `${e.Z}`)));
+    requestAnimationFrame(sh.updateMore);
     if (e.Z !== lastZ) { sh.body.scrollTop = 0; sh.el.classList.remove('is-scrolled'); lastZ = e.Z; }
     // phones: stand the sheet exactly tall enough to show the three doors (at most 62 % of the screen)
-    if (phone) requestAnimationFrame(() => { if (sh.isOpen()) sh.setPeek(Math.min(doorBox.offsetTop + doorBox.offsetHeight + 16, window.innerHeight * 0.62)); });
+    if (phone) requestAnimationFrame(() => { if (sh.isOpen()) sh.setPeek(Math.min(doorBox.offsetTop + doorBox.offsetHeight + 40, window.innerHeight * 0.64)); });
     else sh.setPeek(null);
   }
 

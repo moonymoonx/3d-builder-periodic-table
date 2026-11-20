@@ -8,7 +8,7 @@ import { bySym, propValue, elements, name } from '../data.js';
 export const TOP = ['families', 'heat', 'mp', 'density', 'rCov', 'ie1'];
 export const MORE = ['en', 'year', 'abund', 'bp', 'ea', 'aw', 'rVdw', 'zeff'];
 export const ALL = [...TOP, ...MORE];
-const LOG = new Set(['density', 'abund']);
+const LOG = new Set(['abund']); // heft is linear (hero review r2): gold and osmium tower, gases stay at the floor
 
 /** State changes a lens makes to the table (colour mode, flat or property heights, log scale). */
 export function lensSettings(id) {
@@ -34,6 +34,7 @@ export function lensCaption(id) {
   if (id !== 'mp') return t(`lens.${id}.cap`);
   const names = sublimers().map(e => name(e));
   const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} ${t('and')} ${names[names.length - 1].toLowerCase()}` : names[0] || '';
-  return t('lens.mp.cap', { subs: list });
+  const he = elements().filter(e => e.ph.noSolid).map(e => name(e)).join(', ');
+  return t('lens.mp.cap', { subs: list, he });
 }
 export const lensName = id => t('lens.' + id);

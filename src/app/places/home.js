@@ -36,11 +36,16 @@ export function buildHome(ui, hooks) {
   const bannerSlot = h('div', { class: 'hero-banner' });
   const chips = h('div', { class: 'hero-lenses', role: 'toolbar' });
   const legend = h('div', { class: 'hero-legend', hidden: true });
-  const bottom = h('div', { class: 'hero-bottom' }, legend, prompt, bannerSlot, chips);
+  // after zooming or turning the table: one pill back to the whole table (STYLE §7 "⌂ recentres")
+  const reset = h('button', { type: 'button', class: 'ui-btn ui-btn--secondary hero-reset', hidden: true, onclick: () => hooks.onReset() },
+    h('span', { class: 'ui-btn__icon', 'aria-hidden': 'true' }, '⌂'), h('span', { class: 'ui-btn__label' }));
+  const bottom = h('div', { class: 'hero-bottom' }, legend, prompt, reset, bannerSlot, chips);
+  const head = h('div', { class: 'hero-head' }); // phones: the prompt sits under the top bar, like a page heading
   const loupe = h('div', { class: 'hero-loupe', hidden: true, 'aria-hidden': 'true' });
   const scrims = [h('div', { class: 'hero-scrim is-top', 'aria-hidden': 'true' }), h('div', { class: 'hero-scrim is-bottom', 'aria-hidden': 'true' })];
   ui.prepend(...scrims);
-  ui.append(top, bottom, loupe);
+  ui.append(top, head, bottom, loupe);
+  let isAway = false;
 
   // ---- find ------------------------------------------------------------------------------------
   let active = 0, found = [];
@@ -148,6 +153,9 @@ export function buildHome(ui, hooks) {
       control = h('div', { class: 'hero-heat' }, h('div', { class: 'ui-temp' }, heatRead, heatInput, room), key);
       updateHeat();
     }
+    if (!control) control = h('div', { class: 'ui-legend' }, // every pattern on the table is in the key
+      h('span', null, h('i', { class: 'ui-swatch is-striped' }), t('key.pred')),
+      h('span', null, h('i', { class: 'ui-swatch is-ghost' }), t('key.none')));
     replace(bannerSlot, banner({ title: lensHook(state.lens), caption: lensCaption(state.lens), control }));
   }
   function updateHeat() {
@@ -182,11 +190,16 @@ export function buildHome(ui, hooks) {
     renderChips(); renderBanner();
     renderBack();
     const home = state.view === 'table';
+    document.body.classList.toggle('has-card', home && !!state.card);
     bottom.hidden = !home;
     for (const sc of scrims) sc.hidden = !home;
-    prompt.hidden = state.lens !== 'families' || state.card;
+    prompt.hidden = state.lens !== 'families' || state.card || isAway;
+    if (isPhone()) { if (prompt.parentNode !== head) head.append(prompt); } else if (prompt.parentNode !== bottom) bottom.insertBefore(prompt, reset);
+    head.hidden = !home || prompt.hidden;
+    replace(reset.lastChild, t('home.reset')); reset.title = t('home.resetLabel');
+    reset.hidden = !(home && isAway && !state.card);
     // phones: the table is too small to carry family names, so a colour key sits under it
-    const showKey = isPhone() && home && state.lens === 'families' && !state.card && state.layout !== 'helix';
+    const showKey = isPhone() && home && state.lens === 'families' && !state.card && state.layout !== 'helix' && !isAway;
     legend.hidden = !showKey;
     if (showKey) {
       const pal = state.cb ? pigmentCB : pigment;
@@ -205,8 +218,9 @@ export function buildHome(ui, hooks) {
   }
 
   return {
-    top, bottom,
+    top, bottom, head,
     render,
+    setAway(a) { if (a !== isAway) { isAway = a; render(); } },
     renderBack,
     onState(ch) {
       if ('lens' in ch) { renderChips(); renderBanner(); render(); }

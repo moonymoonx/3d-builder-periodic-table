@@ -78,12 +78,14 @@ function boot() {
     onSelect: e => { firstTouch(); openCard(e.Z); },
     onEmpty: () => { if (state.card && !isPhone()) closeCard(); },
     loupe: (e, x, y) => { firstTouch(); home.loupe(e, x, y); },
+    onAway: a => home.setAway(a),
     isPhone,
   });
   const home = buildHome(ui, {
     onPick: e => { firstTouch(); openCard(e.Z, true); },
     onBack: () => goBack(),
     onInteract: firstTouch,
+    onReset: () => table.frame(),
     openModal: k => shell.openModal(k),
   });
   const card = buildElementCard(ui, {
@@ -208,7 +210,8 @@ function boot() {
       const cardEl = card.isOpen() ? restingRect(card.el) : null;
       if (isPhone()) {
         const bottom = cardEl ? H - cardEl.top + 8 : bottomEl ? H - bottomEl.top + 8 : 16;
-        setSafe({ left: 0, right: 0, top: tb.bottom + 4, bottom });
+        const headEl = home.head.hidden || cardEl ? null : home.head.getBoundingClientRect();
+        setSafe({ left: 0, right: 0, top: Math.max(tb.bottom + 4, headEl ? headEl.bottom + 6 : 0), bottom });
       } else {
         setSafe({ left: 0, right: cardEl ? W - cardEl.left + 12 : 0, top: tb.bottom + 8, bottom: bottomEl ? H - bottomEl.top + 8 : 16 });
       }
@@ -220,7 +223,7 @@ function boot() {
     setSafe({ left: show(shell.left) ? L.right + 8 : 0, right: show(shell.right) ? W - R.left + 8 : 0, top: tb.bottom + 6, bottom: 0 });
   }
   const ro = new ResizeObserver(() => updateSafe());
-  for (const el of [shell.left, shell.right, home.top, home.bottom, card.el]) ro.observe(el);
+  for (const el of [shell.left, shell.right, home.top, home.bottom, home.head, card.el]) ro.observe(el);
   window.addEventListener('resize', () => { home.render(); updateSafe(); });
 
   renderAll();

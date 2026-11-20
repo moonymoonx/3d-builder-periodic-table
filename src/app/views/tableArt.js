@@ -130,9 +130,9 @@ export function symbolAtlas(els, { cols = 16, cell = 128, font }) {
     ctx.font = `600 ${Math.round(cell * 0.44)}px ${font}`;
     ctx.textAlign = 'center';
     ctx.fillText(e.sym, x + cell / 2, y + cell * 0.7);
-    ctx.font = `500 ${Math.round(cell * 0.16)}px ${font}`;
+    ctx.font = `600 ${Math.round(cell * 0.18)}px ${font}`;
     ctx.textAlign = 'left';
-    ctx.fillText(String(e.Z), x + cell * 0.1, y + cell * 0.24);
+    ctx.fillText(String(e.Z), x + cell * 0.09, y + cell * 0.25);
   });
   const tex = new THREE.CanvasTexture(c);
   tex.generateMipmaps = true;
