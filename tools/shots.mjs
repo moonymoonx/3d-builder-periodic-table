@@ -40,6 +40,16 @@ cases.push({ name: 'sample-He-2K-en-desk', hash: 'v=sample&el=He&T=2&lang=en', v
 cases.push({ name: 'sample-N-gas-en-phone', hash: 'v=sample&el=N&T=300&lang=en', vp: SIZES.phone });
 cases.push({ name: 'sample-Pu-beta-card-en-desk', hash: 'v=sample&el=Pu&T=420&lang=en', vp: SIZES.desk });
 cases.push({ name: 'sample-Og-card-vi-desk', hash: 'v=sample&el=Og&T=293.15&lang=vi', vp: SIZES.desk });
+for (const sym of ['H', 'C', 'Fe', 'Au', 'U']) for (const lang of ['en', 'vi']) {
+  cases.push({ name: `trends-${sym}-${lang}-desk`, hash: `v=trends&el=${sym}&p=ie1&lang=${lang}`, vp: SIZES.desk });
+  cases.push({ name: `compare-${sym}-${lang}-desk`, hash: `v=compare&el=${sym}&lang=${lang}`, vp: SIZES.desk });
+}
+for (const lang of ['en', 'vi']) {
+  cases.push({ name: `trends-Fe-${lang}-phone`, hash: `v=trends&el=Fe&p=rCov&lang=${lang}`, vp: SIZES.phone });
+  cases.push({ name: `compare-Fe-${lang}-phone`, hash: `v=compare&el=Fe&el2=Cu&lang=${lang}`, vp: SIZES.phone });
+}
+cases.push({ name: 'trends-density-log-group-en-desk', hash: 'v=trends&el=Os&p=density&log=1&line=group&lang=en', vp: SIZES.desk });
+cases.push({ name: 'compare-Na-Cs-vdw-en-desk', hash: 'v=compare&el=Na&el2=Cs&rad=vdw&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-layout32-en-desk', hash: 'v=table&el=Fe&p=rCov&lay=s32&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-helix-en-desk', hash: 'v=table&el=Fe&p=en&lay=helix&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-state-vi-desk', hash: 'v=table&el=Hg&p=mp&lay=s18&col=state&T=300&lang=vi', vp: SIZES.desk });

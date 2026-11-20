@@ -150,6 +150,9 @@ export function buildShell({ onPick }) {
   S.relabel = () => {
     replace(brand.children[0], t('app.title')); replace(brand.children[1], t('app.sub'));
     S.tabBtns.forEach(b => { b.textContent = t('view.' + b.dataset.view); b.setAttribute('aria-selected', String(b.dataset.view === state.view)); });
+    // phone: the tab row scrolls sideways; keep the active tab fully in view
+    const act = S.tabBtns.find(b => b.dataset.view === state.view);
+    if (act && tabs.scrollWidth > tabs.clientWidth) tabs.scrollLeft = Math.max(0, act.offsetLeft - (tabs.clientWidth - act.offsetWidth) / 2);
     input.placeholder = t('search.ph'); input.setAttribute('aria-label', t('search.label'));
     S.langBtn.textContent = getLang() === 'vi' ? 'EN' : 'VI'; S.langBtn.setAttribute('aria-label', t('btn.lang'));
     S.credBtn.firstChild.textContent = t('btn.credits'); S.credBtn.setAttribute('aria-label', t('btn.credits')); S.helpBtn.setAttribute('aria-label', t('btn.help')); S.setBtn.setAttribute('aria-label', t('btn.settings'));

@@ -10,6 +10,9 @@ import { buildAtomPanel } from './ui/atomPanel.js';
 import { buildSpectrum } from './ui/spectrum.js';
 import { createSampleView } from './views/sample.js';
 import { buildSampleUI } from './ui/samplePanel.js';
+import { buildTrends } from './ui/trends.js';
+import { createCompareView } from './views/compare.js';
+import { buildComparePanel, defaultPartner } from './ui/comparePanel.js';
 import { buildShell } from './ui/shell.js';
 import { buildSheet } from './ui/sheet.js';
 import { buildTablePanel } from './ui/tablePanel.js';
@@ -52,6 +55,9 @@ function boot() {
   const spectrum = buildSpectrum(document.getElementById('ui'));
   spectrum.box.hidden = true;
   const sampleUI = buildSampleUI(document.getElementById('ui'), shell.left);
+  const trends = buildTrends(document.getElementById('ui'), shell.left);
+  const comparePanel = buildComparePanel(shell.left, document.getElementById('ui'));
+  comparePanel.panel.remove();
 
   const table = createTableView({
     onSelect: e => select(e.Z),
@@ -66,6 +72,7 @@ function boot() {
     onEvent: (a, b, e) => { if (state.view === 'sample') sampleUI.onEvent(a, b, e); },
   });
   registerView('sample', sample);
+  registerView('compare', createCompareView());
   for (const v of VIEWS) if (!E.views[v]) registerView(v, stubView(v));
 
   function select(Z, fly = false) {
@@ -74,11 +81,13 @@ function boot() {
     shell.openPanel('right');
   }
 
-  const leftPanels = { table: tablePanel, atom: atomPanel, sample: { panel: sampleUI.panel, render: () => sampleUI.render() } };
+  const leftPanels = { table: tablePanel, atom: atomPanel, sample: { panel: sampleUI.panel, render: () => sampleUI.render() }, trends: { panel: trends.panel, render: () => trends.render() }, compare: comparePanel };
   function renderLeft() {
     for (const [v, p] of Object.entries(leftPanels)) if (v !== state.view && p.panel.parentNode) p.panel.remove();
     spectrum.box.hidden = state.view !== 'atom';
     sampleUI.show(state.view === 'sample');
+    trends.show(state.view === 'trends');
+    comparePanel.show(state.view === 'compare');
     if (state.view === 'atom') spectrum.render(byZ(state.Z));
     if (leftPanels[state.view]) {
       if (stubPanel.parentNode) stubPanel.remove();
@@ -94,13 +103,14 @@ function boot() {
   function renderAll() { shell.relabel(); renderLeft(); sheet.render(); }
 
   on(ch => {
+    if (('view' in ch || 'Z' in ch) && state.view === 'compare' && (!state.Z2 || state.Z2 === state.Z)) set({ Z2: defaultPartner(state.Z) }, { silent: true });
     if ('lang' in ch) setLang(state.lang);
     if ('reduced' in ch) { document.body.classList.toggle('reduced', state.reduced); E.rig.reduced = state.reduced; }
     if ('view' in ch) { switchView(state.view); shell.closePanels(); }
     for (const v of Object.values(E.views)) if (v.ready && v.onState) v.onState(ch);
     if ('lang' in ch || 'view' in ch) renderAll();
     else {
-      if (['prop', 'log', 'layout', 'color', 'filters', 'cb', 'T', 'Z', 'density', 'orbital', 'surf', 'tier', 'allotrope'].some(k => k in ch)) renderLeft();
+      if (['prop', 'log', 'layout', 'color', 'filters', 'cb', 'T', 'Z', 'Z2', 'density', 'orbital', 'surf', 'tier', 'allotrope', 'trendLine', 'cmpR'].some(k => k in ch)) renderLeft();
       if (['Z', 'more', 'cb', 'T'].some(k => k in ch)) sheet.render();
     }
     invalidate();

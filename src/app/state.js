@@ -9,7 +9,7 @@ export const state = {
   lang: 'en', more: false,
   filters: { cats: null, blocks: null, group: 0, period: 0, state: '', origin: '' },
   quality: 'auto', tier: 'med', reduced: false, cb: false, fps: false,
-  orbital: null, density: 'orbital', surf: true, allotrope: null,
+  orbital: null, density: 'orbital', surf: true, allotrope: null, trendLine: 'period', cmpR: 'cov',
 };
 
 export function set(patch, { silent = false } = {}) {
@@ -22,7 +22,7 @@ export function set(patch, { silent = false } = {}) {
 export function on(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
 // ---- URL hash ---------------------------------------------------------------------------
-const HASH_KEYS = { v: 'view', el: 'Z', el2: 'Z2', p: 'prop', log: 'log', lay: 'layout', col: 'color', T: 'T', lang: 'lang', orb: 'orbital', den: 'density', alt: 'allotrope' };
+const HASH_KEYS = { v: 'view', el: 'Z', el2: 'Z2', p: 'prop', log: 'log', lay: 'layout', col: 'color', T: 'T', lang: 'lang', orb: 'orbital', den: 'density', alt: 'allotrope', line: 'trendLine', rad: 'cmpR' };
 let hashTimer = 0, symOf = Z => Z, zOf = s => s;
 export function initHash(symbolOf, zFromSymbol) { symOf = symbolOf; zOf = zFromSymbol; }
 export function readHash() {
@@ -38,6 +38,8 @@ export function readHash() {
     else if (k === 'layout') { if (LAYOUTS.includes(raw)) out.layout = raw; }
     else if (k === 'lang') { if (raw === 'vi' || raw === 'en') out.lang = raw; }
     else if (k === 'density') { if (raw === 'total' || raw === 'orbital') out.density = raw; }
+    else if (k === 'trendLine') { if (raw === 'period' || raw === 'group') out.trendLine = raw; }
+    else if (k === 'cmpR') { if (raw === 'cov' || raw === 'vdw') out.cmpR = raw; }
     else out[k] = raw;
   }
   return out;
@@ -51,6 +53,8 @@ function writeHash() {
   if (state.view === 'sample' || state.color === 'state') q.set('T', String(Math.round(state.T * 100) / 100));
   if (state.view === 'atom') { if (state.orbital) q.set('orb', state.orbital); if (state.density !== 'orbital') q.set('den', state.density); }
   if (state.view === 'sample' && state.allotrope) q.set('alt', state.allotrope);
+  if (state.view === 'trends' && state.trendLine !== 'period') q.set('line', state.trendLine);
+  if (state.view === 'compare' && state.cmpR !== 'cov') q.set('rad', state.cmpR);
   q.set('lang', state.lang);
   const h = '#' + q.toString();
   if (location.hash !== h) history.replaceState(null, '', h);

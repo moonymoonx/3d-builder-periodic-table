@@ -184,6 +184,48 @@ await step('sample view: "Heat it" raises the temperature', async () => {
   return `T rose to ${Math.round(T)} K`;
 });
 
+await step('trends: pick a property, tap a dot to select that element', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'trends', Z: 26, lang: 'en' }));
+  await settle();
+  await page.locator('.chip.prop', { hasText: 'Melting point' }).click(); await page.waitForTimeout(200);
+  const title = await page.locator('.chart-head h2').textContent();
+  if (!/Melting point/.test(title)) throw new Error('title: ' + title);
+  const box = await page.locator('.chart-svg circle[data-z="79"]').boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2); await page.waitForTimeout(200);
+  const Z = await page.evaluate(() => window.__pt.state.Z);
+  if (Z !== 79) throw new Error('Z=' + Z);
+  return title;
+});
+await step('trends: "See it as heights on the table" keeps the property', async () => {
+  await page.getByRole('button', { name: 'See it as heights on the table' }).click(); await page.waitForTimeout(300);
+  const st = await page.evaluate(() => ({ v: window.__pt.state.view, p: window.__pt.state.prop }));
+  if (st.v !== 'table' || st.p !== 'mp') throw new Error(JSON.stringify(st));
+});
+await step('compare: partner chip, swap, radius toggle and sentences', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'compare', Z: 11, Z2: 29, cmpR: 'cov' }));
+  await settle();
+  await page.locator('.side.left .chip', { hasText: 'below K' }).click(); await page.waitForTimeout(250);
+  let st = await page.evaluate(() => ({ Z: window.__pt.state.Z, Z2: window.__pt.state.Z2 }));
+  if (st.Z2 !== 19) throw new Error('chip: ' + JSON.stringify(st));
+  const s1 = await page.locator('.side.left p.why').first().textContent();
+  if (!/Potassium atoms are 1\.\d+ times as wide as sodium atoms\./.test(s1)) throw new Error('sentence: ' + s1);
+  await page.getByRole('button', { name: 'Swap' }).click(); await page.waitForTimeout(250);
+  st = await page.evaluate(() => ({ Z: window.__pt.state.Z, Z2: window.__pt.state.Z2 }));
+  if (st.Z !== 19 || st.Z2 !== 11) throw new Error('swap: ' + JSON.stringify(st));
+  await page.locator('.side.left .seg button', { hasText: 'van der Waals' }).click(); await page.waitForTimeout(250);
+  const s2 = await page.locator('.side.left p.why').first().textContent();
+  if (s2 === s1) throw new Error('radius toggle did not change the size sentence');
+  return s2;
+});
+await step('compare (VI): sentences use the familiar Vietnamese name too', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'compare', Z: 26, Z2: 29, cmpR: 'cov', lang: 'vi' }));
+  await page.waitForTimeout(300);
+  const s = await page.locator('.side.left p.why').first().textContent();
+  await page.evaluate(() => window.__pt.set({ lang: 'en' }));
+  if (!/iron \(sắt\)/.test(s) || !/copper \(đồng\)/.test(s)) throw new Error(s);
+  return s;
+});
+
 for (const [ok, name, info] of results) console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`);
 console.log(errors.length ? `console errors:\n  ${errors.join('\n  ')}` : 'no console errors');
 await browser.close();

@@ -15,9 +15,9 @@ export const prettyTerm = s => String(s).replace(/^(\d+)([A-Z])(\*?)<?([\d/]+)>?
 /** Kid-first summary sentences generated from the data (our own words). */
 export function summary(e) {
   const nm = name(e);
-  let s = t('sum.protons', { name: nm, Z: e.Z });
+  let s = t(e.Z === 1 ? 'sum.proton1' : 'sum.protons', { name: nm, Z: e.Z });
   const A = e.f.nucA?.[0];
-  if (A) s += t('sum.neutrons', { N: A - e.Z });
+  if (A) s += A - e.Z === 0 ? t('sum.neutron0') : A - e.Z === 1 ? t('sum.neutron1') : t('sum.neutrons', { N: A - e.Z });
   const st = stateAt(e, 293.15);
   if (st.s !== 'unknown') s += t(st.p ? 'sum.stateP' : 'sum.state', { state: t('state.' + st.s) });
   const ph = e.ph;
