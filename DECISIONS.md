@@ -78,3 +78,43 @@ Who proposed each: **moony** (owner), **Gemini study** (DESIGN-STUDY.md, committ
   - "a shoebox of gold weighs as much as a small adult" is replaced by the weight of a litre computed from our density (19.3 kg).
   Hooks whose wording still needs checking against their sources are queued as Q15.
 - **The HERO slice is built first at full polish** (landing, table, first tap and card, phone loupe), then a review gate with Gemini and moony before the wow path. *Why:* DESIGN-RULES "first slice"; change direction while it is cheap.
+
+## Gemini critique applied (21 Nov 2026, PLAN-CRITIQUE.md)
+Rule from moony: the builder (Claude) wins on code and design craft; the sourced side wins on facts, but its claims are checked too. Each point is listed with who proposed it.
+
+**Facts: accepted** (proposed by the Gemini critique; checked by Claude against `elements.json`)
+- **Iron's 26 electrons "sit in" 4 shells (2, 8, 14, 2), not "fill".** *Why:* shells 3 and 4 are not full.
+- **The first d cloud shown is a cloverleaf** (m = ±2, d_xy), and the caption says "four of the five d clouds are cloverleaf-shaped". *Why:* our default m = 0 (d_z²) is a dumbbell with a ring.
+- **The lithium "small atom" hook is rewritten to contrast the fairly big lithium atom (128 pm) with its tiny ion between battery layers.** *Why:* the neutral lithium atom is not small. Small correction to the critique itself: carbon is 73 pm in our data, not 76; the conclusion stands.
+- **Gas litre weights are given at 20 °C,** scaled by the ideal-gas law from PubChem's 0 °C values: helium 0.17 g, not 0.18 g. *Why:* the card also says "gas at 20 °C"; mixing bases would contradict itself.
+- **"Soft, low-melting metals" is dropped.** *Why:* it is wrong for aluminium (660 °C) and bismuth (brittle).
+- **The orbital hook is split into two clauses:** shapes decide joining, level jumps decide colours. *Why:* glow colours come from energy steps, not lobe shapes.
+- **The water hook now says** oxygen's pull gives *bent* water molecules a positive and a negative end. *Why:* the polarity needs the bent shape (CO₂ is not polar).
+- **Tungsten 3,422 °C cites PubChem** (our value); RSC lists 3,414 °C. *Why:* a citation must match its value.
+- **De Chancourtois' system is called a helix** (a spiral wound around a cylinder). *Why:* accuracy.
+- **Gold → mercury details add the completed 6s pair and relativity.** *Why:* the nuance curious readers ask about.
+- **"3.5 million iron atoms per millimetre" leaves the card.** If an atoms-per-mm figure is ever used, it comes from the nearest-neighbour distance in the solid (about 4.0 million). *Why:* the covalent diameter is not the spacing in metal.
+
+**Facts: rejected or modified**
+- **The landing line "built from these 118 ingredients" is rejected** (Gemini critique). *Why:* only 94 elements occur naturally (`elements.json`); nobody has touched oganesson. Claude's line keeps the accuracy and adds warmth: *"Everything you have ever touched is made of atoms — and every atom is one of these 118 kinds."*
+
+**Design: accepted** (Gemini critique; the specifics are Claude's craft decisions)
+- **Thicker ceramic tiles,** sides 38 % darker, a satin glaze highlight on top, and pointer parallax of at most 1.2° on desktop only (off for touch and reduced motion). *Why:* flat pale tiles risk reading as a tilted HTML table.
+- **The Heat map is a visible lens chip on the home screen** (a one-tap taste of the wow); the forge works for any glowing solid; "Heat it ▶" plays the whole sweep. *Why:* the main wow was 3 taps deep, on one element.
+- **"Its light" also dims the room to the kiln colour.** One rule: daylight for matter, dark room for light and fire. *Why:* emission lines look lifeless on paper.
+- **Top lens chips:** Families · Heat map · Melting point · Heft · Atom size · Grip on electrons; everything else under "More". *Why:* "grip" and "pull" sound alike to non-chemists, so they are not shown side by side; physical wonder comes first.
+- **Story lenses move to work step 4** (In your phone first, since USGS GIP 167 is public domain). Made in stars waits for a licence and encoding check of the Wikimedia SVG. *Why:* strongest answer to "why should I care?", and the sources now exist.
+- **Hand-written human lines for ~30 elements in the HERO slice;** others generated from data. They are checked by Q17. *Why:* no robotic text on the first taps.
+- **Family names** (Claude's final choices):
+  - Mineral metals (alkaline earth);
+  - Other metals (post-transition);
+  - Half-metals (metalloids);
+  - Noble gases (caption "unreactive gases");
+  - Nonmetals of life (without the list on the map);
+  - kept: Soft, reactive metals · Workhorse metals · Salt-makers · Rare earths · Radioactive heavyweights.
+
+  Gemini's Vietnamese drafts are adopted as drafts for moony. *Why:* dignified for adults, and accurate. One caveat: physicists use "half-metal" for something else, but in a periodic-table context the caption "metalloids" removes the doubt.
+- **Sound is deferred** until the visuals pass the first review gate. *Why:* polish what everyone sees first.
+
+**Design: kept as planned** (Claude)
+- Iron stays the *suggested* first tap and the wow example. *Why:* its two re-stackings (912 °C and 1,394 °C) and its glow make the richest sweep; other metals get the same forge.

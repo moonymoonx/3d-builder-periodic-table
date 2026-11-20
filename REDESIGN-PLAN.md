@@ -8,7 +8,9 @@
 1. **One hero, one obvious action per place.** Home = the table (action: tap an element). Element = the card (action: open a door). Heat = the thermometer (action: drag).
 2. **Plain words first.** No unexplained jargon on any default surface. Jargon appears only as a secondary caption after a human phrase ("Grip on electrons · *ionization energy*").
 3. **Every technical layer sits behind one tap,** opened by a one-line *why it matters* hook with a source (§4).
-4. **Numbers get human anchors computed from our own data:** "a litre of gold would weigh 19.3 kg"; "3.5 million iron atoms side by side make one millimetre"; "melts in your hand: gallium, 29.8 °C". We never invent an anchor; a non-element landmark needs a source first (QUESTIONS.md).
+4. **Numbers get human anchors computed from our own data:** "a litre of gold would weigh 19.3 kg"; "melts in your hand: gallium, 29.8 °C".
+   - We never invent an anchor; a non-element landmark needs a source first (QUESTIONS.md).
+   - Gas weights are stated at 20 °C, scaled by the ideal-gas law from PubChem's 0 °C values; the method is shown in the source popup. Helium: 0.17 g per litre.
 5. **Places, not tabs.** A back link is always visible; nothing is a dead end.
 6. **Smooth on a phone** before anything else (§8). We cut effects before we cut frame rate.
 
@@ -18,16 +20,22 @@
 - Family names are written on the table itself (region labels, see §3). They replace the legend.
 - Top bar: wordmark · "Find an element" · EN|VI · ≡.
 - Bottom prompt: *"Everything you have ever touched is built from these kinds of atom. Tap one to look inside."*
-- A **Lens** pill sits beside the prompt (`Families ▾`). Lenses re-colour or raise the tiles; each opens with a one-line question banner (§4) and has one control at most (the heat map gets a temperature slider).
+- A quiet row of **lens chips** sits under the prompt: **Families** (on) · **Heat map** · Melting point · Heft · Atom size · Grip on electrons · More ▾.
+  - The Heat map is deliberately on the first screen: drag its temperature and all 118 tiles turn solid, liquid or gas together. That is a one-tap taste of the wow (Gemini critique).
+  - Lenses re-colour or raise the tiles. Each opens with a one-line banner (§4) and has one control at most (the heat map's temperature slider).
+  - More ▾ holds Electron pull, Discovered, Crustal abundance, Boiling point, Electron appetite, Weight of one atom, the van der Waals size and the felt pull of the nucleus.
+  - Story lenses (In your phone, Made in stars, In your body) join as soon as their data is in (§7).
 - Phone: thumb-scrub **loupe** to pick tiny tiles; the prompt and lens pill sit above the thumb zone.
 
 **Element (card).** Tapping a tile lifts it 3 mm and glides the camera to it. A card slides in (desktop: 380 px on the right; phone: a bottom sheet that peeks at 45 % and swipes up).
 - **Header:** big serif name, symbol · atomic number, Vietnamese name in VI.
-- **One human line:** e.g. "The metal of steel." Hand-written and sourced where available (Q14); until then a sentence generated from data ("A workhorse metal, solid at room temperature, melts at 1,538 °C").
+- **One human line:** e.g. "The metal of steel and of the red in your blood."
+  - Hand-written in our own words for the ~30 elements people tap first (H, He, Li, C, N, O, F, Ne, Na, Mg, Al, Si, P, S, Cl, K, Ca, Ti, Fe, Cu, Zn, Ag, Sn, I, W, Pt, Au, Hg, Pb, U, Pu, Og), each with a source link and queued for fact-checking (Q17).
+  - Every other element gets a sentence generated from data: "A workhorse metal, solid at room temperature, that melts at 1,538 °C".
 - **Three plain facts with anchors** (all from our data):
   - Solid / liquid / gas at 20 °C;
   - "Melts at 1,538 °C", shown on a mini thermometer with element landmarks;
-  - "A litre would weigh 7.9 kg", or for a gas "a litre weighs 0.18 g".
+  - "A litre would weigh 7.9 kg", or for a gas "a litre weighs 0.17 g" (at 20 °C).
 - **Three doors** (big buttons): **Look inside the atom** · **Hold a piece · heat it** · **Side by side…**
 - **"All numbers & sources ▾":** the full data sheet as it is today: about 25 fields, every value tappable for its source, hatched estimates, "Other sources" disputes. Nothing is removed; it is only demoted.
 - Each fact has a small "↗ across the table" link that opens **Patterns** for that property.
@@ -39,16 +47,17 @@
 - **"About this crystal ▾"** holds today's details: pattern name, unit cell, neighbours, wobble (Lindemann, with its source), gas speeds and slow-down factor, and the honest cards (complex or never-made-in-bulk). Carbon keeps its visible graphite ↔ diamond switch.
 
 **Look inside the atom.**
-- **Default:** the whole atom as stippled clouds, with a plain caption: "Iron's 26 electrons fill 4 shells. The newest went into a 3d cloud, shaped like a cloverleaf." (The configuration is from NIST.)
+- **Default:** the whole atom as stippled clouds, with a plain caption: "Iron's 26 electrons sit in 4 shells (2, 8, 14, 2). The newest went into a 3d cloud; four of the five d clouds are cloverleaf-shaped." (The configuration is from NIST.)
+  - When one d cloud is shown first, it is a cloverleaf (m = ±2, d_xy), not the dumbbell-and-ring d_z².
 - **One visible control:** "+ proton / − proton" (the stepper).
 - **Behind taps:**
   - "Show one cloud" (subshell picker, real ψ(n,l,m) lobes and phases);
-  - "Its light" (NIST lines, tap → wavelength, glow colour);
+  - "Its light" (NIST lines, tap → wavelength, glow colour). **The room dims to the kiln colour** here too, as in Heat it;
   - "About this atom ▾" (configuration, exceptions, Slater/Clementi effective charge, nucleus enlargement factor, 90 % surfaces).
 
 **Side by side.**
 - Opens with **curated surprising pairs** (DESIGN-STUDY §4.7). Each takeaway sentence is checked against our data:
-  - gold 79 vs mercury 80: one more proton, solid → liquid;
+  - gold 79 vs mercury 80: one more proton, solid → liquid. The details add that the extra electron completes mercury's 6s pair, which relativity holds tight (Chemistry World);
   - diamond vs graphite: same atom, different stacking;
   - helium vs osmium: a gas of 0.18 g per litre vs the densest metal, 22.6 kg per litre;
   - sodium vs chlorine;
@@ -66,7 +75,7 @@
 - **Find:** search (EN/VI, accent-insensitive, symbol, number) plus quick filter chips: family, row, column, natural or made-in-lab, state at a temperature. These are today's filters, moved here.
 - **Menu:**
   - Lenses;
-  - Other shapes of the table (32-column; spiral/helix "the first periodic system was a spiral, de Chancourtois 1862");
+  - Other shapes of the table (32-column; helix: "the first periodic system, de Chancourtois 1862, was a helix — a spiral wound around a cylinder");
   - Sound (off by default);
   - Quality;
   - Colour-blind palette;
@@ -76,20 +85,20 @@
   - Share link.
 
 ## 3. Plain-language map (default surfaces)
-Family names are human first and are proposals for Gemini and moony (Q16). The Vietnamese drafts will be written at build time for moony's review.
+Family names are human first and were revised after Gemini's critique (Q16 answered). The Vietnamese column is a draft for moony's review.
 
-| Human (default) | Secondary caption |
-|---|---|
-| Soft, reactive metals | alkali metals |
-| Metals of chalk and stone | alkaline earth metals |
-| Workhorse metals | transition metals |
-| Soft, low-melting metals | post-transition metals |
-| In-betweeners | metalloids |
-| Nonmetals of life (C, H, N, O, P, S, Se) | reactive nonmetals |
-| Salt-makers | halogens (Greek: "salt-former") |
-| Loner gases | noble gases |
-| Rare earths | lanthanides |
-| Radioactive heavyweights | actinides |
+| Human (default) | Secondary caption | VI draft |
+|---|---|---|
+| Soft, reactive metals | alkali metals | Kim loại mềm, dễ phản ứng |
+| Mineral metals | alkaline earth metals (found in nature only in minerals) | Kim loại khoáng |
+| Workhorse metals | transition metals | Kim loại trụ cột |
+| Other metals | post-transition metals | Kim loại khác |
+| Half-metals | metalloids | Á kim |
+| Nonmetals of life | reactive nonmetals (H, C, N, O, P, S, Se) | Phi kim của sự sống |
+| Salt-makers | halogens (Greek: "salt-former") | Nhóm tạo muối |
+| Noble gases | unreactive gases | Khí hiếm |
+| Rare earths | lanthanides | Đất hiếm |
+| Radioactive heavyweights | actinides | Kim loại phóng xạ nặng |
 | Row · Column | period · group |
 | Number (protons) | atomic number |
 | Atom size | covalent radius (Cordero 2008); van der Waals in details |
@@ -110,13 +119,13 @@ Hooks are from DESIGN-STUDY.md §3. ⚠ marks wording we changed for accuracy (r
 
 | Layer | Opened from | Hook (one line) | Source |
 |---|---|---|---|
-| Electron clouds (orbitals) | Atom → "Show one cloud" | The shape of an atom's outer cloud decides how it joins other atoms, and why every element glows its own colours. | Wikipedia *Atomic orbital*; NIST ASD |
+| Electron clouds (orbitals) ⚠ | Atom → "Show one cloud" | Cloud shapes decide how atoms join; jumps between levels decide the colours an element glows. | Wikipedia *Atomic orbital*; NIST ASD |
 | Atomic pattern (lattices) | Heat → "About this crystal" | Same carbon atoms, two stacking patterns: one is soft pencil graphite, the other is diamond, nature's hardest mineral. | Wikipedia *Allotropes of carbon*; RSC carbon |
-| Melting and boiling | Card fact, Heat view, heat-map lens | It decides what survives a light-bulb filament (tungsten, 3,422 °C), what melts in your hand (gallium, 29.8 °C) and what is liquid at room temperature (mercury, −38.8 °C). | RSC W, Ga, Hg; our data |
-| Heft (density) ⚠ | Card fact, lens | Why a helium balloon floats, while a 1-litre carton of gold would weigh 19.3 kg. | RSC He, Au; our density |
-| Atom size | Lens, Side by side | Small atoms slip into tight spaces. That is one reason tiny lithium ions power rechargeable batteries. *(verify)* | Nobel 2019 press release |
+| Melting and boiling | Card fact, Heat view, heat-map lens | It decides what survives a light-bulb filament (tungsten, 3,422 °C), what melts in your hand (gallium, 29.8 °C) and what is liquid at room temperature (mercury, −38.8 °C). | PubChem (our data; RSC lists W at 3,414 °C); RSC Ga, Hg |
+| Heft (density) ⚠ | Card fact, lens | Why a helium balloon floats (a litre of helium weighs 0.17 g, a litre of air 1.20 g, at 20 °C), while a litre of gold would weigh 19.3 kg. | PubChem (our data, gas scaled to 20 °C); Wikipedia *Density of air*; RSC He |
+| Atom size ⚠ | Lens, Side by side | Size changes with charge: a lithium atom is fairly big (128 pm), but without its outer electron it becomes a tiny ion that slips between the layers inside your phone's battery. | Nobel 2019 popular information; USGS GIP 167; our data |
 | Grip on electrons ⚠ | Lens, Patterns | How tightly an atom holds its outer electron. A weak grip is why sodium explodes in water; a strong grip is why noble gases hardly react. | Wikipedia *Ionization energy*; Nature Chemistry 2015 (nchem.2161) |
-| Electron pull ⚠ | Lens, Patterns | How hard an atom pulls on electrons it shares. Fluorine pulls hardest of all (3.98), and oxygen's pull makes water molecules lopsided. *(verify)* | Wikipedia *Electronegativity*; our data |
+| Electron pull ⚠ | Lens (More), Patterns | How hard an atom pulls on electrons it shares. Fluorine pulls hardest of all (3.98); oxygen's pull gives bent water molecules a positive and a negative end, which lets water dissolve salt. | Wikipedia *Electronegativity*, *Properties of water*; our data |
 | Patterns (trends chart) ⚠ | Any fact "↗", lens menu | 118 numbers turn into one repeating wave: the pattern that let Mendeleev leave a gap for gallium and predict it before anyone had seen it. | Wikipedia *Periodic trends*; RSC gallium |
 | Side by side | Card door, menu | One more proton turns solid gold (79) into liquid mercury (80). | Chemistry World, *Relativity behind mercury's liquidity*; RSC Hg |
 | Its light (spectrum) | Atom → "Its light" | Heat or electricity makes every element glow its own colours: neon glows orange-red, sodium glows yellow (its 589 nm lines). | NIST ASD; RSC neon; compoundchem fireworks |
@@ -139,6 +148,7 @@ Hooks are from DESIGN-STUDY.md §3. ⚠ marks wording we changed for accuracy (r
 | Kelvin-first temperatures | °C first; K in details | Human scale |
 | Quiz tab | Parked on branch `wip-m6-quiz`; returns later as "Mysteries" | moony stopped it; Gemini §4.9 reframes it |
 | FPS meter, quality tier | Settings only (F key and `?stats` still work) | Developer tools |
+| Sound | Deferred until the visuals pass the first review gate (still off by default) | Gemini critique: polish what everyone sees first |
 
 ## 6. Facts kept (and where they live now)
 All 118 elements with every sourced field (PubChem, CIAAW, NIST ASD/CODATA, Wikipedia/Arblaster, mendeleev data, NUBASE2020, COD) are kept in the same `elements.json` → card details. The rest moves without loss:
@@ -154,13 +164,15 @@ All 118 elements with every sourced field (PubChem, CIAAW, NIST ASD/CODATA, Wiki
 `tools/validate.mjs` and the tests stay green at every step.
 
 ## 7. New content and data (never invented; queued in QUESTIONS.md)
-- **Q11 Made in stars:** per-element cosmic origin (Johnson 2019).
-- **Q12 In your body:** composition of the human body.
-- **Q13 In your phone:** elements in a smartphone and their roles, from an open source.
-- **Q14 One human line per element:** 118, sourced; Vietnamese by moony.
-- **Q15 Fact-check of the hooks in §4:** wording against the sources; plus any non-element landmark we would like to use (e.g. the density of air).
-- **Q16 Family human names:** accuracy and tone, EN and VI.
-- Story lenses ship only once their data is fetched, cited and validated. Until then they are not shown (no placeholders on a default surface).
+Answered in PLAN-CRITIQUE.md (21 Nov):
+- **Q11 Made in stars:** per-element fractions in Wikimedia Commons *File:Nucleosynthesis_periodic_table.svg* (after Johnson 2019, *Science* 363:474), CC BY-SA 3.0 / GFDL. Before use we check how the numbers are encoded and the share-alike terms; fractions are shown as approximate.
+- **Q12 In your body:** Wikipedia *Composition of the human body* (primary: ICRP Publication 23; Emsley 2011). We take the numbers only, cited.
+- **Q13 In your phone:** USGS GIP 167 *A World of Minerals in Your Mobile Device* (2016, public domain): elements by role (display, electronics, battery, speakers and vibration).
+- **Q14 One human line per element:** no open dataset exists. We write our own lines for ~30 elements in the HERO slice (sources linked; Q17 checks them) and generate the rest from data.
+- **Q15 Hooks:** lithium and water hooks rewritten (§4). Air is 1.205 g/L at 20 °C (Wikipedia *Density of air*).
+- **Q16 Family names:** revised (§3).
+- **New Q17:** fact-check the ~30 hand-written element lines against their sources.
+- **Story lenses move from "Later" to step 4** (In your phone first, since its source is public domain). Each ships only once its data is fetched, cited and validated, with no placeholders on a default surface.
 
 ## 8. Work order: the HERO slice first, at full polish
 1. **HERO slice: landing + table + first interaction.** Acceptance:
@@ -170,24 +182,31 @@ All 118 elements with every sourced field (PubChem, CIAAW, NIST ASD/CODATA, Wiki
    - Frame-rate targets in §9 are met.
    - **Review gate:** Gemini critique and moony's look before step 2.
    1. *Foundations:* STYLE tokens and type stacks in CSS; transparent canvas over paper; daylight rig; rounded porcelain tiles with darker sides; instanced baked contact shadows; region labels; a pure-CSS loading state (paper and tile silhouettes) that paints in under 300 ms.
-   2. *Landing:* flat families table, one-time light sweep, bottom prompt, breathing iron and delayed "Try iron" tag, Find pill (today's search, restyled), menu.
-   3. *First interaction:* hover lift and ring in under 100 ms; tap → lift, camera glide, card or sheet with the human line, 3 anchored facts, 3 doors (wired to today's views inside the new chrome) and "All numbers & sources"; back link and Esc.
+   2. *Landing:*
+      - Families table of thick ceramic tiles, one-time light sweep, subtle pointer parallax.
+      - Bottom prompt and the **lens chip row**: Families, Heat map (with its temperature slider), Melting point, Heft, Atom size, Grip on electrons, More.
+      - Breathing iron and the delayed "Try iron" tag.
+      - Find pill (today's search, restyled) and the menu.
+   3. *First interaction:*
+      - Hover lift and ring in under 100 ms.
+      - Tap → lift, camera glide, then the card or sheet with the human line (~30 hand-written, the rest generated), 3 anchored facts, 3 doors (wired to today's views inside the new chrome) and "All numbers & sources".
+      - Back link and Esc.
    4. *Phone:* thumb-scrub loupe, sheet with peek and expanded states, thumb-zone layout, landscape check.
    5. *Strings:* EN/VI for every new string (VI flagged for moony); smoke checks for the new flow.
 2. **The wow path:** scale dive; Heat restyle; kiln dimming; landmark flags; event captions; sample performance (atoms per tier); optional sound groundwork.
 3. **Inside the atom:** stippled clouds on paper, plain caption, "+ proton", "Show one cloud", "Its light", details.
-4. **Lenses and Find:**
-   - Number lenses: Atom size, Grip on electrons, Electron pull, Melting, Heft, Discovered, each with its question banner and automatic log scale.
-   - Heat-map lens.
+4. **Story lenses, the rest of the lenses, and Find:**
+   - In your phone (USGS), Made in stars (Wikimedia, after the licence check), In your body (Wikipedia/ICRP).
+   - The More lenses, each with its banner and automatic log scale.
    - Find chips; other table shapes in the menu.
 5. **Patterns and Side by side:** question-led charts with data-derived callouts; curated pairs.
 6. **Polish and proof:**
    - The full BEFORE/AFTER set.
    - The DESIGN-RULES checklist recorded in LOG.md.
    - Contrast, keyboard, reduced motion, tiers, phone landscape.
+   - Optional sound (STYLE §8).
    - README.
 7. **Later:**
-   - Story lenses as Q11–Q13 land.
    - "Mysteries" built from the parked quiz (fix its two known bugs first).
    - SPEC §5 Later items (demo dioramas, etc.).
 
@@ -213,9 +232,14 @@ All 118 elements with every sourced field (PubChem, CIAAW, NIST ASD/CODATA, Wiki
 - There is a review gate after the HERO slice (Gemini and moony) and after the wow path.
 - No "M<n>:" commit prefixes. Nothing is published except `git push` to origin.
 
-## 11. Open questions for Gemini's critique
-1. Does a light "porcelain & ink" stage read as *higher quality* to this audience than a dark showroom, at a fraction of the GPU cost?
-2. Are the family names in §3 accurate and inviting (EN and VI)?
-3. Is "heat iron until it glows" the right single wow moment, with the scale dive as the road to it?
-4. Which six number lenses earn the top of the lens menu?
-5. Sources for the story lenses (Q11–Q13), and the hook checks (Q15).
+## 11. Open questions
+Answered by Gemini's critique (PLAN-CRITIQUE.md):
+- **Light vs dark:** light, with strong tactile contrast.
+- **Family names:** revised.
+- **Wow moment:** yes, plus the one-tap heat map on home and the forge for any metal.
+- **Top lenses:** Families, Heat map, Melting point, Heft, Atom size, Grip on electrons.
+- **Sources:** Q11–Q15 answered.
+
+Still open:
+- The Vietnamese wording of every new string (moony).
+- Q17, the element lines.

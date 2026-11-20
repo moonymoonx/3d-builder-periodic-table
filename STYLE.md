@@ -6,6 +6,7 @@ The style card for the redesign (DESIGN-RULES.md Layer 2). It is made for this t
 - **Who:** curious adults with no chemistry assumed, such as a PhD who last studied chemistry decades ago, software developers and documentary watchers. Students and teachers too.
 - **Feeling:** *calm wonder*. It should feel like turning the pages of a beautifully illustrated science book in a sunlit museum, where every specimen can be picked up. The tone is never a dashboard and never homework.
 - **One-line concept:** the elements as **porcelain specimens on warm paper, labelled in ink**. When you heat something, **the room goes dark like a forge** so you can see it glow.
+- **One visual rule:** *daylight is for matter; a dark room is for light and fire.* Only two places dim the room: **Heat it** (glowing metal) and **Its light** (emission spectra).
 
 ## 2. References, and what we take from each
 | Reference | We take | We leave |
@@ -34,7 +35,7 @@ Four core colours with fixed roles. Data colours appear only on the specimens, n
 
 **Family pigments** are muted, like mineral paints. They colour the top glaze of each tile, and the symbols are ink (6.7 : 1 or better on every pigment).
 `alkali #E8955A · alkaline-earth #EBC55E · transition #8FA9CF · post-transition #A9CBD6 · metalloid #7FC0A8 · nonmetal #B5D27F · halogen #E39BBA · noble-gas #B7A6DA · lanthanide #DCC6A0 · actinide #C9967C`
-- Pigments are pale against the paper (1.5–2.3 : 1). Tiles stand out by **shading, not hue**: side faces are 28 % darker than the top, and each tile casts a soft contact shadow, so its edge reaches at least 3 : 1.
+- Pigments are pale against the paper (1.5–2.3 : 1). Tiles stand out by **shading, not hue**: side faces are 38 % darker than the top, the glazed top catches a soft highlight, and each tile casts a soft contact shadow, so its edge reaches at least 3 : 1.
 - A colour-blind-safe set (Okabe–Ito based) remains a setting.
 - Colour never works alone. Families are named in words on the table (region labels), and predicted values keep the hatch.
 
@@ -79,9 +80,14 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
   - Soft *baked* contact shadows: an instanced quad under each tile with a blurred gradient texture generated in code. Real shadow maps only on High on desktop.
   - No post-processing by default: no bloom, no depth-of-field.
 - **Tiles:**
-  - Built in code as rounded boxes (2 mm bevel at tile scale). The material is matte porcelain (`roughness 0.6`, `metalness 0`); the top face is the family pigment and the sides are 28 % darker.
+  - Built in code as **thick** rounded ceramic blocks (height about 40 % of their width, bevel about 8 % of the width), so they read as 3D objects in the first second and not as a tilted HTML table.
+  - Material:
+    - The top face is the family pigment under a satin glaze (`roughness 0.42`) that catches the key light as a soft highlight.
+    - The sides are matte (`roughness 0.75`) and **38 % darker**.
+    - `metalness 0` throughout.
   - The symbol is a crisp screen-space ink label.
-  - Default height is low and equal for all tiles. Height means something only inside a numbers lens.
+  - Default height is equal for all tiles. Height means something only inside a numbers lens.
+  - Pointer parallax on desktop: the camera leans at most 1.2° toward the cursor (300 ms ease-out), as a depth cue. It is off on touch screens and with reduced motion.
 - **Specimen stage (Heat it):**
   - Atoms are glazed beads (`roughness 0.35`) in the family pigment, inside a hairline glass cube with an ink unit-cell outline.
   - When hot, the beads' emissive colour follows the blackbody glow, with a cheap additive halo sprite on Medium and High.
@@ -103,6 +109,8 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 | scale dive (table → inside a tile) | 1400 ms; crossfade at 70 % | ease-in-out quint |
 | return to the table | 900 ms | ease-in-out cubic |
 | number changes (counters) | 300 ms | ease-out |
+| room dims to `--kiln` (Heat it, Its light) / returns | 600 ms / 600 ms | ease-in-out |
+| pointer parallax (desktop) | 300 ms follow, ≤ 1.2° | ease-out |
 
 **Camera language:**
 - One continuous move per user action. The subject always ends centred in the *free* area (beside the card, above the sheet).
@@ -110,7 +118,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 - User orbiting is allowed within soft limits; "⌂" recentres.
 - **Reduced motion:** every camera move becomes a 150 ms crossfade, ripples become instant, vibration amplitude is shown as a still "blur" ring instead of shaking, and heating still changes colour (information, not decoration).
 
-## 8. Sound (optional, **off by default**)
+## 8. Sound (optional, **off by default**; built only after the visuals pass the first review gate)
 - A "Sound" switch lives in the menu and is remembered on this device. Everything is synthesised with WebAudio (no files). Nothing plays on page load, and nothing loops except while the user is acting.
 - Volume is quiet (−24 dB peak) and pitches are warm (marimba and glass timbres).
 
@@ -133,12 +141,14 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 5. At **1,394 °C** it snaps back. At **1,538 °C** it melts into a glowing puddle; at **2,861 °C** it boils away into a gas.
 6. One quiet caption names each moment. Let go and the room light returns.
 Every number comes from our data (PubChem; Wikipedia/Arblaster transitions; COD cells). The stage around it stays calm: no other panels and no chrome beyond the thermometer and the back link.
+- **Not just iron.** The forge dims for *any* solid as soon as it starts to glow, and "Heat it ▶" plays the whole sweep with one tap. Iron is only the suggested first example.
+- **An instant taste from home.** The **Heat map** lens chip on the table turns the temperature into a slider for all 118 tiles at once: drag it and watch whole regions melt and boil.
 
 ## 10. Do / Don't
 | Do | Don't |
 |---|---|
 | "Grip on electrons · *ionization energy*" | "First ionization energy (eV)" in a dropdown |
-| Write the family names on the table, like a map ("Loner gases") | A 12-item colour legend |
+| Write the family names on the table, like a map ("Noble gases", "Salt-makers") | A 12-item colour legend |
 | "Melts at 1,538 °C" (K in the details) | "1,811 K (1,538 °C)" on a default surface |
 | "A litre of gold would weigh 19.3 kg" (from our density) | "19.282 g/cm³" as the headline |
 | One card with 3 facts and 3 doors | A 25-row data sheet wall |

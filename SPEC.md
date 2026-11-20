@@ -12,10 +12,11 @@ Where this section conflicts with §2 (six tabs, kid-first wording, legend and d
 **The first 5 seconds (exactly what is on screen).**
 - *Desktop 1440×900:*
   - The page is warm paper. The 118 elements sit as low porcelain tiles in the familiar 18-column shape, tilted toward you and filling about 80 % of the width. Each tile has its family glaze and its symbol in ink.
-  - The family names are written on the table itself in serif italic, like a map: "Soft, reactive metals", "Workhorse metals", "Loner gases", "Rare earths" …
+  - The family names are written on the table itself in serif italic, like a map: "Soft, reactive metals", "Workhorse metals", "Salt-makers", "Noble gases", "Rare earths" …
   - A soft light sweeps across once on load (1.2 s).
   - A quiet top bar holds the wordmark, a "Find an element" pill, EN | VI and a ≡ menu.
-  - Bottom centre, in serif: *"Everything you have ever touched is built from these kinds of atom."* Under it, in small sans: **"Tap one to look inside."**
+  - Bottom centre, in serif: *"Everything you have ever touched is made of atoms — and every atom is one of these 118 kinds."* Under it, in small sans: **"Tap one to look inside."**
+  - Below the prompt, a quiet row of lens chips: **Families** (on) · **Heat map** · Melting point · Heft · Atom size · Grip on electrons · More ▾. They are visibly secondary to the prompt.
   - The iron tile breathes gently (the suggested first tap). After 4 s without a touch, a small "Try iron" tag appears beside it.
   - There is no legend, dropdown, data sheet or tab row.
 - *Phone 390×844 (portrait):* the same table, framed to fit the width, with the prompt above the thumb zone. Touch and slide across the table: the element under your thumb pops up large above it (a loupe). Lift to open it. This gives tiny tiles a 44 px-equivalent target.
@@ -24,13 +25,16 @@ Where this section conflicts with §2 (six tabs, kid-first wording, legend and d
 **The 3-step path to the wow moment** (STYLE.md §9):
 1. Tap **iron**. Its tile lifts, the camera glides in, and a card shows *"Iron · the metal of steel"* with three plain facts and three doors.
 2. Tap **Hold a piece**. The camera dives *into* the tile, which opens into iron's real crystal (each atom touching 8 neighbours) with a big thermometer.
-3. Drag the thermometer up. The room dims like a forge, the metal glows red, then orange, then white. At 912 °C the crystal snaps into a 12-neighbour stack; it melts at 1,538 °C and boils at 2,861 °C.
+3. Drag the thermometer up (or press "Heat it ▶"). The room dims like a forge, the metal glows red, then orange, then white. At 912 °C the crystal snaps into a 12-neighbour stack; it melts at 1,538 °C and boils at 2,861 °C.
+- **An instant one-tap taste from home:** tap the **Heat map** chip and drag its temperature; all 118 tiles turn solid, liquid or gas together.
+- The forge works for any solid that glows, not only iron.
 
 **User flow across views.** The views are places, not tabs. A back link ("← All elements" or "← Iron") is always visible.
 ```
-Table (home: families; lenses: Heat map · Atom size · Grip on electrons · Electron pull · Melting · Heft · story lenses as data arrives)
+Table (home: Families; lens chips: Heat map · Melting point · Heft · Atom size · Grip on electrons · More: Electron pull, Discovered,
+       Crustal abundance, Boiling point … · story lenses In your phone / Made in stars / In your body once their data is in)
   └─ tap an element → Element card (name, one human line, 3 plain facts, "All numbers & sources")
-        ├─ Look inside the atom   (electron clouds, "add a proton", its light)
+        ├─ Look inside the atom   (electron clouds, "add a proton", its light; "Its light" dims the room)
         ├─ Hold a piece · heat it (crystal, thermometer, melt/boil)  ← the wow
         ├─ Side by side           (curated surprising pairs or any element; to scale)
         └─ "How does this change across the table?" (from any fact) → Patterns (chart that opens with a question)
