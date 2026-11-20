@@ -82,12 +82,30 @@ export function setTier(tier) {
 }
 export const tierConfig = () => TIERS[E.tier];
 /** Device pixel ratio for a tier. A software renderer on the low tier also lowers the internal
- *  resolution of big windows (to about 0.75 megapixels), so it can keep its frame rate. */
+ *  resolution of big windows (to E.mp megapixels: 0.75, less while tiles fill the screen), so it can
+ *  keep its frame rate. */
+E.mp = 0.75;
 function pixelRatioFor(cfg) {
   const dpr = Math.min(window.devicePixelRatio || 1, cfg.maxDpr);
   if (!(E.software && E.tier === 'low')) return dpr;
   const mp = (window.innerWidth * window.innerHeight * dpr * dpr) / 1e6;
-  return mp > 0.75 ? Math.max(0.6, dpr * Math.sqrt(0.75 / mp)) : dpr;
+  return mp > E.mp ? Math.max(0.4, dpr * Math.sqrt(E.mp / mp)) : dpr;
+}
+// Software renderers: when frames take longer than 1/60 s (tiles filling the screen when zoomed in),
+// lower the internal resolution in steps (down to 0.3 MP); raise it again once the camera has moved
+// well back out. Frames are paced at 60 Hz, so "cheap again" cannot be read from frame times alone.
+let resWin = [], resFail = null;
+function adaptResolution(dt) {
+  if (!(E.software && E.tier === 'low' && state.quality === 'auto')) return;
+  resWin.push(dt);
+  if (resWin.length < 24) return;
+  const w = resWin.sort((a, b) => a - b), med = w[w.length >> 1];
+  resWin = [];
+  let next = E.mp;
+  // step by about the speed-up needed (half the pixels for a 30 FPS median), so it settles within ~1.5 s
+  if (med > 20 && E.mp > 0.31) { resFail = { r: E.rig.r }; next = Math.max(0.3, E.mp * Math.min(0.85, Math.max(0.45, (16 / med) ** 1.1))); }
+  else if (med < 17.5 && E.mp < 0.75 && (!resFail || E.rig.r > resFail.r * 1.25)) { resFail = null; next = Math.min(0.75, E.mp / 0.7); }
+  if (next !== E.mp) { E.mp = next; E.renderer.setPixelRatio(pixelRatioFor(TIERS.low)); invalidate(); } // the size and the camera stay as they are
 }
 
 export function resize() {
@@ -158,7 +176,7 @@ function frame(now) {
     }
     E.needs = false;
     // frame-time statistics only while rendering continuously
-    if (E.lastFrame && now - E.lastFrame < 250) { E.frames.push(now - E.lastFrame); if (E.frames.length > 240) E.frames.shift(); autoTier(); }
+    if (E.lastFrame && now - E.lastFrame < 250) { E.frames.push(now - E.lastFrame); if (E.frames.length > 240) E.frames.shift(); autoTier(); adaptResolution(now - E.lastFrame); }
     E.lastFrame = now;
   } else E.lastFrame = 0;
   if (busy) schedule();

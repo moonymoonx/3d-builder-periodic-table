@@ -37,9 +37,9 @@ Four core colours with fixed roles. Data colours appear only on the specimens, n
 `alkali #E8955A · alkaline-earth #EBC55E · transition #8FA9CF · post-transition #A9CBD6 · metalloid #7FC0A8 · nonmetal #B5D27F · halogen #E39BBA · noble-gas #B7A6DA · lanthanide #DCC6A0 · actinide #C9967C`
 - Pigments are pale against the paper (1.5–2.3 : 1). Tiles stand out by **shading, not hue**: side faces are 38 % darker than the top, the glazed top catches a soft highlight, and each tile casts a soft contact shadow, so its edge reaches at least 3 : 1.
 - A colour-blind-safe set (Okabe–Ito based) remains a setting.
-- Colour never works alone. Families are named in words on the table (region labels), and predicted values keep the hatch.
+- Colour never works alone. Families are named in words on the table (region labels; on phones, whose tiles are too small for words, a compact colour key under the table and the family name in the loupe), and predicted values keep the hatch.
 
-**State colours** (heat-map lens): `solid #7D8799 · liquid #2A6FAE · gas #E0A33A`, plus the words "solid / liquid / gas" in the card. Unknown values are hatched.
+**State colours** (heat-map lens): `solid #AEB8C8 · liquid #2A6FAE · gas #E0A33A · not known #E6DFD2` (a blank paper tone), plus the words "solid / liquid / gas" in the card. Ink symbols reach 8.7 : 1 on solid and 7.8 : 1 on gas; liquid takes light symbols (5 : 1). Predicted states are striped. Every colour and the stripes are in the lens key.
 **Electron-cloud inks** (stippled orbitals): `phase + #C8501E` (vermilion) and `phase − #2C5DB0` (cobalt). This orange/blue pair stays distinct for red-green colour blindness.
 **Glow** is never a token: it is computed from the temperature (Planck's law × CIE fit, as today).
 
@@ -67,25 +67,27 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
 - **Spacing:** 4 / 8 / 12 / 16 / 24 / 32 / 48. **Radii:** 10 (chips), 16 (cards), 999 (pills).
 - **Elevation:** paper shadows only (`0 1px 2px rgba(28,26,23,.06), 0 8px 24px rgba(28,26,23,.08)`). No glassmorphism, no glow on chrome.
 - **Targets:** at least 44 × 44 px with 8 px gaps. The primary button is an ink pill with paper text; the secondary is an outlined pill; the tertiary is a text link in verdigris.
-- **The canvas owns the screen** (about 90 %). On a default surface you see at most: a top bar (wordmark, find pill, language, menu), one card or sheet, and one bottom prompt.
+- **The canvas owns the screen** (about 90 %). On a default surface you see at most: a top bar (wordmark, find pill, language, menu), one card or sheet, and one bottom prompt. On phones, find is a round 44 px button that opens into a field across the bar.
+- **Element card:** a 392 px side card on desktop; when it scrolls, a compact title bar (tile, name, number) slides in under the close button, so rows never run beneath it. On phones it is a bottom sheet that stands exactly tall enough to show the three doors (at most 62 % of the screen): name, the human line, the three facts in one strip, the doors; the facts' notes, "across the table" links and all numbers follow below.
+- **Name tags** (hover, "Try iron", lens notes) hang above the tile's back edge with a small caret, so they never cover the printed number. Names written on the table keep 14 px from the screen edges and stay clear of the card, or are hidden.
 
 ## 6. 3D: lighting and materials
-- **Stage:** a transparent canvas over the CSS paper (a soft warm radial light from the top left). Distance fog fades into `--paper`, so depth reads as atmosphere and there is no hard horizon.
+- **Stage:** a transparent canvas over the CSS paper (a soft warm radial light from the top left, a faint grain, the edges a touch deeper; painted once). Distance fog fades into `--paper`, so depth reads as atmosphere and there is no hard horizon.
 - **Light rig (daylight studio):**
-  - a hemisphere light (sky `#FFF7EC`, ground `#D9CFC0`, 0.9);
+  - a hemisphere light (sky `#FFF7EC`, ground `#D9CFC0`, 0.95);
   - one warm key light from the top left (`#FFF1DE`, 2.0);
   - a faint cool rim light from behind (`#DCE6F5`, 0.5).
   - Tone mapping: Khronos PBR Neutral, exposure 1.0 (it keeps the glazes' hues; ACES shifted them).
 - **Scrims:** soft paper gradients at the top and bottom of the screen keep the chrome legible when tiles pass under it (zoomed in, tall columns).
 - **Shadows:**
-  - Soft *baked* contact shadows: an instanced quad under each tile with a blurred gradient texture generated in code. Real shadow maps only on High on desktop.
+  - Soft *baked* contact shadows: all tiles' shadows drawn into one texture on one plane under the table (one blended layer on screen, however close the camera), re-baked only when the shape or the lifted tile changes. A lifted tile's shadow grows softer and lighter. Real shadow maps only on High on desktop.
   - No post-processing by default: no bloom, no depth-of-field.
 - **Tiles:**
-  - Built in code as **thick** rounded ceramic blocks (height about 40 % of their width, bevel about 8 % of the width), so they read as 3D objects in the first second and not as a tilted HTML table.
+  - Built in code as **thick** rounded ceramic blocks (height about 40 % of their width, bevel about 6 % of the width), so they read as 3D objects in the first second and not as a tilted HTML table.
   - Material:
-    - The top face is the family pigment under a satin glaze (`roughness 0.42`) that catches the key light as a soft highlight.
-    - The sides are matte (`roughness 0.75`) and **38 % darker**.
-    - `metalness 0` throughout.
+    - The top face is the family pigment under a glaze (`roughness 0.16`); the sides are glazed too (`roughness 0.34`) and **38 % darker**. `metalness 0` throughout.
+    - The glaze reflects a soft studio computed in the shader (no environment map, so it costs no texture reads): warm walls, the paper floor, a long softbox low behind the table (a sheen on the far tile tops) and a key softbox front-left (a bright catchlight along each front bevel). Strength `tile.glaze 0.6`.
+    - Each tile's glaze varies by ±2.5 % in lightness, like handmade ware, and a resting tile darkens slightly where it meets the paper.
   - The symbol and the atomic number are **printed on the glaze** (an atlas texture drawn with the system sans when the scene is built), so every tile always carries its label, like a specimen tray. The hovered tile's *name* pops up as a screen-space label (≥ 14 px); on phones a loupe shows it under the thumb.
   - Default height is equal for all tiles. Height means something only inside a numbers lens.
   - Pointer parallax on desktop: the camera leans at most 1.2° toward the cursor (300 ms ease-out), as a depth cue. It is off on touch screens and with reduced motion.
@@ -98,7 +100,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
   - It should read like an engraving come alive.
 
 ## 7. Motion
-**Personality:** *unhurried and precise*, like a curator's hands. Moves are smooth and settle without bounce. The only springs are hover and press.
+**Personality:** *unhurried and precise*, like a curator's hands. Moves are smooth and settle without bounce. The only springs are hover, press and picking up a tile: the picked tile rises with a 10 % overshoot and settles (about 350 ms), like a piece lifted from a tray. Reduced motion removes the overshoot.
 
 | Event | Duration | Easing |
 |---|---|---|
@@ -149,12 +151,12 @@ Every number comes from our data (PubChem; Wikipedia/Arblaster transitions; COD 
 | Do | Don't |
 |---|---|
 | "Grip on electrons · *ionization energy*" | "First ionization energy (eV)" in a dropdown |
-| Write the family names on the table, like a map ("Noble gases", "Salt-makers") | A 12-item colour legend |
+| Write the family names on the table, like a map ("Noble gases", "Salt-makers"); phones get a compact key under the table | A 12-item colour legend beside the desktop table |
 | "Melts at 1,538 °C" (K in the details) | "1,811 K (1,538 °C)" on a default surface |
 | "A litre of gold would weigh 19.3 kg" (from our density) | "19.282 g/cm³" as the headline |
 | One card with 3 facts and 3 doors | A 25-row data sheet wall |
 | Equal, calm tiles; heights only in a numbers lens, with its question | Columns of unexplained heights on first load |
-| Soft contact shadows, matte glaze, daylight | Neon edges, heavy bloom, harsh default shadow acne |
+| Soft contact shadows, a glaze that catches the light, daylight | Neon edges, heavy bloom, harsh default shadow acne |
 | The camera glides to what you tapped | Spinning or auto-rotating the table |
 | A back link "← All elements", always visible | Six top-level tabs |
 | A hook first, then the science, then the source | Unexplained "Lindemann", "Z_eff", "Pearson cI2" on screen |

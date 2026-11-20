@@ -1,7 +1,7 @@
 // UI kit: the shared components every place uses (STYLE.md §5, DESIGN-RULES Layer 1).
 // Each factory returns a DOM element (or a small handle); styles live in src/styles/kit.css with the
 // "ui-" prefix, so they can never clash with the legacy view classes. Targets are >= 44 px.
-import { h } from '../dom.js';
+import { h, replace } from '../dom.js';
 
 /** Pill button. kind: 'primary' (ink fill) | 'secondary' (outline) | 'quiet' (text only). */
 export function button({ label, kind = 'secondary', icon = null, onClick, attrs = {} }) {
@@ -83,13 +83,19 @@ export function sheet({ label, onClose, closeLabel = 'Close' }) {
   const body = h('div', { class: 'ui-sheet__body' });
   const handle = h('button', { type: 'button', class: 'ui-sheet__handle', 'aria-label': label }, h('span', { 'aria-hidden': 'true' }));
   const close = h('button', { type: 'button', class: 'ui-icon ui-sheet__close', 'aria-label': closeLabel, title: closeLabel, onclick: () => onClose && onClose() }, h('span', { 'aria-hidden': 'true' }, '×'));
-  const el = h('section', { class: 'ui-sheet', 'aria-label': label, hidden: true }, handle, close, body);
+  // a compact title bar that slides in once the body scrolls, so content never runs under the close button
+  const bar = h('div', { class: 'ui-sheet__bar', 'aria-hidden': 'true' });
+  const el = h('section', { class: 'ui-sheet', 'aria-label': label, hidden: true }, handle, bar, close, body);
+  body.addEventListener('scroll', () => el.classList.toggle('is-scrolled', body.scrollTop > 6), { passive: true });
   const api = {
     el, body,
     isOpen: () => !el.hidden,
     open() { el.hidden = false; requestAnimationFrame(() => el.classList.add('is-in')); },
-    close() { el.classList.remove('is-in', 'is-full'); el.hidden = true; },
+    close() { el.classList.remove('is-in', 'is-full', 'is-scrolled'); el.hidden = true; },
     setFull(f) { el.classList.toggle('is-full', !!f); },
+    setBar(node) { replace(bar, node); },
+    /** Phone: how tall the sheet stands before it is pulled up (px; null = the default). */
+    setPeek(px) { if (px == null) el.style.removeProperty('--peek'); else el.style.setProperty('--peek', `${Math.round(px)}px`); },
   };
   // phone: tap the handle or swipe up/down on it to switch between peek and full
   let y0 = null;

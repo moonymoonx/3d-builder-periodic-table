@@ -263,3 +263,5 @@ export function fmtSci(v, sig = 3) {
   return `${fmtNum(m, sig - 1)} × 10${sup}`;
 }
 export const cap = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+/** A map label written on one line: 'Half-\nmetals' -> 'Half-metals', 'Noble\ngases' -> 'Noble gases'. */
+export const oneLine = s => String(s).replace(/-\n/g, '-').replace(/\n/g, ' ');

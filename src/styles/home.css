@@ -7,6 +7,7 @@
 .hero-word { display: flex; flex-direction: column; line-height: 1.15; padding: 2px 4px; user-select: none; text-shadow: 0 0 8px var(--paper), 0 0 2px var(--paper); }
 .hero-word b { font: 600 22px/1.15 var(--font-serif); letter-spacing: 0.005em; }
 .hero-word span { font: 500 12px/1.4 var(--font-sans); color: var(--ink-2); letter-spacing: 0.06em; text-transform: uppercase; }
+.hero-word span:empty { display: none; }
 body.legacy .hero-word b { color: var(--text); }
 body.legacy .hero-word span { color: var(--muted); }
 
@@ -36,7 +37,12 @@ body.legacy .hero-word span { color: var(--muted); }
   align-items: center; gap: 12px; pointer-events: none !important; transition: left var(--d-card-in) var(--ease), width var(--d-card-in) var(--ease); }
 .hero-bottom > * { pointer-events: auto; }
 .hero-bottom.is-card { left: calc((100% - 424px) / 2); width: min(820px, calc(100% - 456px)); }
-.hero-bottom.is-card .hero-lenses { flex-wrap: nowrap; justify-content: flex-start; max-width: 100%; overflow-x: auto; scrollbar-width: none; padding: 2px; -webkit-mask: linear-gradient(90deg, #000 90%, transparent); }
+.hero-bottom.is-card .hero-lenses { flex-wrap: nowrap; justify-content: flex-start; max-width: 100%; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+/* a scrolling chip row fades only on the side that has more chips (classes set in home.js) */
+.hero-lenses { --fl: 0px; --fr: 0px; scroll-padding-inline: 36px;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
+  mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent); }
+.hero-lenses.fade-l { --fl: 28px; } .hero-lenses.fade-r { --fr: 28px; }
 .hero-bottom.is-card .hero-lenses::-webkit-scrollbar { display: none; }
 .hero-prompt { text-align: center; max-width: 660px; animation: hero-rise 700ms var(--ease) both 300ms; }
 .hero-prompt__line { margin: 0; font: italic 400 var(--t-lead)/var(--lh-lead) var(--font-serif); color: var(--ink); text-wrap: balance; }
@@ -47,9 +53,18 @@ body.legacy .hero-word span { color: var(--muted); }
 .hero-heat { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 @keyframes hero-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-/* the "Try iron" tag (a 3D label) and the hovered tile's name */
+/* the "Try iron" tag (a 3D label), the hovered tile's name and lens notes: each with a small caret
+   pointing down at its tile */
 .lbl.pop.hint { background: var(--verdigris); color: #fff; font: 600 14px/1 var(--font-sans); padding: 8px 12px; border-radius: var(--r-pill); }
-.lbl.pop { font: 600 17px/1.2 var(--font-serif); }
+.lbl.pop { font: 600 17px/1.2 var(--font-serif); overflow: visible; }
+.lbl.pop::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 10px; margin-left: -5px; background: inherit; transform: rotate(45deg);
+  border-radius: 0 0 2px 0; }
+.lbl.pop.note { font: 600 14px/1.3 var(--font-sans); color: var(--ink); padding: 6px 10px; border-radius: 9px; max-width: 260px; white-space: normal; text-align: center; }
+/* phones: the family colours explained under the table */
+.hero-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; width: 100%; max-width: 420px; margin: 0 0 4px; padding: 0 4px;
+  font: 500 var(--t-caption)/var(--lh-caption) var(--font-sans); color: var(--ink-2); animation: hero-rise 700ms var(--ease) both 400ms; }
+.hero-legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.hero-legend .ui-swatch { width: 12px; height: 12px; border-radius: 3px; }
 
 /* phone loupe while a thumb scrubs across the table */
 .hero-loupe { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 10px; border-radius: 18px;
@@ -64,12 +79,20 @@ body.legacy .hero-word span { color: var(--muted); }
   .hero-top { padding: 10px 10px 0; gap: 8px; }
   .hero-word b { font-size: 18px; }
   .hero-word span { display: none; }
-  .hero-find { width: auto; flex: 1; min-width: 0; }
+  /* find: a round 44 px button that opens into a field across the bar */
+  .hero-find { width: 44px; flex: none; }
+  .hero-find__icon { left: 50%; transform: translateX(-50%); font-size: 20px; color: var(--ink); }
+  .hero-find input { padding: 0; color: transparent; cursor: pointer; }
+  .hero-find input::placeholder { color: transparent; }
+  .hero-find:focus-within { position: absolute; left: 10px; right: 10px; top: 10px; width: auto; z-index: 46; }
+  .hero-find:focus-within .hero-find__icon { left: 14px; transform: none; color: var(--ink-2); }
+  .hero-find:focus-within input { padding: 0 16px 0 40px; color: var(--ink); cursor: text; }
+  .hero-find:focus-within input::placeholder { color: var(--ink-3); }
   .hero-top__right { flex: 1; justify-content: flex-end; }
   .hero-bottom { bottom: calc(10px + env(safe-area-inset-bottom)); width: calc(100% - 20px); gap: 10px; }
   .hero-prompt__line { font-size: 17px; line-height: 25px; }
   .hero-prompt__tap { font-size: 14px; }
-  .hero-lenses { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; width: 100%; padding: 2px 2px 4px; scrollbar-width: none; -webkit-mask: linear-gradient(90deg, #000 88%, transparent); }
+  .hero-lenses { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; width: 100%; padding: 2px 2px 4px; scrollbar-width: none; }
   .hero-lenses::-webkit-scrollbar { display: none; }
   .hero-banner .ui-banner__title { font-size: 15px; line-height: 1.4; }
 }

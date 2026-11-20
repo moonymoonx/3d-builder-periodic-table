@@ -139,6 +139,20 @@ export class OrbitRig {
     this.camera.updateMatrixWorld();
   }
   stop() { this.v = { theta: 0, phi: 0, r: 0, px: 0, py: 0 }; this.tween = null; }
+  /** Move the goal of the glide under way (its timing and easing carry on); with no glide, jump there. */
+  retarget(to, done) {
+    if (!this.tween) { this.flyTo(to, 0, done); return; }
+    const g = this.tween.to;
+    if (to.target) g.target.copy(to.target);
+    if (to.r != null) g.r = to.r;
+    if (to.phi != null) g.phi = to.phi;
+    if (to.theta != null) {
+      g.theta = to.theta;
+      while (g.theta - this.tween.from.theta > Math.PI) g.theta -= 2 * Math.PI;
+      while (g.theta - this.tween.from.theta < -Math.PI) g.theta += 2 * Math.PI;
+    }
+    if (done) this.tween.done = done;
+  }
   flyTo(to, dur = 0.9, done) {
     const goal = { target: (to.target || this.target).clone(), r: to.r ?? this.r, theta: to.theta ?? this.theta, phi: to.phi ?? this.phi };
     // shortest way round in theta

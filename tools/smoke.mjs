@@ -125,6 +125,7 @@ await step('credits (menu) list the sources', async () => {
 });
 await step('URL hash is shareable (lens + open card)', async () => {
   await page.evaluate(() => window.__pt.set({ lens: 'heat', color: 'state', T: 1000 }));
+  await page.waitForTimeout(250); await settle(); // the heat banner changes the free area; the table is re-framed
   const p = await tileTop(79); await page.mouse.click(p.x, p.y); await page.waitForTimeout(600);
   const hash = await page.evaluate(() => location.hash);
   await page.evaluate(() => window.__pt.set({ lens: 'families', color: 'cat', T: 293.15 }));

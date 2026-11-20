@@ -4,7 +4,7 @@
 //   bottom   — the one prompt; a quiet row of lens chips; a lens banner (hook + caption + control)
 //   on top   — the phone loupe while a thumb scrubs across the table
 import { h, replace, clear, isPhone, toast } from '../dom.js';
-import { t, getLang, fmtNum } from '../i18n.js';
+import { t, getLang, fmtNum, oneLine } from '../i18n.js';
 import { state, set, shareURL } from '../state.js';
 import { search, name, altName, byZ } from '../data.js';
 import { chip, backLink, iconButton, segmented, banner } from '../ui/kit.js';
@@ -35,7 +35,8 @@ export function buildHome(ui, hooks) {
   const prompt = h('div', { class: 'hero-prompt' }, line, tap);
   const bannerSlot = h('div', { class: 'hero-banner' });
   const chips = h('div', { class: 'hero-lenses', role: 'toolbar' });
-  const bottom = h('div', { class: 'hero-bottom' }, prompt, bannerSlot, chips);
+  const legend = h('div', { class: 'hero-legend', hidden: true });
+  const bottom = h('div', { class: 'hero-bottom' }, legend, prompt, bannerSlot, chips);
   const loupe = h('div', { class: 'hero-loupe', hidden: true, 'aria-hidden': 'true' });
   const scrims = [h('div', { class: 'hero-scrim is-top', 'aria-hidden': 'true' }), h('div', { class: 'hero-scrim is-bottom', 'aria-hidden': 'true' })];
   ui.prepend(...scrims);
@@ -112,7 +113,24 @@ export function buildHome(ui, hooks) {
     replace(chips, ...TOP.map(id => chip({ label: lensName(id), pressed: state.lens === id, onClick: () => pickLens(id) })),
       chip({ label: moreActive ? `${lensName(state.lens)} ▾` : `${t('lens.more')} ▾`, pressed: moreActive, attrs: { class: 'ui-chip hero-more', 'aria-haspopup': 'menu' }, onClick: ev => toggleMenu('more', ev.currentTarget) }));
     chips.setAttribute('aria-label', t('home.lenses'));
+    // keep the chosen chip fully in view (clear of the fades) when the row scrolls
+    requestAnimationFrame(() => {
+      const on = chips.querySelector('[aria-pressed="true"]');
+      if (on && chips.scrollWidth > chips.clientWidth + 2) {
+        const pad = 36, l = on.offsetLeft - chips.offsetLeft, r = l + on.offsetWidth;
+        if (l - pad < chips.scrollLeft) chips.scrollLeft = Math.max(0, l - pad);
+        else if (r + pad > chips.scrollLeft + chips.clientWidth) chips.scrollLeft = r + pad - chips.clientWidth;
+      }
+      chipFades();
+    });
   }
+  function chipFades() {
+    const more = chips.scrollWidth > chips.clientWidth + 2;
+    chips.classList.toggle('fade-l', more && chips.scrollLeft > 2);
+    chips.classList.toggle('fade-r', more && chips.scrollLeft < chips.scrollWidth - chips.clientWidth - 2);
+  }
+  chips.addEventListener('scroll', chipFades, { passive: true });
+  window.addEventListener('resize', chipFades);
   let heatInput = null, heatRead = null;
   function renderBanner() {
     if (state.lens === 'families') { replace(bannerSlot); bannerSlot.hidden = true; return; }
@@ -123,15 +141,18 @@ export function buildHome(ui, hooks) {
       heatInput = h('input', { type: 'range', min: '0', max: '1000', step: '1', value: String(Math.round(toS(state.T) * 1000)), 'aria-label': t('heat.label') });
       heatInput.addEventListener('input', () => set({ T: Math.round(fromS(heatInput.value / 1000) * 100) / 100 }));
       const room = h('button', { type: 'button', class: 'ui-btn ui-btn--quiet', onclick: () => set({ T: ROOM }) }, t('heat.room'));
-      const legend = h('div', { class: 'ui-legend' }, ['solid', 'liquid', 'gas'].map(s => h('span', null, h('i', { class: 'ui-swatch', style: { background: stateColor[s] } }), t('state.' + s))));
-      control = h('div', { class: 'hero-heat' }, h('div', { class: 'ui-temp' }, heatRead, heatInput, room), legend);
+      // every colour on the table is in the key, and so are the stripes
+      const key = h('div', { class: 'ui-legend' }, ['solid', 'liquid', 'gas'].map(s => h('span', null, h('i', { class: 'ui-swatch', style: { background: stateColor[s] } }), t('state.' + s))),
+        h('span', null, h('i', { class: 'ui-swatch', style: { background: stateColor.unknown } }), t('heat.unknown')),
+        h('span', null, h('i', { class: 'ui-swatch is-striped' }), t('heat.pred')));
+      control = h('div', { class: 'hero-heat' }, h('div', { class: 'ui-temp' }, heatRead, heatInput, room), key);
       updateHeat();
     }
     replace(bannerSlot, banner({ title: lensHook(state.lens), caption: lensCaption(state.lens), control }));
   }
   function updateHeat() {
     if (!heatRead) return;
-    replace(heatRead, degC(state.T), h('small', null, `${fmtNum(state.T, state.T < 30 ? 1 : 0)} K`));
+    replace(heatRead, degC(state.T)); // °C only here; kelvin lives in the details (STYLE.md §4)
     const v = String(Math.round(toS(state.T) * 1000));
     if (heatInput.value !== v && document.activeElement !== heatInput) heatInput.value = v;
   }
@@ -141,7 +162,7 @@ export function buildHome(ui, hooks) {
     if (!e) { loupe.hidden = true; return; }
     const pal = state.cb ? pigmentCB : pigment;
     replace(loupe, h('span', { class: 'hero-loupe__tile', style: { background: pal[e.f.cat[0]] } }, h('small', null, String(e.Z)), e.sym),
-      h('span', { class: 'hero-loupe__name' }, name(e), altName(e) ? h('small', null, altName(e)) : null));
+      h('span', { class: 'hero-loupe__name' }, name(e), h('small', null, [altName(e), oneLine(t('fam.' + e.f.cat[0]))].filter(Boolean).join(' · '))));
     loupe.hidden = false;
     const w = loupe.offsetWidth || 180, hgt = loupe.offsetHeight || 80;
     const lx = Math.max(8, Math.min(window.innerWidth - w - 8, x - w / 2));
@@ -164,6 +185,14 @@ export function buildHome(ui, hooks) {
     bottom.hidden = !home;
     for (const sc of scrims) sc.hidden = !home;
     prompt.hidden = state.lens !== 'families' || state.card;
+    // phones: the table is too small to carry family names, so a colour key sits under it
+    const showKey = isPhone() && home && state.lens === 'families' && !state.card && state.layout !== 'helix';
+    legend.hidden = !showKey;
+    if (showKey) {
+      const pal = state.cb ? pigmentCB : pigment;
+      replace(legend, Object.keys(pal).map(c => h('span', null, h('i', { class: 'ui-swatch', style: { background: pal[c] } }), oneLine(t('fam.' + c)))));
+      legend.setAttribute('aria-label', t('home.legend'));
+    }
     chips.hidden = state.card && isPhone();
     bottom.classList.toggle('is-card', state.card && !isPhone());
     word.hidden = !(home && !state.card) && isPhone();
@@ -183,7 +212,7 @@ export function buildHome(ui, hooks) {
       if ('lens' in ch) { renderChips(); renderBanner(); render(); }
       else if ('T' in ch) updateHeat();
       if ('card' in ch && state.card) opened = true;
-      if (['card', 'view', 'Z'].some(k => k in ch)) render();
+      if (['card', 'view', 'Z', 'cb', 'layout'].some(k => k in ch)) render();
     },
     loupe: showLoupe,
     closeMenu,

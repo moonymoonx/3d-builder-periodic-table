@@ -40,15 +40,18 @@ export class LabelLayer {
     // never show a label half-hidden under the chrome (card, side panels, bottom bar): treat those areas as taken
     const sf = E.safe || {};
     const placed = [];
-    if (sf.right > 0) placed.push({ x0: W - sf.right + 4, y0: 0, x1: W, y1: H });
+    if (sf.right > 0) placed.push({ x0: W - sf.right - 8, y0: 0, x1: W, y1: H });
     if (sf.left > 0) placed.push({ x0: 0, y0: 0, x1: sf.left - 4, y1: H });
     if (sf.bottom > 24) placed.push({ x0: 0, y0: H - sf.bottom + 4, x1: W, y1: H });
     const pad = 3;
     for (const it of cand) {
-      const x = it.anchor === 'left' ? it.s.x + 6 : it.anchor === 'right' ? it.s.x - it.w - 6 : it.s.x - it.w / 2;
+      let x = it.anchor === 'left' ? it.s.x + 6 : it.anchor === 'right' ? it.s.x - it.w - 6 : it.s.x - it.w / 2;
       const y = (it.anchor === 'bottom' ? it.s.y - it.h - 4 : it.anchor === 'top' ? it.s.y + 4 : it.s.y - it.h / 2) - (it.dy || 0);
+      // names written on the table never hug the screen edge (hidden instead); name tags slide inside it
+      const region = it.cls.includes('region');
+      if (!region) x = Math.max(8, Math.min(W - it.w - 8, x));
       const r = { x0: x - pad, y0: y - pad, x1: x + it.w + pad, y1: y + it.h + pad };
-      let hit = false;
+      let hit = region && (x < 14 || x + it.w > W - 14);
       for (const p of placed) if (r.x0 < p.x1 && r.x1 > p.x0 && r.y0 < p.y1 && r.y1 > p.y0) { hit = true; break; }
       if (hit) { if (it.visible) { it.el.style.visibility = 'hidden'; it.visible = false; } continue; }
       placed.push(r);

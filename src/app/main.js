@@ -194,12 +194,18 @@ function boot() {
   });
 
   // ---- frame the 3D view in the area not covered by chrome ----------------------------------------------
+  /** Where a panel will rest: its box without the slide-in transform it may still be animating. */
+  function restingRect(el) {
+    const r = el.getBoundingClientRect(), tf = getComputedStyle(el).transform;
+    const m = tf && tf !== 'none' ? new DOMMatrixReadOnly(tf) : null;
+    return m ? { left: r.left - m.m41, top: r.top - m.m42, right: r.right - m.m41, bottom: r.bottom - m.m42 } : r;
+  }
   function updateSafe() {
     const W = window.innerWidth, H = window.innerHeight;
     const tb = home.top.getBoundingClientRect();
     if (state.view === 'table') {
       const bottomEl = home.bottom.hidden ? null : home.bottom.getBoundingClientRect();
-      const cardEl = card.isOpen() ? card.el.getBoundingClientRect() : null;
+      const cardEl = card.isOpen() ? restingRect(card.el) : null;
       if (isPhone()) {
         const bottom = cardEl ? H - cardEl.top + 8 : bottomEl ? H - bottomEl.top + 8 : 16;
         setSafe({ left: 0, right: 0, top: tb.bottom + 4, bottom });

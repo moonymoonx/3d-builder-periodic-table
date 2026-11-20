@@ -22,7 +22,8 @@ export const pigmentCB = {
   alkali: '#E69F00', 'alkaline-earth': '#F0E442', transition: '#56B4E9', 'post-transition': '#A9D7F2', metalloid: '#3FB38F',
   nonmetal: '#A8E0C9', halogen: '#E2A1C9', 'noble-gas': '#CBBBE9', lanthanide: '#EFDFB5', actinide: '#E58C5E',
 };
-export const stateColor = { solid: '#7D8799', liquid: '#2A6FAE', gas: '#E0A33A', unknown: '#C9C2B6' };
+// heat map: ink symbols on solid 8.7:1, light symbols on liquid 5:1, ink on gas 7.8:1; 'unknown' is a blank paper tone
+export const stateColor = { solid: '#AEB8C8', liquid: '#2A6FAE', gas: '#E0A33A', unknown: '#E6DFD2' };
 export const phaseInk = { plus: '#C8501E', minus: '#2C5DB0' };
 
 export const font = {
@@ -52,14 +53,17 @@ export const motion = {
 
 // 3D: daylight studio (STYLE.md §6).
 export const light = {
-  sky: '#FFF7EC', ground: '#D9CFC0', hemi: 0.9,
+  sky: '#FFF7EC', ground: '#D9CFC0', hemi: 0.95,
   key: '#FFF1DE', keyIntensity: 2.0, keyPos: [-9, 22, 14],
   rim: '#DCE6F5', rimIntensity: 0.5, rimPos: [10, 8, -16],
   exposure: 1.0,
 };
 export const tile = {
-  width: 0.86, thickness: 0.36, bevel: 0.07, sideDarken: 0.38, topRoughness: 0.42, sideRoughness: 0.75,
-  hoverLift: 0.07, selectLift: 0.26, shadowOpacity: 0.42,
+  width: 0.86, thickness: 0.36, bevel: 0.055, sideDarken: 0.38, topRoughness: 0.16, sideRoughness: 0.34,
+  hoverLift: 0.07, selectLift: 0.26, shadowOpacity: 0.5,
+  // glaze: how strongly the tiles reflect the soft studio (tableArt.js GLAZE); tintJitter: each tile's
+  // glaze a touch different, like handmade ware
+  glaze: 0.6, tintJitter: 0.05,
 };
 
 const kebab = s => s.replace(/([a-z])([A-Z0-9])/g, '$1-$2').toLowerCase(); // ink2 -> ink-2, kilnText2 -> kiln-text-2

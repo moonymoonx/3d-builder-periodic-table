@@ -110,11 +110,13 @@ export function stateAt(e, T) {
 
 // ---- formatting ---------------------------------------------------------------------------
 export const K0 = 273.15;
+/** Temperatures: °C first (human scale), kelvin in brackets (STYLE.md §4). both: false gives °C only. */
 export function fmtTemp(K, { both = true } = {}) {
   if (K == null) return '—';
   const c = K - K0;
+  const cStr = `${fmtNum(c, K < 30 ? 2 : Math.abs(c) < 100 ? 2 : 0)} °C`.replace(/^-/, '−');
   const kStr = `${fmtNum(K, K < 30 ? 2 : 0)} K`;
-  return both ? `${kStr} (${fmtNum(c, K < 30 ? 2 : Math.abs(c) < 100 ? 2 : 0)} °C)` : kStr;
+  return both ? `${cStr} (${kStr})` : cStr;
 }
 /** Human string for a [value, src, flags] of field `key`. */
 // Vietnamese wording for our canonical crystal-structure names (data keeps one English form)

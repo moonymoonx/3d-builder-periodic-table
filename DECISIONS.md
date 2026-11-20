@@ -141,3 +141,65 @@ Rule from moony: the builder (Claude) wins on code and design craft; the sourced
   *Why:* the redesign lets the table fill about 85 % of the width, roughly 2.8× more pixels than the old panel-squeezed table, and the headless baseline fell from 60 to 15 FPS. Real GPUs are unaffected and keep full quality.
 - **Review screenshots are taken with `?q=med`** (full resolution, anti-aliased), while FPS is reported on the automatic path. *Why:* the images should show the design; the FPS should show what a fallback machine gets.
 - **The Quiz tab and the 1–6 view keys are removed** (`VIEWS` no longer lists `quiz`). Keys now: arrows, `/`, Enter, Esc, `H` (next lens), `L` (other shapes), `F`.
+
+## Hero round 2: Gemini's first-time-visitor review (`reviews/hero-r1.md`), 21 Nov 2026
+Proposed by Gemini (reviewer); every call below is Claude's (design owner), with the reason. Scores in r1: clarity 4.0, ease 3.5, beauty 4.0, smoothness 4.0, delight 3.5. Numbers refer to the review's §3 problem list.
+
+**Ease**
+- **#2 / fix 1, phone sheet hides the three doors: accepted.** On phones the card shows name, line, the three facts in one strip (`At 20 °C · Melts at · 1 litre weighs`) and then the doors. The sheet stands exactly as tall as the doors need (measured, at most 62 % of the screen). The facts' notes, "across the table" links and all numbers follow below. Doors are compact (52 px, still ≥ 44 px). *Why:* the path to the wow is 3 taps on every screen (SPEC §0).
+- **#1 / fix 2, × collides with "↗ across the table" when the card scrolls: accepted.** A compact title bar (tile · name · number) slides in under the × once the card scrolls; rows pass beneath it. *Why:* no overlap, and you always know which element you are reading.
+- **#5, phone find is a malformed pill: accepted.** A round 44 px button like the menu; tapping it opens a field across the bar (CSS `:focus-within`, no extra state).
+- **#6, phone lens chips clipped and the chosen chip faded: accepted.** The row fades only on the side that has more chips, and the chosen chip is scrolled fully clear of the fades.
+
+**Clarity**
+- **#8, heat map's 4th colour unexplained, weak stripes: accepted.** The key lists solid, liquid, gas, **not known** and **striped: predicted**. "Not known" is a blank paper tone `#E6DFD2` (was a beige that read as a fourth state), and the stripes are darker in this lens.
+- **#8, ink on slate "solid" tiles: accepted, by lightening.** Solid is now `#AEB8C8` (ink 8.7 : 1). *Rejected alternative:* white symbols on the old `#7D8799`, which reach only 3.7 : 1.
+- **#9, kelvin on a default surface and kelvin-first details: accepted.** The heat readout shows °C only. Every temperature in the app now reads "1,064 °C (1,337 K)" (one formatter, `fmtTemp`), including the older views.
+- **#11 / fix 5, no family names on phones: accepted, with a key instead of map labels.** A compact two-column colour key sits under the table on the phone landing, and the thumb loupe names the family ("Iron · Workhorse metals"). *Rejected:* map labels on the phone table, whose tiles are about 20 px wide, so words would cover them. STYLE.md now allows the key on phones only.
+- **#15 / fix 7, carbon looks broken in "Melting point"; tall columns hide back rows: accepted.**
+  - Elements that never melt at 1 atm (carbon, arsenic: our data has no 1-atm melting point, only a sublimation point) stand at the temperature where they turn into gas.
+  - The tallest of them gets a tag: "Carbon never melts: it turns to gas at 3,642 °C" (3,915 K, Wikipedia). The caption names both (computed from the data).
+  - Numbers lenses look down about 7° more steeply (desktop φ 0.56 → 0.44 rad; phones 0.36 → 0.30).
+  - *Why:* carbon now towers over tungsten, a true surprise, with no unexplained flat tile.
+- **#16, "Hold a piece · heat it" for a gas: accepted.** Gases read "Hold a sample · cool or heat it".
+- **#16, oxygen compared with mercury: accepted.** For gases the fact is "Turns liquid at −183 °C", with "Freezes at −219 °C". When it is close, a comparison with liquid nitrogen follows ("A little warmer than liquid nitrogen (−196 °C)"); it is computed from nitrogen's boiling point in our data.
+- **#10, cryptic † after the line: accepted.** It is now a quiet "Source" pill whose tap area reaches 44 px.
+- **#10, dotted underlines differ between desktop and phone: rejected.** Both use the same rule (`.card-v`). The r1 desktop images show it when enlarged; it was lost to image scaling.
+- **#12, "3D · REAL DATA" under the wordmark: accepted, removed.** Trust stays where it is earned: every value opens its source, and "Sources & credits" is in the menu.
+
+**Beauty**
+- **#14 / fix 3, tiles read like matte keycaps: accepted, our way.**
+  - The glaze reflects a soft studio computed in the shader (`tableArt.js` `GLAZE`): warm walls, the paper floor, a long softbox low behind the table (a sheen on the far tops) and a key softbox front-left (a bright catchlight along every front bevel).
+  - Tops at roughness 0.16, sides 0.34, the bevel a little tighter (0.07 → 0.055).
+  - Each tile's glaze varies ±2.5 %, like handmade ware, and a resting tile darkens slightly where it meets the paper.
+  - The paper gets a faint grain and deeper edges.
+  - *Rejected:* `MeshPhysicalMaterial` clearcoat on med/high, and a prefiltered environment map. The clearcoat adds a second specular pass. The environment map was tried and measured back to back: on a software renderer it added about 17 ms a frame on the landing (33 → 50 ms median under the same heavy load). The computed studio looks the same on every tier and costs a few arithmetic operations.
+- **#3, "Nonm / of" clipped by the open card: accepted, and it was a bug.** The free area was measured while the card was still sliding in (18 px off). It now uses the card's resting position, and labels keep 8 px from it.
+- **#4 / fix 6, name tags cover the tile's number: accepted.** Hover names, "Try iron" and lens notes hang above the tile's back edge, with a caret.
+- **#7, "Radioactive heavyweights" hugs the screen edge: accepted.** It now sits on two lines, and names written on the table are hidden rather than drawn closer than 14 px to an edge.
+- **Phone landing "too much empty beige void" (fix 5): accepted.**
+  - The colour key fills the space under the table.
+  - The flat table is tilted to show the glazed tile fronts (φ 0.36 → 0.5 rad) and framed about 5 % larger.
+
+**Delight**
+- **#13 / fix 1, no camera glide on phones: accepted.** A tap glides the camera in above the sheet until about five tiles fill the width, angled (φ 0.66) so the lifted tile reads as an object among its neighbours. If the sheet settles mid-glide, the glide's goal moves (`OrbitRig.retarget`) instead of jumping.
+- **#16 / fix 8, "Side by side with Ruthenium": accepted.**
+  - Common elements get a familiar or surprising partner: iron → gold, aluminium → iron, lithium → iron, tungsten → gold, bromine → mercury, oxygen ↔ nitrogen, helium ↔ osmium, and so on (`PAIRS`).
+  - The door says why, computed from measured values only:
+    - "with gold: a litre of gold weighs 2.4× more";
+    - tungsten: "almost exactly as heavy, litre for litre";
+    - bromine: "both are liquid at room temperature";
+    - helium: "a litre of osmium weighs 136,000× more".
+  - Predictions are never used for a hook.
+- **Picking up a tile springs (Claude's addition):** it rises with a 10 % overshoot and settles in about 350 ms; landing and hover are critically damped, and reduced motion removes the overshoot. STYLE.md §7 is updated. *Why:* the tactile "lifted from a tray" feel the reviewer liked, made physical.
+
+**Smoothness**
+- **Fix 9, zoomed-in desktop at 30 FPS: accepted, and fixed at the cause.** Measured on the r1 build: hiding the 118 overlapping contact-shadow quads restored 60 FPS.
+  - **Contact shadows are baked** into one texture on one plane (one blended layer), re-baked only when the shape or the lifted tile changes. They fade out while tiles travel to a new shape and fade back once the tiles land.
+  - **Front rows are drawn first** (instance order), so hidden fragments are rejected early.
+  - **Adaptive resolution on software renderers.** The tiles' own shading then limited a screen full of tiles. On a software renderer (low tier, auto quality), when frames take longer than 20 ms the internal resolution steps down from 0.75 to at least 0.3 MP. It steps back up once the camera has moved well back out.
+  - Real GPUs are unaffected.
+  - Same-load A/B, r1 vs r2: landing 16.7 vs 16.7 ms; zoomed in 33.3 vs 16.7 ms median.
+
+**Not done in this round (and why)**
+- **The forge wow (heat a piece until it glows):** the reviewer's "land the forge wow". It belongs to the next slice, Hold & heat (REDESIGN-PLAN work step 2). The hero slice only opens its door.

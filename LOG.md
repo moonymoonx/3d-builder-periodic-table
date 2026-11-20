@@ -81,3 +81,37 @@
     - Vietnamese strings are drafts for moony; Q17 (independent check of the 37 lines) is open.
     - Sound deferred.
     - "Other metals" may read as a label for the rare earths; it sits between the post-transition block and the f rows.
+- 2026-11-21 ~04:25 (Saigon) — **Hero slice committed (e53a3c2, with `reviews/hero-r1.md`) and pushed, then polished in round 2** after Gemini's first-time-visitor review. Round-1 scores: clarity 4.0, ease 3.5, beauty 4.0, smoothness 4.0, delight 3.5. Each review point is accepted or rejected with a reason in DECISIONS.md › Hero round 2.
+  - **Ease:**
+    - Phone card: a three-fact strip, and the sheet stands exactly tall enough to show the three doors.
+    - Desktop card: a compact title bar under × when the card scrolls.
+    - Phone find is a round button; chip fades only where more chips are hidden; the chosen chip is kept in view.
+  - **Clarity:**
+    - Heat-map key includes "not known" and "striped: predicted"; solid is lighter (ink 8.7 : 1); °C only on the default surface; °C first everywhere.
+    - Phone colour key and the family in the loupe.
+    - Carbon stands at its sublimation point with a tag; numbers lenses look more from above.
+    - Gas wording: "Turns liquid at", "Hold a sample · cool or heat it", a liquid-nitrogen comparison.
+    - "Source" pill instead of †; the "3D · REAL DATA" badge removed.
+  - **Beauty:**
+    - Glaze reflecting a computed soft studio (bevel catchlights, far-row sheen); per-tile variation; base occlusion; tighter bevel; paper grain.
+    - Name tags above the tile's back edge with a caret.
+    - Label bugs fixed: measured mid-slide; edge-hugging.
+  - **Delight:**
+    - The camera glides in on phones too; the glide retargets instead of jumping if the sheet settles mid-glide.
+    - Side by side with familiar or surprising partners and a reason computed from measured data ("with gold: a litre of gold weighs 2.4× more").
+    - A picked tile springs up with a small overshoot (reduced motion: none).
+  - **Smoothness:**
+    - Contact shadows baked into one plane; front rows drawn first.
+    - Software renderers step their resolution down (to ≥ 0.3 MP) while frames are slow and back up once the camera moves out.
+    - A prefiltered environment map was tried, then dropped: +17 ms a frame on the software landing.
+  - **Checks:** smoke 27/27 (several runs; one test now waits for the heat banner to re-frame the table before clicking), unit tests 17/17, validator ALL PASS, no console errors, index.html 1,434 KB.
+  - **FPS** (software renderer, automatic quality, `hero-r2/fps.txt`):
+    - All 19 states at a 60 FPS median; round 1 had iron card and deep zoom at 30.
+    - Deep zoom: p95 50 ms, average 38.7, while the resolution steps down.
+    - A/B with the round-1 build, alternating, same load: landing 16.7 vs 16.7 ms; zoom 33.3 vs 16.7 ms.
+    - Another agent (agy/Gemini) was running its own screenshot jobs for a different project on this machine's shared headless browser at times. FPS was therefore measured in a quiet window.
+  - **Review set:** `/workspace/out/redesign/hero-r2/` (19 PNG, fps.txt, README.txt); repo screenshots regenerated.
+  - **Not done / known:**
+    - The forge wow is the next slice (Hold & heat).
+    - The phone table is still width-bound.
+    - Vietnamese strings are drafts for moony; Q17 is open.
