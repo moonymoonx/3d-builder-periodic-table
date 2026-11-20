@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-20T14:28:23.717Z",
+ "generated": "2026-11-20T15:48:03.230Z",
  "note": "Provenance of every raw download. sha256 is of the bytes as served.",
  "files": {
   "ciaaw/abridged-atomic-weights.htm": {
@@ -74,18 +74,6 @@
    "phase": "alpha-Hg",
    "reason": "sg R -3 m :H (#166); T=n/a K; Amand, R.S.; Giessen, B.C. 1978; 3 candidates"
   },
-  "cod/1527120.cif": {
-   "source": "cod",
-   "url": "https://www.crystallography.net/cod/1527120.cif",
-   "accessed": "2026-11-20T14:06:31.142Z",
-   "bytes": 2055,
-   "sha256": "b7c180e3d5a6dd7c9ebcb2a4bccf0ce9142c2e090dd745716d947550aab3333c",
-   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
-   "committed": true,
-   "element": "U",
-   "phase": "alpha-U",
-   "reason": "sg C m c m (#63); T=n/a K; Barrett, C.S.; Mueller, M.H.; Hitterman, R.L. 1963; 4 candidates"
-  },
   "cod/1537782.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/1537782.cif",
@@ -146,18 +134,6 @@
    "phase": "Bi (A7)",
    "reason": "sg R -3 m (#166); T=298 K; Wei, Zheng; Dubceac, Cristina; Petrukhina, Marina A.; Dikare 2019; 8 candidates"
   },
-  "cod/7222459.cif": {
-   "source": "cod",
-   "url": "https://www.crystallography.net/cod/7222459.cif",
-   "accessed": "2026-11-20T14:03:52.820Z",
-   "bytes": 7835,
-   "sha256": "4167a61c488f40cdabd45095f44d54f36cf37709f22cd932166fcbcb75702daa",
-   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
-   "committed": true,
-   "element": "Sn",
-   "phase": "alpha-Sn (grey)",
-   "reason": "sg F d -3 m :1 (#227); T=n/a K; Oehl, Nikolas; Schmuelling, Guido; Knipper, Martin; Kloepsch 2015; 2 candidates"
-  },
   "cod/9006587.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/9006587.cif",
@@ -169,6 +145,18 @@
    "element": "Fe",
    "phase": "alpha-Fe",
    "reason": "sg I m -3 m (#229); T=298 K; Zhang, J.; Guyot, F. 1999; 4 candidates"
+  },
+  "cod/9008085.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008085.cif",
+   "accessed": "2026-11-20T15:47:50.223Z",
+   "bytes": 2325,
+   "sha256": "a8075a69a19c2ef15ed79559a6b632a6b1c55994fba82099d8a05a03300975c9",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "Ga",
+   "phase": "alpha-Ga",
+   "reason": "pinned (fact-check); sg C m c e (#64); T=n/a K; Sharma, B. D.; Donohue, J. 1962; 3 candidates"
   },
   "cod/9008524.cif": {
    "source": "cod",
@@ -182,17 +170,29 @@
    "phase": "alpha-Am (dhcp)",
    "reason": "sg P 63/m m c (#194); T=n/a K; Wyckoff, R. W. G. 1963; 1 candidates"
   },
-  "cod/9008562.cif": {
+  "cod/9008568.cif": {
    "source": "cod",
-   "url": "https://www.crystallography.net/cod/9008562.cif",
-   "accessed": "2026-11-20T14:06:24.155Z",
-   "bytes": 2276,
-   "sha256": "f1f1bb42938cac56225bafb9c3fa61d46c10d06820551f4ab5f1ddfac40ed26d",
+   "url": "https://www.crystallography.net/cod/9008568.cif",
+   "accessed": "2026-11-20T15:47:57.204Z",
+   "bytes": 5098,
+   "sha256": "a6e0df570fcf7a3cf7ebc8b9acc2a63eb6f62e3afb9dbe25e60ce17fdc751b81",
    "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
    "committed": true,
-   "element": "Ga",
-   "phase": "alpha-Ga",
-   "reason": "sg B m e b (#64); T=n/a K; Wyckoff, R. W. G. 1963; 3 candidates"
+   "element": "Sn",
+   "phase": "alpha-Sn (grey)",
+   "reason": "pinned (fact-check); sg F d -3 m :1 (#227); T=n/a K; Wyckoff, R. W. G. 1963; 1 candidates"
+  },
+  "cod/9008584.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008584.cif",
+   "accessed": "2026-11-20T15:47:54.560Z",
+   "bytes": 2223,
+   "sha256": "f3067c9cdb1ef09faf3a3300c672260a1147c7a516e46d634b54288ed799ad61",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "element": "U",
+   "phase": "alpha-U",
+   "reason": "pinned (fact-check); sg C m c m (#63); T=n/a K; Wyckoff, R. W. G. 1963; 3 candidates"
   },
   "cod/9008585.cif": {
    "source": "cod",
@@ -541,15 +541,6 @@
    "sha256": "9e0be5e5c81f254f728daeec5e403f16d4a34db9682c07910b6b0d5a09c9b4c4",
    "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
    "committed": true
-  },
-  "iaea/ground_states_all.csv": {
-   "source": "iaea",
-   "url": "https://www-nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=all",
-   "accessed": "2026-11-20T13:33:25.101Z",
-   "bytes": 900613,
-   "sha256": "8aee5dc431af1e35fcb49746387b83e927b3c300e7787defbda621a08212c795",
-   "licence": "IAEA Nuclear Data Section, LiveChart of Nuclides API (NUBASE2020/ENSDF evaluated data); no explicit open licence on the API: cite IAEA LiveChart. Raw dump kept local only.",
-   "committed": false
   },
   "mendeleev/elements.db": {
    "source": "mendeleev",
@@ -1820,6 +1811,15 @@
    "licence": "NIST CODATA 2022 fundamental constants (NIST SRD 121); free to use with citation (Mohr, Newell, Taylor, Tiesinga, CODATA 2022). Raw dump kept local only.",
    "committed": false
   },
+  "nubase/nubase_4.mas20.txt": {
+   "source": "nubase",
+   "url": "https://www-nds.iaea.org/amdc/ame2020/nubase_4.mas20.txt",
+   "accessed": "2026-11-20T14:47:50.304Z",
+   "bytes": 761906,
+   "sha256": "1585a5eea86c5e17e90307c7e6e786d060049c4039e392a261ff6db977df9859",
+   "licence": "NUBASE2020 evaluation (F. G. Kondev et al., Chinese Physics C 45 (2021) 030001, open access CC BY 3.0); ASCII table distributed by the Atomic Mass Data Center.",
+   "committed": true
+  },
   "pubchem/periodictable.json": {
    "source": "pubchem",
    "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/periodictable/JSON",
@@ -1874,6 +1874,15 @@
    "licence": "Wikipedia text CC BY-SA 4.0 (Wikipedia contributors; revision ids recorded). We extract factual values only and cite the references given in the infobox.",
    "committed": true
   },
+  "wikipedia/articles-factcheck.json": {
+   "source": "wikipedia",
+   "url": "https://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content%7Cids%7Ctimestamp&rvslots=main&format=json&formatversion=2&redirects=1&titles=Curium%7CBerkelium%7CCalifornium%7CEinsteinium%7CCerium%7CRadium%7CAluminium%7CCalcium%7CFluorine%7CSilicon%7CRuthenium%7CHelium%7CCIE+1931+color+space",
+   "accessed": "2026-11-20T14:47:49.447Z",
+   "bytes": 1097380,
+   "sha256": "50c45b0d23b8e01694cc46f104487c48aa3307590004b695e0c65335315e7255",
+   "licence": "Wikipedia text CC BY-SA 4.0 (Wikipedia contributors; revision ids recorded). We extract factual values only and cite the references given in the infobox.",
+   "committed": true
+  },
   "wikipedia/infobox-batch-1.json": {
    "source": "wikipedia",
    "url": "https://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content%7Cids%7Ctimestamp&rvslots=main&format=json&formatversion=2&redirects=1&titles=Template%3AInfobox+hydrogen%7CTemplate%3AInfobox+helium%7CTemplate%3AInfobox+lithium%7CTemplate%3AInfobox+beryllium%7CTemplate%3AInfobox+boron%7CTemplate%3AInfobox+carbon%7CTemplate%3AInfobox+nitrogen%7CTemplate%3AInfobox+oxygen%7CTemplate%3AInfobox+fluorine%7CTemplate%3AInfobox+neon%7CTemplate%3AInfobox+sodium%7CTemplate%3AInfobox+magnesium%7CTemplate%3AInfobox+aluminum%7CTemplate%3AInfobox+silicon%7CTemplate%3AInfobox+phosphorus%7CTemplate%3AInfobox+sulfur%7CTemplate%3AInfobox+chlorine%7CTemplate%3AInfobox+argon%7CTemplate%3AInfobox+potassium%7CTemplate%3AInfobox+calcium%7CTemplate%3AInfobox+scandium%7CTemplate%3AInfobox+titanium%7CTemplate%3AInfobox+vanadium%7CTemplate%3AInfobox+chromium%7CTemplate%3AInfobox+manganese%7CTemplate%3AInfobox+iron%7CTemplate%3AInfobox+cobalt%7CTemplate%3AInfobox+nickel%7CTemplate%3AInfobox+copper%7CTemplate%3AInfobox+zinc%7CTemplate%3AInfobox+gallium%7CTemplate%3AInfobox+germanium%7CTemplate%3AInfobox+arsenic%7CTemplate%3AInfobox+selenium%7CTemplate%3AInfobox+bromine%7CTemplate%3AInfobox+krypton%7CTemplate%3AInfobox+rubidium%7CTemplate%3AInfobox+strontium%7CTemplate%3AInfobox+yttrium%7CTemplate%3AInfobox+zirconium",
@@ -1902,5 +1911,12 @@
    "committed": true
   }
  },
- "failures": []
+ "failures": [],
+ "removed": [
+  {
+   "source": "iaea",
+   "when": "2026-11-20T15:48:13.207Z",
+   "why": "Replaced by NUBASE2020 (CC BY 3.0) after the Gemini fact-check: LiveChart has non-open terms of use."
+  }
+ ]
 }

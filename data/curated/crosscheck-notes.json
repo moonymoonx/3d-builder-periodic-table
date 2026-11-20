@@ -1,10 +1,5 @@
 {
-  "_note": "Explanations for gaps between the primary value and a second source (tools/validate.mjs). Each note is shown in the app next to the value as 'Other sources'. Numbers quoted here are the values in data/crosscheck.json.",
-  "He:mp": "PubChem's 0.95 K is not a 1-atm melting point: at 1 atm helium has no solid phase (no melting point in CRC via mendeleev, none in the Wikipedia infobox). The sample view uses 'no solid at 1 atm'.",
-  "C:mp": "Carbon does not melt at 1 atm: it sublimes (Wikipedia infobox 3915 K; CRC via mendeleev 4098 K). PubChem's 3823 K is kept with this note; the sample view uses sublimation.",
-  "Ga:bp": "Handbooks differ: PubChem 2477 K, CRC (mendeleev) 2502 K. The Wikipedia infobox gives 2676 K from Zhang, Evans & Zhang (2011), 'Corrected values for boiling points and enthalpies of vaporization of elements in handbooks', J. Chem. Eng. Data 56, doi:10.1021/je1011086. Unresolved: QUESTIONS.md Q10.",
-  "Cs:density": "PubChem 1.93 g/cm³; Wikipedia (Arblaster 2018, 20 °C) 1.886 and CRC (mendeleev) 1.873 g/cm³. The two handbook values agree within 0.7 %; PubChem is 2–3 % higher. QUESTIONS.md Q10.",
-  "Ba:bp": "PubChem 2170 K; Wikipedia and CRC (mendeleev) both give 2118 K. QUESTIONS.md Q10.",
+  "_note": "Explanations for gaps between the primary value and a second source (tools/validate.mjs). Shown in the app as 'Other sources'. Corrections applied from the Gemini fact-check carry their own explanation (data/curated/factcheck-fixes.json).",
   "Ta:ie1": "NIST ASD 5.12 gives 7.549571 ± 0.000025 eV (NIST ref. L13153); PubChem 7.89 eV and Wikipedia 761 kJ/mol (7.887 eV) carry a different, older compiled value. NIST (the evaluated primary database) is used.",
   "W:ie1": "NIST ASD 5.12 gives 7.86403 ± 0.0001 eV (ref. L11604); PubChem 7.98 eV and Wikipedia 770 kJ/mol (7.980 eV) differ by 1.5 %. NIST is used.",
   "Re:ie1": "NIST ASD 5.12 gives 7.83352 ± 0.00011 eV (ref. L11604); PubChem 7.88 eV and Wikipedia 760 kJ/mol (7.877 eV) differ by 0.6 %. NIST is used.",
@@ -15,10 +10,7 @@
   "Pu:ie1": "NIST ASD 5.12 gives 6.02576 ± 0.00025 eV (refs. L15992, L11260); PubChem 6.06 eV and Wikipedia 584.7 kJ/mol (6.060 eV) differ by 0.6 %. NIST is used.",
   "Bk:ie1": "NIST ASD 5.12 gives 6.19785 ± 0.00025 eV (ref. L15992); PubChem 6.23 eV and Wikipedia 601 kJ/mol (6.229 eV) differ by 0.5 %. NIST is used.",
   "Es:ie1": "NIST ASD 5.12 gives 6.3684 ± 0.00006 eV (ref. L22449); PubChem 6.42 eV and Wikipedia 619 kJ/mol (6.415 eV) differ by 0.8 %. NIST is used.",
-  "Ra:bp": "PubChem 1413 K; Wikipedia infobox 2010 K. Not resolved: QUESTIONS.md Q10.",
-  "Np:bp": "PubChem 4175 K (flagged as an estimate); Wikipedia infobox 4447 K. Not resolved: QUESTIONS.md Q10.",
-  "Am:bp": "PubChem 2284 K (flagged as an estimate); Wikipedia infobox 2880 K. Not resolved: QUESTIONS.md Q10.",
-  "Am:density": "PubChem 13.69 g/cm³; Wikipedia and CRC (mendeleev) 12 g/cm³. Not resolved: QUESTIONS.md Q10.",
-  "Bk:mp": "PubChem 1323 K; Wikipedia and CRC (mendeleev) give 1259 K for β-berkelium. Possibly different allotropes; QUESTIONS.md Q10.",
-  "Bk:density": "PubChem 14 g/cm³; Wikipedia and CRC (mendeleev) give 14.78 g/cm³ for α-berkelium. QUESTIONS.md Q10."
+  "Np:bp": "Not measured directly (vapour-pressure extrapolations differ): PubChem 4175 K, Wikipedia 4447 K. Shown as an estimate (fact-check §3.3).",
+  "Am:bp": "Not measured directly (vapour-pressure extrapolations differ): PubChem 2284 K, Wikipedia 2880 K. Shown as an estimate (fact-check §3.3).",
+  "Am:density": "PubChem 13.69 g/cm³ is kept: the fact-check identifies it as the X-ray density of α-americium (13.67–13.69); the 12 g/cm³ in Wikipedia and the CRC Handbook (via mendeleev) is an older bulk value."
 }

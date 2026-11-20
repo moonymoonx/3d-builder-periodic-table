@@ -1,42 +1,45 @@
-// Colour of light: wavelength -> sRGB using the CIE 1931 2-degree colour-matching functions
-// (table embedded in the data, from the CIE dataset) and the XYZ -> linear sRGB matrix
-// (from the W3C CSS Color 4 sample code). Also the "glow" of an emission spectrum.
+// Colour of light: wavelength -> sRGB using the analytic multi-lobe Gaussian fit to the CIE 1931 2°
+// colour-matching functions (Wyman, Sloan & Shirley 2013; coefficients carried in the data as cmfFit)
+// and the XYZ -> linear sRGB matrix (W3C CSS Color 4). No CIE table is embedded.
 
-/** Interpolate the CMF table rows [[lambda, x, y, z], ...] (uniform step). */
-export function cmfAt(cmf, lambda) {
-  const l0 = cmf[0][0], step = cmf[1][0] - cmf[0][0];
-  const t = (lambda - l0) / step;
-  const i = Math.floor(t);
-  if (i < 0 || i >= cmf.length - 1) return [0, 0, 0];
-  const f = t - i, a = cmf[i], b = cmf[i + 1];
-  return [a[1] + f * (b[1] - a[1]), a[2] + f * (b[2] - a[2]), a[3] + f * (b[3] - a[3])];
+/** fit = { x: [[amp, mu, tau1, tau2], ...], y: [...], z: [...] }; g = exp(-tau^2 (l - mu)^2 / 2). */
+export function cmfAt(fit, lambda) {
+  const lobe = terms => {
+    let s = 0;
+    for (const [a, mu, t1, t2] of terms) {
+      const t = lambda < mu ? t1 : t2;
+      const d = lambda - mu;
+      s += a * Math.exp(-0.5 * t * t * d * d);
+    }
+    return s;
+  };
+  return [lobe(fit.x), lobe(fit.y), lobe(fit.z)];
 }
 
 export const mul3 = (M, v) => [M[0][0] * v[0] + M[0][1] * v[1] + M[0][2] * v[2], M[1][0] * v[0] + M[1][1] * v[1] + M[1][2] * v[2], M[2][0] * v[0] + M[2][1] * v[1] + M[2][2] * v[2]];
 export const gammaEncode = c => (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
 
-/** Display colour for a single wavelength. Out-of-gamut spectral colours are desaturated by
- *  adding white until all channels are >= 0, then scaled so the largest channel is 1. */
-export function wavelengthToRGB(lambda, cmf, M) {
-  const XYZ = cmfAt(cmf, lambda);
+/** Display colour for one wavelength. Spectral colours lie outside sRGB: white is added until all
+ *  channels are >= 0, then the colour is scaled so its largest channel is 1 and dimmed at the ends
+ *  of the visible range, where the eye is barely sensitive. */
+export function wavelengthToRGB(lambda, fit, M) {
+  const XYZ = cmfAt(fit, lambda);
   let rgb = mul3(M, XYZ);
   const mn = Math.min(...rgb);
   if (mn < 0) rgb = rgb.map(c => c - mn);
   const mx = Math.max(...rgb);
   if (mx <= 0) return [0, 0, 0];
-  // fade at the ends of the visible range so 380 nm / 750 nm look dim, as they appear to the eye
-  const Y = XYZ[1];
-  const fade = Math.min(1, 0.25 + 3 * Y);
+  const fade = Math.min(1, 0.25 + 3 * Math.max(0, XYZ[1]));
   return rgb.map(c => gammaEncode((c / mx) * fade));
 }
 
-/** Approximate perceived colour of a gas-discharge glow: sum the lines' XYZ weighted by their
- *  relative intensities. lines: [[lambda_nm, intensity], ...]. Returns {rgb:[0..1], ok:boolean}. */
-export function glowColour(lines, cmf, M) {
+/** Approximate colour of a gas-discharge glow: the lines' XYZ summed with their relative intensities.
+ *  lines: [[lambda_nm, intensity], ...]. Returns {rgb: [0..1] | null, ok}. */
+export function glowColour(lines, fit, M) {
   let X = 0, Y = 0, Z = 0, n = 0;
   for (const [lam, I] of lines) {
     if (!(I > 0)) continue;
-    const c = cmfAt(cmf, lam);
+    const c = cmfAt(fit, lam);
     X += I * c[0]; Y += I * c[1]; Z += I * c[2]; n++;
   }
   if (!n || Y <= 0) return { rgb: null, ok: false };

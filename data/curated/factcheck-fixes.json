@@ -1,0 +1,205 @@
+{
+  "_note": "Corrections from the Gemini fact-check of 2026-11-20 (FACTCHECK.md), applied by tools/build-data.mjs. 'from' = value read from a raw file we hold (source wins); 'value' = explicit value (null = no 1-atm value); 'flag' = mark as predicted/estimated; 'why' = our explanation shown in the app. Values only available from the fact-check use source key 'fc' with Gemini's citation in 'cite' and our consistency check in 'check'.",
+  "values": [
+    {
+      "sym": "Ga",
+      "field": "bp",
+      "from": "boiling point K",
+      "why": "PubChem lists an older 2477 K; the corrected value 2676 K is from Zhang, Evans & Zhang (2011), J. Chem. Eng. Data 56, doi:10.1021/je1011086."
+    },
+    {
+      "sym": "Ba",
+      "field": "bp",
+      "from": "boiling point K",
+      "why": "PubChem lists 2170 K; Wikipedia and the CRC Handbook (via mendeleev) agree on 2118 K."
+    },
+    {
+      "sym": "Ra",
+      "field": "bp",
+      "from": "boiling point K",
+      "why": "PubChem lists an older 1413 K; Wikipedia gives 2010 K. Not measured directly: an extrapolation (fact-check §3.3).",
+      "flag": "p"
+    },
+    {
+      "sym": "Bk",
+      "field": "mp",
+      "from": "melting point K",
+      "why": "PubChem lists 1323 K; the measured value 1259 K is given by Wikipedia and the CRC Handbook (via mendeleev)."
+    },
+    {
+      "sym": "Bk",
+      "field": "density",
+      "from": "density gpcm3nrt",
+      "why": "PubChem's 14 g/cm³ is over-rounded; α-berkelium is 14.78 g/cm³ (Wikipedia; CRC via mendeleev)."
+    },
+    {
+      "sym": "Cs",
+      "field": "density",
+      "from": "density",
+      "why": "PubChem's 1.93 g/cm³ is 2–3 % high for 20 °C; Arblaster (2018) gives 1.886 g/cm³ (CRC via mendeleev: 1.873)."
+    },
+    {
+      "sym": "He",
+      "field": "mp",
+      "value": null,
+      "why": "Helium does not solidify at normal pressure (Wikipedia: Helium). PubChem's 0.95 K is a melting point at about 25 bar (fact-check)."
+    },
+    {
+      "sym": "C",
+      "field": "mp",
+      "value": null,
+      "why": "At 1 atm carbon never melts: it sublimes (see sublimation point). PubChem's 3823 K is not a 1-atm melting point."
+    },
+    {
+      "sym": "C",
+      "field": "bp",
+      "value": null,
+      "why": "At 1 atm carbon sublimes (see sublimation point) instead of boiling."
+    },
+    {
+      "sym": "As",
+      "field": "mp",
+      "value": null,
+      "why": "At 1 atm grey arsenic sublimes. PubChem's 1090 K is a melting point under pressure (triple point)."
+    },
+    {
+      "sym": "As",
+      "field": "bp",
+      "value": null,
+      "why": "At 1 atm arsenic sublimes at 887 K (see sublimation point); PubChem lists that temperature as a boiling point."
+    },
+    {
+      "sym": "At",
+      "field": "mp",
+      "flag": "p",
+      "why": "Astatine has never been made in bulk, so its melting point is an estimate, not a measurement."
+    },
+    {
+      "sym": "Fr",
+      "field": "mp",
+      "flag": "p",
+      "why": "Francium has never been made in bulk, so its melting point is an estimate, not a measurement."
+    },
+    {
+      "sym": "Al",
+      "field": "year",
+      "from": "discovery date",
+      "why": "PubChem says 'Ancient'. The Wikipedia infobox gives 1824 (Ørsted); the fact-check gives 1825 for the first isolation."
+    },
+    {
+      "sym": "Ca",
+      "field": "year",
+      "from": "discovery date",
+      "why": "PubChem says 'Ancient'. The metal was first isolated in 1808 (Wikipedia infobox; fact-check: Davy)."
+    },
+    {
+      "sym": "F",
+      "field": "year",
+      "from": "discovery date",
+      "why": "PubChem's 1670 does not mark the element's discovery (fact-check). Wikipedia: recognised as an element in 1810; first isolated by Moissan (1886, fact-check)."
+    },
+    {
+      "sym": "Si",
+      "field": "year",
+      "from": "discovery date",
+      "why": "PubChem's 1854 is the first crystalline silicon (fact-check). The element was first isolated in 1823 (Wikipedia infobox)."
+    },
+    {
+      "sym": "Ru",
+      "field": "year",
+      "from": "discovery date",
+      "why": "PubChem's 1827 is an unconfirmed claim (fact-check). Ruthenium was confirmed in 1844 (Wikipedia infobox)."
+    },
+    {
+      "sym": "Og",
+      "field": "state",
+      "from": "phase",
+      "flag": "p",
+      "why": "PubChem's 'Expected to be a Gas' is outdated: relativistic calculations predict a solid (Wikipedia infobox: solid, predicted; fact-check)."
+    },
+    {
+      "sym": "Pa",
+      "field": "bp",
+      "flag": "p",
+      "why": "The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3)."
+    },
+    {
+      "sym": "Cm",
+      "field": "bp",
+      "flag": "p",
+      "why": "The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3)."
+    },
+    {
+      "sym": "Bk",
+      "field": "bp",
+      "flag": "p",
+      "why": "The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3)."
+    },
+    {
+      "sym": "Cf",
+      "field": "bp",
+      "flag": "p",
+      "why": "The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3)."
+    }
+  ],
+  "lattices": {
+    "Cm": {
+      "proto": "dhcp",
+      "pearson": "hP4",
+      "a": 349.6,
+      "c": 1133.1,
+      "src": "fc",
+      "cite": "Cunningham & Wallmann (1964), as given in the fact-check (FACTCHECK.md §3.1)",
+      "check": "Wikipedia's Curium article gives a = 365 pm, c = 1182 pm instead; the fact-check cell reproduces PubChem's density (see note), the article's does not."
+    },
+    "Bk": {
+      "proto": "dhcp",
+      "pearson": "hP4",
+      "a": 341.6,
+      "c": 1106.9,
+      "src": "fc",
+      "cite": "Peterson et al. (1971), as given in the fact-check (FACTCHECK.md §3.1)",
+      "check": "Wikipedia's Berkelium article gives 341 pm and 1107 pm (agrees)."
+    },
+    "Cf": {
+      "proto": "dhcp",
+      "pearson": "hP4",
+      "a": [
+        338.0,
+        338.4
+      ],
+      "c": [
+        1102.5,
+        1104.0
+      ],
+      "src": "fc",
+      "cite": "Radchenko et al. (1986), as given in the fact-check (FACTCHECK.md §3.1) as ranges",
+      "check": "Drawn at the middle of the reported ranges."
+    },
+    "Es": {
+      "proto": "fcc",
+      "pearson": "cF4",
+      "a": 575,
+      "src": "wpa",
+      "page": "Einsteinium",
+      "cite": "Wikipedia: Einsteinium (fcc, a = 575 pm; fact-check: Haire & Baybarz 1979)",
+      "check": "The same article notes a report of a hexagonal room-temperature form."
+    }
+  },
+  "gas": {
+    "_note": "Particles in the gas phase near the boiling point (for the gas speed sqrt(3RT/M)). Fact-check FACTCHECK.md §B #23.",
+    "H": 2,
+    "N": 2,
+    "O": 2,
+    "F": 2,
+    "Cl": 2,
+    "Br": 2,
+    "I": 2,
+    "P": 4,
+    "S": 8
+  },
+  "nuclearR0_fm": {
+    "value": 0.94,
+    "cite": "Fact-check FACTCHECK.md §B #21: R_rms ≈ 0.94·A^(1/3) fm (√(3/5) × the uniform-sphere 1.2 fm)"
+  }
+}

@@ -2,18 +2,19 @@
 
 Tolerances: mp/bp ±max(2 K, 1 %), density ±2 %, IE ±0.5 %, atomic weight ±0.1 %. Second sources: Wikipedia infobox, mendeleev (CRC), PubChem.
 
-Full table (118 × 5): {"match":503,"explained":21,"no-primary":66} — only non-matching rows are listed below.
+Full table (118 × 5): {"match":472,"no-primary":71,"explained":12,"predicted":35} — only non-matching rows are listed below.
 
-SPEC sample (seed 20261120): Z = 12, 16, 24, 31, 38, 47, 49, 57, 66, 68, 70, 75, 76, 81, 95, 99, 101, 106, 114, 117 → {"match":82,"explained":6,"no-primary":12}
+SPEC sample (seed 20261120): Z = 12, 16, 24, 31, 38, 47, 49, 57, 66, 68, 70, 75, 76, 81, 95, 99, 101, 106, 114, 117 → {"match":75,"explained":5,"predicted":8,"no-primary":12}
 
 | Z | El | field | primary | second source | status | note |
 |---|---|---|---|---|---|---|
-| 2 | He | mp | 0.95 (pc) | — | explained | PubChem's 0.95 K is not a 1-atm melting point: at 1 atm helium has no solid phase (no melting point in CRC via mendeleev, none in the Wikipedia infobox). The sample view uses 'no solid at 1 atm'. |
-| 6 | C | mp | 3823 (pc) | — | explained | Carbon does not melt at 1 atm: it sublimes (Wikipedia infobox 3915 K; CRC via mendeleev 4098 K). PubChem's 3823 K is kept with this note; the sample view uses sublimation. |
-| 31 | Ga | bp | 2477 (pc) | 2676 (wp) | explained | Handbooks differ: PubChem 2477 K, CRC (mendeleev) 2502 K. The Wikipedia infobox gives 2676 K from Zhang, Evans & Zhang (2011), 'Corrected values for boiling points and enthalpies of vaporization of elements in handbooks', J. Chem. Eng. Data 56, doi:10.1021/je1011086. Unresolved: QUESTIONS.md Q10. |
+| 2 | He | mp | — | — | no-primary | Helium does not solidify at normal pressure (Wikipedia: Helium). PubChem's 0.95 K is a melting point at about 25 bar (fact-check). |
+| 6 | C | mp | — | — | no-primary | At 1 atm carbon never melts: it sublimes (see sublimation point). PubChem's 3823 K is not a 1-atm melting point. |
+| 6 | C | bp | — | — | no-primary | At 1 atm carbon sublimes (see sublimation point) instead of boiling. |
+| 31 | Ga | bp | 2676 (wp) | 2477 (pc) | explained | PubChem lists an older 2477 K; the corrected value 2676 K is from Zhang, Evans & Zhang (2011), J. Chem. Eng. Data 56, doi:10.1021/je1011086. |
+| 33 | As | mp | — | — | no-primary | At 1 atm grey arsenic sublimes. PubChem's 1090 K is a melting point under pressure (triple point). |
+| 33 | As | bp | — | — | no-primary | At 1 atm arsenic sublimes at 887 K (see sublimation point); PubChem lists that temperature as a boiling point. |
 | 43 | Tc | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
-| 55 | Cs | density | 1.93 (pc) | 1.886 (wp) | explained | PubChem 1.93 g/cm³; Wikipedia (Arblaster 2018, 20 °C) 1.886 and CRC (mendeleev) 1.873 g/cm³. The two handbook values agree within 0.7 %; PubChem is 2–3 % higher. QUESTIONS.md Q10. |
-| 56 | Ba | bp | 2170 (pc) | 2118 (wp) | explained | PubChem 2170 K; Wikipedia and CRC (mendeleev) both give 2118 K. QUESTIONS.md Q10. |
 | 61 | Pm | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 73 | Ta | ie1 | 7.549571 (nist-ie) | 7.89 (pc) | explained | NIST ASD 5.12 gives 7.549571 ± 0.000025 eV (NIST ref. L13153); PubChem 7.89 eV and Wikipedia 761 kJ/mol (7.887 eV) carry a different, older compiled value. NIST (the evaluated primary database) is used. |
 | 74 | W | ie1 | 7.86403 (nist-ie) | 7.98 (pc) | explained | NIST ASD 5.12 gives 7.86403 ± 0.0001 eV (ref. L11604); PubChem 7.98 eV and Wikipedia 770 kJ/mol (7.980 eV) differ by 1.5 %. NIST is used. |
@@ -25,25 +26,28 @@ SPEC sample (seed 20261120): Z = 12, 16, 24, 31, 38, 47, 49, 57, 66, 68, 70, 75,
 | 85 | At | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 86 | Rn | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 87 | Fr | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 87 | Fr | density | 2.458 (wp) | 1.87 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
 | 87 | Fr | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
-| 88 | Ra | bp | 1413 (pc) | 2010 (wp) | explained | PubChem 1413 K; Wikipedia infobox 2010 K. Not resolved: QUESTIONS.md Q10. |
+| 88 | Ra | bp | 2010 (wp) | 1413 (pc) | predicted | PubChem lists an older 1413 K; Wikipedia gives 2010 K. Not measured directly: an extrapolation (fact-check §3.3). |
 | 88 | Ra | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 89 | Ac | ie1 | 5.380235 (nist-ie) | 5.17 (pc) | explained | NIST ASD 5.12 gives 5.380235 ± 0.000012 eV (refs. L22136, L17893); PubChem 5.17 eV and Wikipedia 499 kJ/mol (5.172 eV) differ by 4 %. NIST is used. |
 | 89 | Ac | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 90 | Th | ie1 | 6.3067 (nist-ie) | 6.08 (pc) | explained | NIST ASD 5.12 gives 6.3067 ± 0.00025 eV (ref. L15992); PubChem 6.08 eV and Wikipedia 587 kJ/mol (6.084 eV) differ by 3.6 %. NIST is used. |
-| 93 | Np | bp | 4175 (pc) | 4447 (wp) | explained | PubChem 4175 K (flagged as an estimate); Wikipedia infobox 4447 K. Not resolved: QUESTIONS.md Q10. |
+| 91 | Pa | bp | 4300 (wp) | — | predicted | The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3). |
+| 93 | Np | bp | 4175 (pc) | 4447 (wp) | predicted | Not measured directly (vapour-pressure extrapolations differ): PubChem 4175 K, Wikipedia 4447 K. Shown as an estimate (fact-check §3.3). |
 | 93 | Np | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 94 | Pu | ie1 | 6.02576 (nist-ie) | 6.06 (pc) | explained | NIST ASD 5.12 gives 6.02576 ± 0.00025 eV (refs. L15992, L11260); PubChem 6.06 eV and Wikipedia 584.7 kJ/mol (6.060 eV) differ by 0.6 %. NIST is used. |
 | 94 | Pu | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
-| 95 | Am | bp | 2284 (pc) | 2880 (wp) | explained | PubChem 2284 K (flagged as an estimate); Wikipedia infobox 2880 K. Not resolved: QUESTIONS.md Q10. |
-| 95 | Am | density | 13.69 (pc) | 12 (wp) | explained | PubChem 13.69 g/cm³; Wikipedia and CRC (mendeleev) 12 g/cm³. Not resolved: QUESTIONS.md Q10. |
+| 95 | Am | bp | 2284 (pc) | 2880 (wp) | predicted | Not measured directly (vapour-pressure extrapolations differ): PubChem 2284 K, Wikipedia 2880 K. Shown as an estimate (fact-check §3.3). |
+| 95 | Am | density | 13.69 (pc) | 12 (wp) | explained | PubChem 13.69 g/cm³ is kept: the fact-check identifies it as the X-ray density of α-americium (13.67–13.69); the 12 g/cm³ in Wikipedia and the CRC Handbook (via mendeleev) is an older bulk value. |
 | 95 | Am | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 96 | Cm | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
-| 97 | Bk | mp | 1323 (pc) | 1259 (wp) | explained | PubChem 1323 K; Wikipedia and CRC (mendeleev) give 1259 K for β-berkelium. Possibly different allotropes; QUESTIONS.md Q10. |
-| 97 | Bk | density | 14 (pc) | 14.78 (wp) | explained | PubChem 14 g/cm³; Wikipedia and CRC (mendeleev) give 14.78 g/cm³ for α-berkelium. QUESTIONS.md Q10. |
+| 97 | Bk | bp | 2900 (wp) | — | predicted | The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3). |
 | 97 | Bk | ie1 | 6.19785 (nist-ie) | 6.23 (pc) | explained | NIST ASD 5.12 gives 6.19785 ± 0.00025 eV (ref. L15992); PubChem 6.23 eV and Wikipedia 601 kJ/mol (6.229 eV) differ by 0.5 %. NIST is used. |
 | 97 | Bk | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 98 | Cf | bp | 1743 (wp) | — | predicted | The boiling point has not been measured directly; this value is an estimate or extrapolation (fact-check §3.3). |
 | 98 | Cf | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 99 | Es | bp | 1269 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
 | 99 | Es | ie1 | 6.3684 (nist-ie) | 6.42 (pc) | explained | NIST ASD 5.12 gives 6.3684 ± 0.00006 eV (ref. L22449); PubChem 6.42 eV and Wikipedia 619 kJ/mol (6.415 eV) differ by 0.8 %. NIST is used. |
 | 99 | Es | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 100 | Fm | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
@@ -53,45 +57,72 @@ SPEC sample (seed 20261120): Z = 12, 16, 24, 31, 38, 47, 49, 57, 66, 68, 70, 75,
 | 102 | No | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
 | 102 | No | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 103 | Lr | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 103 | Lr | density | 14.4 (wp) | 15.6 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
 | 103 | Lr | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 104 | Rf | mp | 2400 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
+| 104 | Rf | bp | 5800 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
+| 104 | Rf | density | 17 (wp) | 23.3 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
 | 104 | Rf | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 105 | Db | mp | — | — | no-primary | no melting point in PubChem or the Wikipedia infobox |
 | 105 | Db | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 105 | Db | density | 21.6 (wp) | 29.3 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
+| 105 | Db | ie1 | 6.8 (nist-ie) | 6.892239 (wp) | predicted | predicted / estimated value (no measurement to compare with) |
 | 105 | Db | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 106 | Sg | mp | — | — | no-primary | no melting point in PubChem or the Wikipedia infobox |
 | 106 | Sg | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 106 | Sg | density | 23 (wp) | 35 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
+| 106 | Sg | ie1 | 7.8 (nist-ie) | 7.845752 (wp) | predicted | predicted / estimated value (no measurement to compare with) |
 | 106 | Sg | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 107 | Bh | mp | — | — | no-primary | no melting point in PubChem or the Wikipedia infobox |
 | 107 | Bh | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 107 | Bh | density | 26 (wp) | 37.1 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
 | 107 | Bh | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 108 | Hs | mp | — | — | no-primary | no melting point in PubChem or the Wikipedia infobox |
 | 108 | Hs | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 108 | Hs | density | 27 (wp) | 40.7 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
 | 108 | Hs | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 109 | Mt | mp | — | — | no-primary | no melting point in PubChem or the Wikipedia infobox |
 | 109 | Mt | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 109 | Mt | density | 27 (wp) | 37.4 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
 | 109 | Mt | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 109 | Mt | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 110 | Ds | mp | — | — | no-primary | no melting point in PubChem or the Wikipedia infobox |
 | 110 | Ds | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 110 | Ds | density | 26 (wp) | 34.8 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
 | 110 | Ds | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 110 | Ds | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
 | 111 | Rg | mp | — | — | no-primary | no melting point in PubChem or the Wikipedia infobox |
 | 111 | Rg | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 111 | Rg | density | 22 (wp) | 28.7 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
 | 111 | Rg | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 111 | Rg | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 112 | Cn | mp | 283 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
+| 112 | Cn | bp | 340 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
 | 112 | Cn | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 112 | Cn | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 113 | Nh | mp | 700 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
+| 113 | Nh | bp | 1430 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
 | 113 | Nh | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 113 | Nh | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 114 | Fl | mp | 284 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
 | 114 | Fl | bp | — | — | no-primary | no boiling point in PubChem or the Wikipedia infobox |
+| 114 | Fl | density | 11.4 (wp) | 9.928 (mdl-crc) | predicted | predicted / estimated value (no measurement to compare with) |
 | 114 | Fl | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 114 | Fl | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 115 | Mc | mp | 670 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
+| 115 | Mc | bp | 1400 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
 | 115 | Mc | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 115 | Mc | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 116 | Lv | mp | 637 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
+| 116 | Lv | bp | 1035 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
 | 116 | Lv | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 116 | Lv | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 117 | Ts | mp | 623 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
+| 117 | Ts | bp | 883 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
 | 117 | Ts | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 117 | Ts | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |
+| 118 | Og | mp | 325 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
+| 118 | Og | bp | 450 (wp) | — | predicted | predicted / estimated value (no measurement to compare with) |
 | 118 | Og | density | — | — | no-primary | no density in PubChem or the Wikipedia infobox |
 | 118 | Og | ie1 | — | — | no-primary | no ionization energy in NIST ASD or PubChem |
 | 118 | Og | aw | — | — | no-primary | no standard atomic weight: the element has no stable isotopes (see longest-lived isotope) |

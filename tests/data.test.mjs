@@ -35,3 +35,13 @@ test('wikitext: lattice constants in pm, nm and rhombohedral forms', () => {
   assert.ok(Math.abs(sb.ah - 430.84) < 1e-9 && Math.abs(sb.ch - 1127.36) < 1e-9 && sb.alpha === 57.112);
   assert.equal(infoboxFields('{{infobox element\n|name=iron\n|crystal structure=x |crystal structure comment=(predicted)\n}}')['crystal structure comment'], '(predicted)');
 });
+
+test('colour: analytic CIE 1931 fit (embedded) stays close to the CIE table (raw file, test only)', async () => {
+  const { cmfAt } = await import('../src/physics/color.js');
+  const D = JSON.parse(fs.readFileSync('data/elements.json', 'utf8'));
+  const rows = fs.readFileSync('data/raw/cie/CIE_xyz_1931_2deg.csv', 'utf8').trim().split(/\r?\n/).map(l => l.split(',').map(Number)).filter(r => r[0] >= 380 && r[0] <= 750);
+  let worst = 0;
+  for (const [l, x, y, z] of rows) { const f = cmfAt(D.cmfFit.v, l); worst = Math.max(worst, Math.abs(f[0] - x), Math.abs(f[1] - y), Math.abs(f[2] - z)); }
+  assert.ok(worst < 0.05, `max |fit - table| = ${worst}`);
+  assert.equal(D.cmf, undefined, 'the CIE table itself must not be embedded');
+});

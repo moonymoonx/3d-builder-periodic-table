@@ -2,20 +2,21 @@
 // Rule: space-group number must match the wanted phase; ambient pressure; not a duplicate or
 // retracted entry; then the cell temperature closest to 293 K (explicit temperature preferred
 // over unknown), then entries with an R factor, then the newest publication.
+// `pin`: entry chosen explicitly (Gemini fact-check 2026-11-20, FACTCHECK.md §D #47) when it is a candidate.
 export const COD_PHASES = {
-  Ga: [{ phase: 'alpha-Ga', sg: [64] }],
+  Ga: [{ phase: 'alpha-Ga', sg: [64], pin: '9008085' }], // Sharma & Donohue 1962 refinement, standard Cmce setting
   As: [{ phase: 'grey As (A7)', sg: [166] }],
   Se: [{ phase: 'trigonal (grey) Se', sg: [152, 154] }],
   Sb: [{ phase: 'Sb (A7)', sg: [166] }],
   Te: [{ phase: 'trigonal Te', sg: [152, 154] }],
   Bi: [{ phase: 'Bi (A7)', sg: [166] }],
   Sm: [{ phase: 'alpha-Sm (9R)', sg: [166] }],
-  U: [{ phase: 'alpha-U', sg: [63] }],
+  U: [{ phase: 'alpha-U', sg: [63], pin: '9008584' }], // room temperature; 1527120 is a 43 K study
   Np: [{ phase: 'alpha-Np', sg: [62] }],
   Pu: [{ phase: 'alpha-Pu', sg: [11] }],
   Hg: [{ phase: 'alpha-Hg', sg: [166] }],
   In: [{ phase: 'In (A6)', sg: [139] }],
-  Sn: [{ phase: 'beta-Sn (white)', sg: [141] }, { phase: 'alpha-Sn (grey)', sg: [227] }],
+  Sn: [{ phase: 'beta-Sn (white)', sg: [141] }, { phase: 'alpha-Sn (grey)', sg: [227], pin: '9008568' }], // bulk; 7222459 is a nanocrystalline electrode
   Pa: [{ phase: 'alpha-Pa', sg: [139] }],
   Po: [{ phase: 'alpha-Po', sg: [221] }],
   // graphite and lonsdaleite share P6_3/mmc: graphite has c/a ~ 2.7, lonsdaleite ~ 1.6
@@ -47,8 +48,9 @@ export function codCandidates(sym, rows, want) {
     if (p !== null && p > 200) return false; // COD pressures are in kPa; keep ambient only
     if (!(num(r.a) > 0)) return false;
     if (want.check && !want.check(r)) return false;
-    // local-structure models (XAFS/PDF) are not long-range crystal structures
-    if (/local (atomic )?structure/i.test(String(r.title || ''))) return false;
+    // local-structure models (XAFS/PDF) are not long-range crystal structures; skip cryogenic,
+    // nanocrystalline, electrode and thin-film studies (not the bulk room-temperature solid)
+    if (/local (atomic )?structure|low[- ]temperature|nanocryst|electrode|thin[- ]film/i.test(String(r.title || ''))) return false;
     if (want.window) {
       const T = num(r.celltemp) ?? num(r.diffrtemp);
       if (T === null || T < want.window[0] || T > want.window[1]) return false;
@@ -78,11 +80,13 @@ export function selectCod(sym, rows) {
     const target = want.window ? (want.window[0] + want.window[1]) / 2 : 293;
     const ranked = rankCod(codCandidates(sym, rows, want), target);
     if (!ranked.length) continue;
-    const r = ranked[0];
+    const pinned = want.pin ? ranked.find(x => String(x.file) === want.pin) : null;
+    if (want.pin && !pinned) throw new Error(`COD pin ${want.pin} for ${sym} is not among the candidates`);
+    const r = pinned || ranked[0];
     const T = num(r.celltemp) ?? num(r.diffrtemp);
     out.push({
       file: String(r.file), phase: want.phase,
-      reason: `sg ${r.sg} (#${r.sgNumber}); T=${T ?? 'n/a'} K; ${String(r.authors || '').slice(0, 60)} ${r.year || ''}; ${ranked.length} candidates`,
+      reason: `${pinned ? 'pinned (fact-check); ' : ''}sg ${r.sg} (#${r.sgNumber}); T=${T ?? 'n/a'} K; ${String(r.authors || '').slice(0, 60)} ${r.year || ''}; ${ranked.length} candidates`,
     });
   }
   return out;

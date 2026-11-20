@@ -29,12 +29,12 @@ export const LICENCES = {
   wikipedia: { licence: 'Wikipedia text CC BY-SA 4.0 (Wikipedia contributors; revision ids recorded). We extract factual values only and cite the references given in the infobox.', commit: true },
   wikidata: { licence: 'Wikidata CC0 1.0 (public domain dedication).', commit: true },
   mendeleev: { licence: 'mendeleev v1.3.0 by L. M. Mentel, MIT licence (LICENSE stored alongside). Per-column citation keys in table propertymetadata.', commit: true },
-  iaea: { licence: 'IAEA Nuclear Data Section, LiveChart of Nuclides API (NUBASE2020/ENSDF evaluated data); no explicit open licence on the API: cite IAEA LiveChart. Raw dump kept local only.', commit: false },
   cod: { licence: 'Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).', commit: true },
   'nist-codata': { licence: 'NIST CODATA 2022 fundamental constants (NIST SRD 121); free to use with citation (Mohr, Newell, Taylor, Tiesinga, CODATA 2022). Raw dump kept local only.', commit: false },
   'vi-gdpt': { licence: 'News article (Bao Dai Doan Ket), copyright of the publisher. Only the factual list of 13 Vietnamese element names is extracted. Raw HTML kept local only.', commit: false },
   cie: { licence: 'CIE dataset "Colour-matching functions of CIE 1931 standard colorimetric observer", doi:10.25039/CIE.DS.xvudnb9b, CC BY-SA 4.0.', commit: true },
   w3c: { licence: 'W3C CSS Color 4 sample code (conversions.js), W3C Software and Document License; only the XYZ->sRGB matrix is used.', commit: true },
+  nubase: { licence: 'NUBASE2020 evaluation (F. G. Kondev et al., Chinese Physics C 45 (2021) 030001, open access CC BY 3.0); ASCII table distributed by the Atomic Mass Data Center.', commit: true },
 };
 
 function sha256(buf) { return crypto.createHash('sha256').update(buf).digest('hex'); }
@@ -201,6 +201,23 @@ async function wikipedia() {
   await fetchTo('wikipedia', 'wikipedia/article-synthetic-element.json', syn, {
     validate: b => (JSON.parse(b).query ? null : 'no query'),
   });
+  // Articles used to verify the Gemini fact-check corrections (FACTCHECK.md): actinide lattices,
+  // cerium phases, radium, discovery/isolation years, and the analytic CIE 1931 fit.
+  const fc = 'https://en.wikipedia.org/w/api.php?' + new URLSearchParams({
+    action: 'query', prop: 'revisions', rvprop: 'content|ids|timestamp', rvslots: 'main', format: 'json', formatversion: '2', redirects: '1',
+    titles: 'Curium|Berkelium|Californium|Einsteinium|Cerium|Radium|Aluminium|Calcium|Fluorine|Silicon|Ruthenium|Helium|CIE 1931 color space',
+  });
+  await fetchTo('wikipedia', 'wikipedia/articles-factcheck.json', fc, {
+    timeout: 180000, validate: b => (JSON.parse(b).query?.pages?.length >= 13 ? null : 'expected 13 pages'),
+  });
+}
+
+// ---- 8b. NUBASE2020 (Kondev et al. 2021, Chinese Physics C 45 030001, CC BY 3.0) -------------
+async function nubase() {
+  console.log('NUBASE2020');
+  const ok = b => (/NUBASE2020/i.test(b.toString('latin1', 0, 4000)) ? null : 'not the NUBASE2020 table');
+  const got = await fetchTo('nubase', 'nubase/nubase_4.mas20.txt', 'https://www-nds.iaea.org/amdc/ame2020/nubase_4.mas20.txt', { timeout: 120000, validate: ok });
+  if (!got) await fetchTo('nubase', 'nubase/nubase_4.mas20.txt', 'https://amdc.impcas.ac.cn/masstables/Ame2020/nubase_4.mas20.txt', { timeout: 120000, validate: ok });
 }
 
 // ---- 5b. CODATA constants (a0, R, k, u, NA) -------------------------------------------------
@@ -261,14 +278,6 @@ async function mendeleev() {
   });
 }
 
-// ---- 8. IAEA LiveChart ground states (half-lives, abundances, charge radii) --------------
-async function iaea() {
-  console.log('IAEA LiveChart ground states');
-  await fetchTo('iaea', 'iaea/ground_states_all.csv', 'https://www-nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=all', {
-    timeout: 180000, validate: b => (b.toString('utf8', 0, 20).startsWith('z,n,symbol') ? null : 'unexpected CSV header'),
-  });
-}
-
 // ---- 9. COD: entries for elements whose structures have free atomic coordinates ----------
 // Selection rule (deterministic, in tools/lib/cod-select.mjs): matching space group, ambient
 // pressure, temperature closest to 293 K, then newest. The query JSON is kept so the choice
@@ -297,7 +306,7 @@ async function cod() {
 
 // ---- run ----------------------------------------------------------------------------------
 const steps = [['pubchem', pubchem], ['ciaaw', ciaaw], ['nist-ie', nistIE], ['nist-lines', nistLines], ['wikipedia', wikipedia],
-  ['codata', codata], ['colour', colour], ['vi-gdpt', viGdpt], ['wikidata', wikidata], ['mendeleev', mendeleev], ['iaea', iaea], ['cod', cod]];
+  ['codata', codata], ['colour', colour], ['vi-gdpt', viGdpt], ['wikidata', wikidata], ['mendeleev', mendeleev], ['nubase', nubase], ['cod', cod]];
 fs.mkdirSync(RAW, { recursive: true });
 for (const [id, fn] of steps) {
   if (!want(id)) continue;
