@@ -33,6 +33,7 @@ export function layoutPose(e, layout, out = { pos: new THREE.Vector3(), quat: ne
 }
 
 export function matchesFilters(e) {
+  if (state.marks && !state.marks.has(e.Z)) return false; // quiz: only the elements a question is about
   const F = state.filters;
   if (F.cats && !F.cats.has(e.f.cat[0])) return false;
   if (F.blocks && !F.blocks.has(e.f.block[0])) return false;
@@ -109,6 +110,7 @@ export function createTableView(hooks) {
   const axisLabels = [];
 
   function heightFor(e) {
+    if (state.flat) return HMIN + 0.1 * (HMAX - HMIN); // quiz: equal low columns, so heights give nothing away
     const v = propValue(e, state.prop);
     if (!v) return null;
     const p = prop(state.prop);
@@ -150,6 +152,7 @@ export function createTableView(hooks) {
   }
   function writeColours() {
     const pal = state.cb ? CATEGORY_COLORS_CB : CATEGORY_COLORS;
+    const selZ = state.hideSel ? 0 : state.Z;
     for (let i = 0; i < N; i++) {
       const e = els[i];
       const st = state.color === 'state' ? stateAt(e, state.T) : null;
@@ -158,17 +161,18 @@ export function createTableView(hooks) {
       const v = propValue(e, state.prop);
       const hatch = (v && isPred(v)) || (st && st.p) ? 1 : 0;
       const dim = matchesFilters(e) ? 0 : 1;
-      const sel = e.Z === state.Z ? 1 : hovered === e.Z ? 0.5 : 0;
+      const sel = e.Z === selZ ? 1 : hovered === e.Z ? 0.5 : 0;
       fx.setXYZ(i, hatch, dim, sel);
       const lbl = elLabels[i];
-      labels.setClass(lbl, (e.Z === state.Z ? 'sel' : '') + (dim ? ' dim' : ''));
-      lbl.priority = e.Z === state.Z ? 100 : hovered === e.Z ? 90 : dim ? 0.5 : 1 + (e.f.group[0] ? 0 : -0.1);
-      if (e.Z === state.Z) labels.setText(lbl, e.sym, v ? fmtProp(state.prop, v) : t('tip.nodata'));
+      labels.setClass(lbl, (e.Z === selZ ? 'sel' : '') + (dim ? ' dim' : ''));
+      lbl.priority = e.Z === selZ ? 100 : hovered === e.Z ? 90 : dim ? 0.5 : state.marks ? 50 : 1 + (e.f.group[0] ? 0 : -0.1);
+      if (e.Z === selZ) labels.setText(lbl, e.sym, state.flat ? '' : v ? fmtProp(state.prop, v) : t('tip.nodata'));
       else labels.setText(lbl, e.sym, '');
     }
     solid.instanceColor.needsUpdate = true; fx.needsUpdate = true;
   }
   function placeSelectionRing() {
+    ring.visible = !state.hideSel;
     const i = state.Z - 1;
     const c = cur[i];
     ring.position.copy(c.pos).add(new THREE.Vector3(0, 0.02, 0).applyQuaternion(c.quat));
@@ -245,7 +249,8 @@ export function createTableView(hooks) {
     }
     const halfW = state.layout === 's32' ? 17.6 : 10.4;
     const halfD = state.layout === 's32' ? 4.8 : 6.2;
-    const phi = portrait ? 0.62 : state.layout === 's32' ? 0.62 : 0.95;
+    // quiz (flat columns): look more from above so each row's labels stay clear of the next row
+    const phi = portrait ? 0.62 : state.layout === 's32' || state.flat ? 0.62 : 0.95;
     // fit both the width and the (foreshortened) depth into the view
     const rW = halfW / Math.tan(hfov / 2);
     const rD = (halfD * Math.cos(phi) + HMAX * 0.5 * Math.sin(phi)) / Math.tan(vfov / 2) + halfD * Math.sin(phi);
@@ -290,8 +295,8 @@ export function createTableView(hooks) {
     },
     onState(ch) {
       if ('layout' in ch) { morph(); rebuildAxisLabels(); frame(); writeColours(); }
-      else if ('prop' in ch || 'log' in ch) { morph(); writeColours(); }
-      if ('Z' in ch || 'color' in ch || 'T' in ch || 'filters' in ch || 'cb' in ch || 'lang' in ch) { writeColours(); placeSelectionRing(); }
+      else if ('prop' in ch || 'log' in ch || 'flat' in ch) { morph(); writeColours(); }
+      if ('Z' in ch || 'color' in ch || 'T' in ch || 'filters' in ch || 'cb' in ch || 'lang' in ch || 'marks' in ch || 'hideSel' in ch) { writeColours(); placeSelectionRing(); }
       invalidate();
     },
     tap(x, y) {
@@ -303,12 +308,22 @@ export function createTableView(hooks) {
       const z = e ? e.Z : 0;
       E.canvas.style.cursor = e ? 'pointer' : '';
       if (z !== hovered) { hovered = z; writeColours(); invalidate(); }
-      hooks.tooltip(e ? { x, y, e, text: fmtProp(state.prop, propValue(e, state.prop)) } : null);
+      hooks.tooltip(e ? { x, y, e, text: state.flat ? '' : fmtProp(state.prop, propValue(e, state.prop)) } : null);
     },
     focus(Z, dur = 0.7) {
       const c = cur[Z - 1];
       const top = new THREE.Vector3(0, c.h * 0.5, 0).applyQuaternion(c.quat).add(c.pos);
       E.rig.flyTo({ target: top, r: Math.min(E.rig.r, 9) }, dur);
+    },
+    /** fly so that all the given columns are in view (quiz: "the camera flies to the clue") */
+    focusMany(Zs, dur = 0.9) {
+      if (Zs.length === 1) return view.focus(Zs[0], dur);
+      const box = new THREE.Box3();
+      for (const Z of Zs) { const c = cur[Z - 1]; box.expandByPoint(c.pos); box.expandByPoint(view.columnTop(Z)); }
+      const ctr = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+      const fov = freeFov();
+      const r = Math.max(7, (Math.max(size.x, size.z) * 0.5 + 2.2) / Math.tan(Math.min(fov.h, fov.v) / 2));
+      E.rig.flyTo({ target: ctr, r: Math.min(r, E.rig.lim ? E.rig.lim.rMax : r) }, state.reduced ? 0 : dur);
     },
     frame,
     poseOf: Z => cur[Z - 1],

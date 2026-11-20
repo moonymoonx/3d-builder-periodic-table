@@ -13,6 +13,7 @@ import { buildSampleUI } from './ui/samplePanel.js';
 import { buildTrends } from './ui/trends.js';
 import { createCompareView } from './views/compare.js';
 import { buildComparePanel, defaultPartner } from './ui/comparePanel.js';
+import { buildQuiz } from './ui/quiz.js';
 import { buildShell } from './ui/shell.js';
 import { buildSheet } from './ui/sheet.js';
 import { buildTablePanel } from './ui/tablePanel.js';
@@ -60,8 +61,8 @@ function boot() {
   comparePanel.panel.remove();
 
   const table = createTableView({
-    onSelect: e => select(e.Z),
-    onOpen: () => set({ view: 'atom' }),
+    onSelect: e => (state.view === 'quiz' ? quiz.tap(e.Z) : select(e.Z)),
+    onOpen: e => (state.view === 'quiz' ? quiz.tap(e.Z) : set({ view: 'atom' })),
     tooltip: shell.tooltip,
   });
   registerView('table', table);
@@ -75,18 +76,28 @@ function boot() {
   registerView('compare', createCompareView());
   for (const v of VIEWS) if (!E.views[v]) registerView(v, stubView(v));
 
+  // Quiz: its own tab; the 3D view behind it is whichever view shows the current clue ("stage")
+  let quizStage = 'table';
+  const quiz = buildQuiz(document.getElementById('ui'), {
+    switchStage(v) { quizStage = v; switchView(v); trends.show(v === 'trends'); updateSafe(); },
+    focusTable(Zs) { if (E.active === table) table.focusMany(Zs); },
+    frameTable() { if (E.active === table) table.frame(state.reduced ? 0 : 0.9); },
+    layoutChanged: () => updateSafe(),
+  });
+
   function select(Z, fly = false) {
+    if (state.view === 'quiz') { set({ Z, hideSel: false }); if (fly && E.active === table) table.focus(Z); return; }
     set({ Z });
     if (fly && state.view === 'table' && E.active === table) table.focus(Z);
     shell.openPanel('right');
   }
 
-  const leftPanels = { table: tablePanel, atom: atomPanel, sample: { panel: sampleUI.panel, render: () => sampleUI.render() }, trends: { panel: trends.panel, render: () => trends.render() }, compare: comparePanel };
+  const leftPanels = { table: tablePanel, atom: atomPanel, sample: { panel: sampleUI.panel, render: () => sampleUI.render() }, trends: { panel: trends.panel, render: () => trends.render() }, compare: comparePanel, quiz: { panel: quiz.panel, render: () => quiz.renderSkills() } };
   function renderLeft() {
     for (const [v, p] of Object.entries(leftPanels)) if (v !== state.view && p.panel.parentNode) p.panel.remove();
     spectrum.box.hidden = state.view !== 'atom';
     sampleUI.show(state.view === 'sample');
-    trends.show(state.view === 'trends');
+    trends.show(state.view === 'trends' || (state.view === 'quiz' && quizStage === 'trends'));
     comparePanel.show(state.view === 'compare');
     if (state.view === 'atom') spectrum.render(byZ(state.Z));
     if (leftPanels[state.view]) {
@@ -106,7 +117,12 @@ function boot() {
     if (('view' in ch || 'Z' in ch) && state.view === 'compare' && (!state.Z2 || state.Z2 === state.Z)) set({ Z2: defaultPartner(state.Z) }, { silent: true });
     if ('lang' in ch) setLang(state.lang);
     if ('reduced' in ch) { document.body.classList.toggle('reduced', state.reduced); E.rig.reduced = state.reduced; }
-    if ('view' in ch) { switchView(state.view); shell.closePanels(); }
+    if ('view' in ch) {
+      document.body.classList.toggle('quiz-mode', state.view === 'quiz');
+      if (state.view === 'quiz') quiz.enter(); else { quiz.exit(); switchView(state.view); }
+      shell.closePanels();
+    }
+    if (('lang' in ch || 'cb' in ch) && state.view === 'quiz' && !('view' in ch)) quiz.render();
     for (const v of Object.values(E.views)) if (v.ready && v.onState) v.onState(ch);
     if ('lang' in ch || 'view' in ch) renderAll();
     else {
@@ -125,6 +141,10 @@ function boot() {
     const k = ev.key;
     if (k === 'Escape') { shell.closeModal(); shell.closePanels(); return; }
     if (shell.modalOpen()) return;
+    if (state.view === 'quiz') {
+      if (quiz.onKey(ev)) { ev.preventDefault(); return; }
+      if (/^[lLhH]$/.test(k)) return; // layout and height keys would undo the quiz staging
+    }
     if (k === 'ArrowRight' || k === ']') { select(e.Z < 118 ? e.Z + 1 : 1, true); ev.preventDefault(); }
     else if (k === 'ArrowLeft' || k === '[') { select(e.Z > 1 ? e.Z - 1 : 118, true); ev.preventDefault(); }
     else if (k === 'ArrowUp' || k === 'ArrowDown') { const n = neighbour(e, k === 'ArrowUp' ? -1 : 1); if (n) select(n.Z, true); ev.preventDefault(); }
@@ -140,20 +160,27 @@ function boot() {
   function updateSafe() {
     const W = window.innerWidth;
     const tb = document.querySelector('.topbar').getBoundingClientRect();
-    if (isPhone()) { setSafe({ left: 0, right: 0, top: tb.bottom + 4, bottom: 64 }); return; }
+    const inQuiz = state.view === 'quiz' && !quiz.card.hidden;
+    if (isPhone()) {
+      const bottom = inQuiz ? Math.max(64, window.innerHeight - quiz.card.getBoundingClientRect().top + 8) : 64;
+      setSafe({ left: 0, right: 0, top: tb.bottom + 4, bottom });
+      return;
+    }
     const L = shell.left.getBoundingClientRect(), R = shell.right.getBoundingClientRect();
     const show = el => getComputedStyle(el).display !== 'none' && el.children.length;
-    setSafe({ left: show(shell.left) ? L.right + 8 : 0, right: show(shell.right) ? W - R.left + 8 : 0, top: tb.bottom + 6, bottom: 0 });
+    const right = inQuiz ? W - quiz.card.getBoundingClientRect().left + 8 : show(shell.right) ? W - R.left + 8 : 0;
+    setSafe({ left: show(shell.left) ? L.right + 8 : 0, right, top: tb.bottom + 6, bottom: 0 });
   }
   const ro = new ResizeObserver(updateSafe);
-  ro.observe(shell.left); ro.observe(shell.right); ro.observe(document.querySelector('.topbar'));
+  ro.observe(shell.left); ro.observe(shell.right); ro.observe(document.querySelector('.topbar')); ro.observe(quiz.card);
   window.addEventListener('resize', updateSafe);
 
   renderAll();
   updateSafe();
-  switchView(state.view);
+  document.body.classList.toggle('quiz-mode', state.view === 'quiz');
+  if (state.view === 'quiz') quiz.enter(); else switchView(state.view);
   if (!isPhone()) shell.openPanel('right');
-  window.__pt = { state, set, E }; // debugging / scripted screenshots
+  window.__pt = { state, set, E, quiz }; // debugging / scripted screenshots
 }
 
 boot();

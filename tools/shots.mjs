@@ -53,6 +53,18 @@ cases.push({ name: 'compare-Na-Cs-vdw-en-desk', hash: 'v=compare&el=Na&el2=Cs&ra
 cases.push({ name: 'table-layout32-en-desk', hash: 'v=table&el=Fe&p=rCov&lay=s32&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-helix-en-desk', hash: 'v=table&el=Fe&p=en&lay=helix&lang=en', vp: SIZES.desk });
 cases.push({ name: 'table-state-vi-desk', hash: 'v=table&el=Hg&p=mp&lay=s18&col=state&T=300&lang=vi', vp: SIZES.desk });
+// quiz: a fresh visitor's first question, a miss with its smaller question, and reveals
+for (const lang of ['en', 'vi']) for (const [sz, vp] of Object.entries(SIZES)) cases.push({ name: `quiz-first-${lang}-${sz}`, hash: `v=quiz&lang=${lang}`, vp });
+const Q = (skill, tier, prefix, steps) => `(() => { const q = window.__pt.quiz; q._ask('${skill}', ${tier}, '${prefix}'); ${steps} })()`;
+cases.push({ name: 'quiz-hint-big-en-desk', hash: 'v=quiz&lang=en', vp: SIZES.desk, act: Q('trends', 1, 'big:', 'q._answer(false);') });
+cases.push({ name: 'quiz-retry-big-en-desk', hash: 'v=quiz&lang=en', vp: SIZES.desk, act: Q('trends', 1, 'big:', 'q._answer(false); q._answer(true, true);') });
+cases.push({ name: 'quiz-reveal-big-en-desk', hash: 'v=quiz&lang=en', vp: SIZES.desk, act: Q('trends', 1, 'big:', 'q._answer(true);') });
+cases.push({ name: 'quiz-reveal-heat-Fe-en-desk', hash: 'v=quiz&lang=en', vp: SIZES.desk, act: Q('states', 2, 'heat:26:liquid', 'q._answer(true);') });
+cases.push({ name: 'quiz-hint-ie-vi-desk', hash: 'v=quiz&lang=vi', vp: SIZES.desk, act: Q('trends', 2, 'ie1:', 'q._answer(false);') });
+cases.push({ name: 'quiz-hint-findZ-en-phone', hash: 'v=quiz&lang=en', vp: SIZES.phone, act: Q('table', 1, 'findZ:', 'q._answer(false);') });
+cases.push({ name: 'quiz-cat-vi-phone', hash: 'v=quiz&lang=vi', vp: SIZES.phone, act: Q('categories', 1, 'cat:', '') });
+cases.push({ name: 'quiz-tr-en-desk', hash: 'v=quiz&lang=en', vp: SIZES.desk, act: Q('crystals', 2, 'tr:', 'q._answer(false);') });
+cases.push({ name: 'quiz-exc-en-desk', hash: 'v=quiz&lang=en', vp: SIZES.desk, act: Q('orbitals', 2, 'exc:', '') });
 cases.push({ name: 'table-density-log-en-phone', hash: 'v=table&el=Os&p=density&log=1&lay=s18&lang=en', vp: SIZES.phone });
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -66,6 +78,11 @@ for (const c of cases.filter(c => !only || c.name.includes(only))) {
   await page.goto(`file://${ROOT}/index.html${c.query ? '?' + c.query : ''}#${c.hash}`);
   await page.waitForFunction(() => window.__pt && window.__pt.E.active, null, { timeout: 30000 }).catch(() => logs.push('timeout: app did not start'));
   await page.waitForFunction(() => { const E = window.__pt?.E; return E && !E.rig.tween && E.anims.size === 0; }, null, { timeout: 30000 }).catch(() => logs.push('timeout: animations did not settle'));
+  if (c.act) { // scripted steps (quiz): run in the page, then let the camera and animations settle again
+    await page.evaluate(c.act).catch(e => logs.push('act failed: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.waitForFunction(() => { const E = window.__pt?.E; return E && !E.rig.tween && E.anims.size === 0; }, null, { timeout: 30000 }).catch(() => logs.push('timeout: animations did not settle'));
+  }
   await page.waitForTimeout(400);
   const file = path.join(OUT, `${c.name}.jpg`);
   await page.screenshot({ path: file, type: 'jpeg', quality: 82 });

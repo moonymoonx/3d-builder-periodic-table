@@ -156,7 +156,7 @@ export function buildShell({ onPick }) {
     input.placeholder = t('search.ph'); input.setAttribute('aria-label', t('search.label'));
     S.langBtn.textContent = getLang() === 'vi' ? 'EN' : 'VI'; S.langBtn.setAttribute('aria-label', t('btn.lang'));
     S.credBtn.firstChild.textContent = t('btn.credits'); S.credBtn.setAttribute('aria-label', t('btn.credits')); S.helpBtn.setAttribute('aria-label', t('btn.help')); S.setBtn.setAttribute('aria-label', t('btn.settings'));
-    S.mobBtns.left.textContent = t('btn.controls'); S.mobBtns.right.textContent = t('btn.data');
+    S.mobBtns.left.textContent = state.view === 'quiz' ? t('qz.skills') : t('btn.controls'); S.mobBtns.right.textContent = t('btn.data');
   };
   S.relabel();
   return S;

@@ -10,6 +10,8 @@ export const state = {
   filters: { cats: null, blocks: null, group: 0, period: 0, state: '', origin: '' },
   quality: 'auto', tier: 'med', reduced: false, cb: false, fps: false,
   orbital: null, density: 'orbital', surf: true, allotrope: null, trendLine: 'period', cmpR: 'cov',
+  // quiz staging (never in the URL): highlighted elements, equal column heights, selection ring hidden
+  marks: null, flat: false, hideSel: false,
 };
 
 export function set(patch, { silent = false } = {}) {
