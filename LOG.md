@@ -264,3 +264,7 @@
   - **Side by side:** a size headline on "One atom of each"; oganesson an outline with "?"; a two-step "Pick any two…"; quicksilver mercury on the balance; oganesson's phone label; rail fades.
   - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,802 KB.
   - **Shots:** `/workspace/out/redesign/polish-1/`.
+- 2026-11-21 ~12:27 (Saigon) — **Merged `view-atom-r3`** (answers `reviews/atom-a2.md`). Clean rebase onto 9216171; review passed (DECISIONS.md › Merge review: view-atom-r3).
+  - **Proposals:** OKLab gamut mapping scheduled; the kit no-× option not needed now.
+  - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,810 KB.
+  - **Reshoot:** `/workspace/out/redesign/atom-r3-merged/`.

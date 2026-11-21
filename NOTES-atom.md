@@ -214,3 +214,44 @@ Review scores: clarity 3.5, ease 3.5, beauty 4.0, smoothness 4.0, delight 3.5. E
   - Is this method acceptable in place of DECISIONS Q-atom-1's "a sourced lamp colour per element"? If not, the glow can fall back to the dots in the lines' colours only. Dropping proposal r2 #1 removes `lines.glow`, and the view then draws no glow.
 - **Q-atom-r2-2, the sheet's wording:** `sheet.js`'s emission-line note still says "the 8 strongest are used" (proposal r2 #1 asks to change it).
 - **Q-atom-r2-3, flame colours:** potassium's lilac flame comes from lines beyond 750 nm and from a cooler source than the model's 1 eV. Should the fetch window grow to 780 nm (the CIE limit)? It would not change the model's verdict for potassium.
+
+---
+
+# Round 3 (branch `view-atom-r3`, 21 Nov 2026): answering `reviews/atom-a2.md`
+Scores were clarity 3.5, ease 3.5, beauty 4.0, smoothness 4.0, delight 4.0; the target is clarity and ease of at least 4. The fixes are in the main session's priority order.
+
+## Clarity
+- **Every cloud is named in plain words first, with its code after it:** "the newest electron went into shell 3's clover clouds (3d)"; "one electron sits in shell 6's clover clouds (6d) instead of shell 5's many-lobed clouds (5f)". This is `subPhrase()`, tested for every filling-order exception in the data.
+  - Stage labels: "clover cloud · shell 3", with the plain turn below ("clover, standing, facing you").
+  - The axis names (xz, y(3x²−y²)) appear nowhere on screen. They remain only where a value is tapped for its source.
+- **The picker:** three short rows, Shell (1–7) → Clouds (round, dumbbells, clovers, many-lobed, each with its electron count) → Which one (numbered, each named in words in its tooltip and on the drawing). Uranium's picker is three rows instead of nine.
+- **"Its 8 brightest lines to the eye, out of 2,542 measured lines"** replaces "of 2,542 NIST lists".
+- **A quiet line under the hook:** "Tap underlined values for sources." It carries the hook's own sources as a small link, so the hook no longer ends on an orphaned [Source] pill.
+
+## Honest colour
+- **Colour words name what is drawn,** from the displayed hue: neon's 614.3 nm draws pure red, so it says "red light". Sodium's 589.0 nm draws yellow-orange and says so. New words: orange-red, yellow-orange, yellow-green, purple.
+  - Spectral light lies outside sRGB; the clipped colours draw 605–650 nm as red. A hue-preserving OKLCH mapping would draw 614 nm orange-red, but it needs the OKLab matrices in the data: proposal r3 #1.
+- **When the glow and the shown lines disagree** (their hues differ by more than 40°), the card says why in one line. Iron's reads: "Why blue? The glow mixes all 651 lines in our source, not only the brightest; its many fainter lines tint it."
+
+## Ease
+- **Phones:** the sheet stands tall enough to show one cloud's first plain sentence and the light's "Each line is light given off…" line (at most 60 % of the screen).
+- **The band** has a heading: "Its light, split into colours · tap a line".
+- **One exit:** the back link "← Iron". The sheet's × is not shown in this place; Escape still leads back.
+- **Picometre:** one definition ("a trillionth of a metre") on the stage and in About.
+
+## Beauty and delight
+- **Whole atom:** darker outer stipple (ink 0.3 → 0.4), a fuller glass on each shell (veil, shade, highlight).
+- **Chromium's surprise is seen:** stepping vanadium → chromium sends the moved electron, a vermilion bead, from the outer round cloud into the clover cloud over 1.4 s (none with reduced motion). The caption starts "A surprise:" and is marked with a vermilion rule.
+- **Leaders** end at the edge of the label's ground, never across its words. A point that sits under its own label gets no line.
+- **The dark room's controls are calm:** the active way to look is a cream outline and "+ proton" a cream pill with kiln ink. Ember stays for heat UI (STYLE §3, §9).
+- **Disabled steppers** share one ghost style (hydrogen's − proton, oganesson's + proton).
+- **Small fixes:**
+  - The ripple stays inside the frame.
+  - The nucleus is drawn at least 4 px across its radius.
+  - Tile numbers no longer crowd their symbols.
+  - Vietnamese footers read "Sắt · Iron".
+
+## Left for the main session
+- Uranium's outer clouds come from Slater's rules above Z = 86 and are several times too large. This is the scheduled Clementi–Raimondi review (DECISIONS), a data change, not done here.
+- "90 %" with a space is the house style in all places' strings; not changed here.
+- The table tile's banding in the dive is shared code.

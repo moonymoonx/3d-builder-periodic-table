@@ -687,3 +687,21 @@ Both places passed that review (patterns 4.0/4.0/4.5/4.0/4.5, side by side 4.0/4
    - **Checked and left:** the inline Source pills already reach 44 px through an invisible extension (24 px pill + 2 × 10 px).
 
 **Checks:** unit tests 47/47, validator, smoke 48/48 twice (the pick-two step now checks both steps). Shots: `/workspace/out/redesign/polish-1/`.
+
+## Merge review: `view-atom-r3` (the atom place, round 3), 21 Nov 2026
+The answer to `reviews/atom-a2.md` (clarity and ease were 3.5). Reviewed against STYLE.md and the PARALLEL.md checklist: passed. Only scope files changed; the rebase onto 9216171 was clean.
+- **The picker** is in plain words: shell, then the clouds ("round · dumbbells · clovers · many-lobed"), then which one.
+- **One exit:** the back link (the sheet's × hidden by the place's own CSS).
+- **A scale bar** in picometres with its meaning.
+- **"Its light"** uses kiln-text cream for its controls instead of ember. That is right: STYLE keeps ember for heat.
+
+**Open items, as reported:**
+- The phone "all 5" chip sits under the sheet's edge but is reachable by scrolling.
+- The uranium picker wraps on desktop.
+- Uranium's outer cloud (Slater above Z = 86) waits for the data review (Q-atom-3).
+
+**Its proposals:**
+- **OKLab constants for hue-keeping gamut mapping** (614 nm orange-red rather than clipped red): scheduled with the colour/data pass.
+- **A kit `closable: false` sheet option:** not now. The place's scoped CSS does the job; the kit option comes with the kit pass if a second place needs it.
+
+**Checks:** unit tests 47/47, validator, smoke 48/48 twice; index.html 1,810 KB. Reshoot: `/workspace/out/redesign/atom-r3-merged/`.

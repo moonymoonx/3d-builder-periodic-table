@@ -43,28 +43,34 @@ body.diving .atom-ruler, body.diving .atom-hint-drag { opacity: 0; }
 .atom-sheet.is-scrolled .ui-sheet__body { -webkit-mask: linear-gradient(transparent 0, transparent 66px, #000 90px); mask: linear-gradient(transparent 0, transparent 66px, #000 90px); }
 .atom-sheet.is-scrolled.has-more .ui-sheet__body { -webkit-mask: linear-gradient(transparent 0, transparent 66px, #000 90px, #000 calc(100% - 26px), transparent); mask: linear-gradient(transparent 0, transparent 66px, #000 90px, #000 calc(100% - 26px), transparent); }
 .atom-sheet.has-more:not(.is-scrolled) .ui-sheet__body { -webkit-mask: linear-gradient(#000 calc(100% - 26px), transparent); mask: linear-gradient(#000 calc(100% - 26px), transparent); }
-.atom-head { display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: center; padding-right: 44px; }
+/* one way out: the back link "← Iron" (the sheet's own × is not shown here; Escape still leads back) */
+.atom-sheet .ui-sheet__close { display: none; }
+.atom-head { display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: center; }
 .atom-tile { position: relative; width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; font: 600 22px/1 var(--font-sans); color: var(--ink);
   box-shadow: inset 0 -6px 0 rgba(28, 26, 23, 0.16), 0 5px 12px rgba(28, 26, 23, 0.12); }
+.atom-tile { padding-top: 7px; }
 .atom-tile small { position: absolute; top: 5px; left: 6px; font: 500 11px/1 var(--font-sans); } /* decoration, as on the tiles */
 .atom-head__text { min-width: 0; }
 .atom-title { margin: 0; font: 600 var(--t-title)/var(--lh-title) var(--font-serif); letter-spacing: -0.005em; overflow-wrap: anywhere; }
 .atom-counts { margin: 2px 0 0; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); font-variant-numeric: tabular-nums; }
 /* the hook: why it matters, first, in one line */
 .atom-hook { margin: 14px 0 0; font: 400 var(--t-lead)/var(--lh-lead) var(--font-serif); color: var(--ink); text-wrap: pretty; }
-.atom-src { position: relative; display: inline-flex; align-items: center; height: 24px; padding: 0 9px; vertical-align: 2px; border: 1px solid var(--line-strong);
-  border-radius: var(--r-pill); background: transparent; color: var(--ink-2); font: 600 13px/1 var(--font-sans); letter-spacing: 0.02em; }
-.atom-src::before { content: ""; position: absolute; inset: -10px -6px; } /* the tap area reaches 44 px */
-.atom-src:hover { color: var(--verdigris); border-color: var(--verdigris); }
+/* a quiet line: how to reach the sources, and the hook's own */
+.atom-tip { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; margin: 6px 0 0; font: 400 13px/18px var(--font-sans); color: var(--ink-2); }
+.atom-src { position: relative; border: 0; padding: 0; background: transparent; color: var(--verdigris); font: 600 13px/18px var(--font-sans); }
+.atom-src::before { content: ""; position: absolute; inset: -13px -6px; } /* the tap area reaches 44 px */
+.atom-src:hover { text-decoration: underline; }
 /* three ways to look, side by side in one row (also in Vietnamese): each as wide as its words, the rest shared */
 .atom-modes { display: flex; gap: 8px; margin: 14px 0 4px; }
 .atom-modes .ui-chip { flex: 1 1 auto; justify-content: center; padding: 0 10px; }
 /* what the chosen way shows: its controls first, then the plain caption */
 .atom-modebody { margin-top: 10px; }
 .atom-pre:empty { display: none; }
+.atom-pre__lead { margin: 0 0 10px; font: 400 var(--t-body)/var(--lh-body) var(--font-sans); color: var(--ink); text-wrap: pretty; }
 .atom-caption p { margin: 0 0 8px; font: 400 var(--t-body)/var(--lh-body) var(--font-sans); color: var(--ink); text-wrap: pretty; }
 .atom-caption p.atom-caption__quiet { font-size: 14px; line-height: 20px; color: var(--ink-2); }
 .atom-caption:empty { display: none; }
+.atom-caption p.atom-caption__surprise { padding-left: 10px; border-left: 3px solid #C8501E; } /* the surprise, marked in the newest cloud's ink */
 /* a word coloured like the ink it names: a swatch of the ink before it (the word keeps text contrast) */
 .atom-ink { white-space: nowrap; }
 .atom-ink__dot { display: inline-block; width: 0.62em; height: 0.62em; margin: 0 0.28em 0.06em 0.06em; border-radius: 50%; vertical-align: middle; }
@@ -84,10 +90,8 @@ body.diving .atom-ruler, body.diving .atom-hint-drag { opacity: 0; }
 .atom-pick .ui-chip { padding: 0 12px; gap: 3px; }
 .atom-pick__n { position: relative; top: -0.42em; font: 600 13px/1 var(--font-sans); opacity: 0.75; } /* the electron count, raised like 3d⁶ */
 /* which way it points: the label above one full-width row of turns, the gloss under it */
-.atom-pick__turns { display: block; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
-.atom-pick__turns > .atom-pick__shell { display: block; margin-bottom: 6px; }
-.atom-pick__turns .ui-chip { padding: 0 11px; }
-.atom-pick__axes { margin: 0; font-size: 13px; line-height: 18px; color: var(--ink-2); }
+.atom-pick__turns { margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--line); }
+.atom-pick [data-shell], .atom-pick__turns .ui-chip { min-width: 44px; justify-content: center; padding: 0 10px; }
 
 /* its light (shown in the kiln): the spectroscope band across the stage; the picked line in the card */
 .atom-band { position: absolute; z-index: 5; padding: 0; opacity: 1; animation: atom-band-in var(--d-kiln) var(--ease-in-out) both; }
@@ -96,6 +100,8 @@ body.diving .atom-ruler, body.diving .atom-hint-drag { opacity: 0; }
 .atom-band .atom-spec__axis span { font-size: 13px; }
 .atom-nowrap { white-space: nowrap; }
 .atom-light__title { margin: 6px 0 8px; font: 600 14px/1.35 var(--font-sans); }
+.atom-light__how { margin: 4px 0 0; font-size: 14px; line-height: 20px; color: var(--kiln-text-2); }
+.atom-spec__head { margin: 0 0 6px; font: 400 13px/18px var(--font-sans); color: var(--kiln-text-2); }
 .atom-spec__strip { position: relative; height: 64px; border-radius: 8px; cursor: pointer; }
 .atom-spec__strip:focus { outline: none; }
 .atom-spec__strip:focus-visible { outline: 2px solid #F0874F; outline-offset: 3px; }
@@ -125,15 +131,15 @@ body.diving .atom-ruler, body.diving .atom-hint-drag { opacity: 0; }
 .atom-step__btn .ui-btn__label { display: grid; justify-items: center; gap: 2px; }
 .atom-step__do { font: 600 15px/1.15 var(--font-sans); white-space: nowrap; }
 .atom-step__btn small { font: 400 13px/1.2 var(--font-sans); opacity: 0.82; white-space: nowrap; max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; }
-.atom-step__btn:disabled { opacity: 0.4; cursor: default; }
+.atom-step__btn:disabled { opacity: 1; cursor: default; background: transparent; color: var(--ink-3); border-color: var(--line); }
 .atom-step__read { text-align: center; min-width: 6.4em; }
 .atom-step__read b { display: block; font: 600 20px/1.2 var(--font-serif); font-variant-numeric: tabular-nums; }
 .atom-step__read span { font-size: 13px; line-height: 1.3; color: var(--ink-2); }
 /* the compact title once the card scrolls: the tile keeps its number, as on the card */
 .atom-bar { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .atom-bar b { font: 600 19px/1.1 var(--font-serif); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.atom-bar__tile { position: relative; flex: none; width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; font: 600 15px/1 var(--font-sans); color: var(--ink);
-  box-shadow: inset 0 -3px 0 rgba(28, 26, 23, 0.16); padding-top: 4px; }
+.atom-bar__tile { position: relative; flex: none; width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; font: 600 15px/1 var(--font-sans); color: var(--ink);
+  box-shadow: inset 0 -3px 0 rgba(28, 26, 23, 0.16); padding-top: 9px; }
 .atom-bar__tile small { position: absolute; top: 3px; left: 4px; font: 500 9px/1 var(--font-sans); } /* decoration, as on the tiles */
 
 /* ---- the kiln: the card turns dark like the forge's panel ------------------------------------------------ */
@@ -151,10 +157,13 @@ body.kiln .atom-src:hover, body.kiln .atom-v:hover { color: #F0874F; border-colo
 body.kiln .atom-v { border-bottom-color: var(--kiln-text-2); }
 body.kiln .atom-sheet .ui-chip { background: transparent; color: var(--kiln-text-2); border-color: rgba(242, 232, 218, 0.26); }
 body.kiln .atom-sheet .ui-chip:hover { color: var(--kiln-text); border-color: var(--kiln-text-2); }
-body.kiln .atom-sheet .ui-chip[aria-pressed="true"] { background: #F0874F; border-color: #F0874F; color: var(--kiln); }
+body.kiln .atom-sheet .ui-chip[aria-pressed="true"] { background: rgba(242, 232, 218, 0.14); border-color: var(--kiln-text); color: var(--kiln-text); }
 body.kiln .atom-sheet .ui-disclosure__summary { color: var(--kiln-text); }
 body.kiln .atom-sheet .ui-disclosure__chev { color: var(--kiln-text-2); }
-body.kiln .atom-sheet .ui-btn--primary { background: #F0874F; color: var(--kiln); }
+body.kiln .atom-sheet .ui-btn--primary { background: var(--kiln-text); color: var(--kiln); }
+body.kiln .atom-sheet .atom-step__btn:disabled { background: transparent; color: rgba(242, 232, 218, 0.38); border-color: rgba(242, 232, 218, 0.14); }
+body.kiln .atom-tip { color: var(--kiln-text-2); }
+body.kiln .atom-src { color: var(--kiln-text); }
 body.kiln .atom-sheet .ui-btn--secondary { background: transparent; color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.3); }
 body.kiln .atom-sheet :focus-visible { outline-color: #F0874F; }
 
@@ -162,27 +171,19 @@ body.kiln .atom-sheet :focus-visible { outline-color: #F0874F; }
   .atom-sheet { transition: opacity var(--d-card-in) var(--ease), transform var(--d-card-in) var(--ease), max-height var(--d-card-in) var(--ease), background-color var(--d-kiln) var(--ease-in-out), color var(--d-kiln) var(--ease-in-out); }
   .atom-sheet.is-scrolled .ui-sheet__body, .atom-sheet.is-scrolled.has-more .ui-sheet__body { -webkit-mask: linear-gradient(transparent 0, transparent 36px, #000 58px); mask: linear-gradient(transparent 0, transparent 36px, #000 58px); }
   .atom-sheet.has-more:not(.is-scrolled) .ui-sheet__body { -webkit-mask: none; mask: none; }
-  .atom-head { grid-template-columns: 44px 1fr; gap: 12px; padding-right: 50px; }
+  .atom-head { grid-template-columns: 44px 1fr; gap: 12px; padding-right: 0; }
   .atom-tile { width: 44px; height: 44px; font-size: 19px; border-radius: 10px; }
   .atom-title { font-size: var(--t-title-phone); line-height: var(--lh-title-phone); }
   .atom-hook { margin-top: 8px; font-size: 17px; line-height: 25px; }
   .atom-modes { gap: 6px; margin-top: 10px; }
   .atom-modes .ui-chip { padding: 0 7px; }
   .atom-modebody { margin-top: 8px; }
-  .atom-caption p { font-size: 15px; line-height: 22px; margin-bottom: 6px; }
+  .atom-caption p, .atom-pre__lead { font-size: 15px; line-height: 22px; margin-bottom: 6px; }
   .atom-step { gap: 6px; padding-top: 6px; }
   .atom-step__btn { padding: 6px 10px; }
   .atom-step__read { min-width: 5.6em; }
   .atom-step__read b { font-size: 18px; }
-  /* one cloud on a phone: all the clouds in one wrapping row (each says its shell to screen readers), then
-     the turns */
-  .atom-pick { display: flex; flex-wrap: wrap; gap: 6px; }
-  .atom-pick__row { display: contents; }
-  .atom-pick__row > .atom-pick__shell { display: none; }
-  .atom-pick__chips { display: contents; }
-  .atom-pick__turns { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; margin-top: 2px; padding-top: 8px; }
-  .atom-pick__turns > .atom-pick__shell { display: block; width: 100%; font-size: 14px; }
-  .atom-pick__axes { padding-left: 0; width: 100%; }
+  .atom-pick__row { grid-template-columns: 4.4em 1fr; gap: 8px; }
   .atom-band .atom-spec__strip { height: 60px; }
   .atom-light__detail { font-size: 15px; }
 }

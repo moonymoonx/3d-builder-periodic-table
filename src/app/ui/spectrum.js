@@ -24,6 +24,18 @@ const LO = 380, HI = 750;
 export function colourWord(nm) {
   return nm < 450 ? 'violet' : nm < 485 ? 'blue' : nm < 500 ? 'teal' : nm < 565 ? 'green' : nm < 590 ? 'yellow' : nm < 625 ? 'orange' : 'red';
 }
+/** The colour word for what is drawn: the hue of the displayed colour (so the word and its swatch agree;
+ *  spectral light lies outside sRGB, and 605–650 nm draw as red). rgb: display colour, any brightness. */
+export function hueWord(rgb) {
+  const [r, g, b] = rgb, mx = Math.max(r, g, b), d = mx - Math.min(r, g, b);
+  if (!(d > 0)) return 'red';
+  let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h = (h * 60 + 360) % 360;
+  return h < 8 || h >= 345 ? 'red' : h < 28 ? 'orangeRed' : h < 42 ? 'yellowOrange' : h < 75 ? 'yellow' : h < 105 ? 'yellowGreen'
+    : h < 150 ? 'green' : h < 200 ? 'teal' : h < 250 ? 'blue' : h < 300 ? 'violet' : 'purple';
+}
+/** The word for a line at a wavelength, from its drawn colour. */
+export const lineWord = nm => hueWord(lineColour(nm));
 /** The element's visible lines [[nm, strength]], one per wavelength. */
 export function uniqueLines(e) {
   if (e.lines.none) return [];
@@ -65,6 +77,19 @@ export function glowRGB(e) {
   return mx > 0 ? rgb.map(c => gammaEncode(c / mx)) : null;
 }
 
+/** The colour the shown lines alone would mix to (display sRGB, as glowRGB), to compare with the glow. */
+export function shownRGB(e) {
+  const { cmfFit: { v: fit }, srgb: { v: M } } = data();
+  let X = 0, Y = 0, Z = 0;
+  for (const [lam, I] of uniqueLines(e)) { const [a, b, c] = cmfAt(fit, lam); X += I * a; Y += I * b; Z += I * c; }
+  if (!(Y > 0)) return null;
+  let rgb = mul3(M, [X / Y, 1, Z / Y]);
+  const mn = Math.min(...rgb);
+  if (mn < 0) rgb = rgb.map(c => c - mn);
+  const mx = Math.max(...rgb);
+  return mx > 0 ? rgb.map(c => gammaEncode(c / mx)) : null;
+}
+
 export function spectrumStrip(e, { onPick } = {}) {
   const lines = looks(e);
   const W = 600, H = 84, x = lam => ((lam - LO) / (HI - LO)) * W;
@@ -95,11 +120,11 @@ export function spectrumStrip(e, { onPick } = {}) {
   const sel = s('rect', { x: -10, y: 2, width: 10, height: H - 4, rx: 5, class: 'atom-spec__sel', fill: 'none' });
   svg.append(sel);
   // colour words under the band, placed at the middle of their wavelength band
-  const words = [['violet', 415], ['blue', 467], ['green', 532], ['yellow', 577], ['red', 690]];
+  const words = [['violet', 415], ['blue', 467], ['green', 524], ['yellow', 584], ['red', 690]];
   const axis = h('div', { class: 'atom-spec__axis', 'aria-hidden': 'true' }, words.map(([w, lam]) => h('span', { style: { left: `${(((lam - LO) / (HI - LO)) * 100).toFixed(2)}%` } }, t('atom.col.' + w))));
   const band = h('div', { class: 'atom-spec__strip', tabindex: lines.length ? '0' : null, role: lines.length ? 'slider' : null,
     'aria-label': t('atom.light.tap'), 'aria-valuemin': lines.length ? String(Math.round(lines[0].lam)) : null, 'aria-valuemax': lines.length ? String(Math.round(lines[lines.length - 1].lam)) : null }, svg);
-  const el = h('div', { class: 'atom-spec' }, band, axis);
+  const el = h('div', { class: 'atom-spec' }, h('p', { class: 'atom-spec__head', 'aria-hidden': 'true' }, t('atom.light.bandHead')), band, axis);
   let cur = -1;
   function pick(i, focus = false, user = false) {
     if (!marks.length) return;
@@ -109,7 +134,7 @@ export function spectrumStrip(e, { onPick } = {}) {
     sel.setAttribute('x', String(Math.max(3, Math.min(W - 3 - w, x(m.lam) - w / 2)))); sel.setAttribute('width', String(w));
     marks.forEach((o, j) => o.g.classList.toggle('is-picked', j === cur));
     band.setAttribute('aria-valuenow', String(Math.round(m.lam)));
-    band.setAttribute('aria-valuetext', t('atom.light.line', { nm: fmtNum(m.lam, 1, { minDigits: 1 }), colour: t('atom.col.' + colourWord(m.lam)) }));
+    band.setAttribute('aria-valuetext', t('atom.light.line', { nm: fmtNum(m.lam, 1, { minDigits: 1 }), colour: t('atom.col.' + hueWord(m.hue)) }));
     if (focus) band.focus({ preventScroll: true });
     if (onPick) onPick(m, user);
   }
