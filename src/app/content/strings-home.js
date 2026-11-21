@@ -49,6 +49,7 @@ const EN = {
   'famCap.alkali': 'alkali metals', 'famCap.alkaline-earth': 'alkaline earth metals', 'famCap.transition': 'transition metals', 'famCap.post-transition': 'post-transition metals',
   'famCap.metalloid': 'metalloids', 'famCap.nonmetal': 'reactive nonmetals', 'famCap.halogen': 'halogens', 'famCap.noble-gas': 'unreactive gases',
   'famCap.lanthanide': 'lanthanides', 'famCap.actinide': 'actinides',
+  'famCap.noble-gas.solidPred': 'predicted to be a solid, unlike the other noble gases', 'famCap.noble-gas.solid': 'a solid, unlike the other noble gases',
 
   'card.label': 'Element', 'card.close': 'Close', 'card.back': 'All elements', 'card.prev': 'Previous element', 'card.next': 'Next element',
   'card.number': 'number {Z}',
@@ -150,6 +151,7 @@ const VI = {
   'famCap.alkali': 'kim loại kiềm', 'famCap.alkaline-earth': 'kim loại kiềm thổ', 'famCap.transition': 'kim loại chuyển tiếp', 'famCap.post-transition': 'kim loại sau chuyển tiếp',
   'famCap.metalloid': 'á kim', 'famCap.nonmetal': 'phi kim hoạt động', 'famCap.halogen': 'halogen', 'famCap.noble-gas': 'khí trơ',
   'famCap.lanthanide': 'họ lanthanide', 'famCap.actinide': 'họ actinide',
+  'famCap.noble-gas.solidPred': 'được dự đoán là chất rắn, không như các khí hiếm khác', 'famCap.noble-gas.solid': 'chất rắn, không như các khí hiếm khác',
 
   'card.label': 'Nguyên tố', 'card.close': 'Đóng', 'card.back': 'Tất cả nguyên tố', 'card.prev': 'Nguyên tố trước', 'card.next': 'Nguyên tố sau',
   'card.number': 'số {Z}',

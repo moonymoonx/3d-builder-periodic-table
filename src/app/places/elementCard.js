@@ -165,6 +165,11 @@ export function buildElementCard(ui, hooks) {
     const title = gdpt ? cap(e.names.viAlt[0]) : name(e);
     const alt = gdpt ? name(e) : altName(e);
     const famName = oneLine(t('fam.' + e.f.cat[0]));
+    // the family's caption, unless this element breaks its rule: oganesson, a noble gas predicted to be
+    // a solid at room temperature (our data: state at 20 °C), is no "unreactive gas"
+    const room = stateAt(e, ROOM);
+    const famCap = e.f.cat[0] === 'noble-gas' && room.s !== 'gas' && room.s !== 'unknown'
+      ? t(room.p ? 'famCap.noble-gas.solidPred' : 'famCap.noble-gas.solid') : t('famCap.' + e.f.cat[0]);
     const meta = [alt, `${e.sym} · ${t('card.number', { Z: e.Z })}`].filter(Boolean).join(' · ');
     const head = h('div', { class: 'card-head' },
       h('div', { class: 'card-tile', style: { background: swatch }, 'aria-hidden': 'true' }, h('small', null, String(e.Z)), e.sym),
@@ -172,9 +177,9 @@ export function buildElementCard(ui, hooks) {
         h('h2', { class: 'card-name' }, title),
         phone
           ? [h('p', { class: 'card-meta' }, `${meta} · `, h('span', { class: 'card-meta__fam' }, h('span', { class: 'ui-swatch', style: { background: swatch } }), famName)),
-            h('p', { class: 'card-meta card-meta__cap' }, t('famCap.' + e.f.cat[0]))]
+            h('p', { class: 'card-meta card-meta__cap' }, famCap)]
           : [h('p', { class: 'card-meta' }, meta),
-            h('p', { class: 'card-family' }, h('span', { class: 'ui-swatch', style: { background: swatch } }), h('span', null, famName), h('span', { class: 'card-family__cap' }, t('famCap.' + e.f.cat[0])))]));
+            h('p', { class: 'card-family' }, h('span', { class: 'ui-swatch', style: { background: swatch } }), h('span', null, famName), h('span', { class: 'card-family__cap' }, famCap))]));
     const lead = h('p', { class: 'card-line' }, lineFor(e));
     if (e.line) lead.append(' ', h('button', { type: 'button', class: 'card-src', title: t('card.sourceOf'), onclick: src(t('card.sourceOf'), e.line, e, lineFor(e)) }, t('card.sourceOf')));
     const F = factData(e);
