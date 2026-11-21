@@ -424,17 +424,40 @@ await step('atom place: one cloud picks a subshell and a turn; the link keeps it
   if (a !== '3d:1' || b !== '3p:1' || c.orbital !== '3p:all' || !/orb=3p%3Aall|orb=3p:all/.test(hash) || d.orbital !== null || !/All 3 3p clouds/.test(c.cap)) throw new Error(JSON.stringify({ a, b, c, hash, d }));
   return `${a} → ${b} → ${c.orbital}`;
 });
+await step('atom place: every shell count shows (on its globe or in the legend), a scale bar, a round nucleus factor', async () => {
+  const w = await page.evaluate(() => ({ rings: [...document.querySelectorAll('.lbl.atom-ring')].filter(l => l.style.visibility === 'visible').map(l => l.textContent),
+    legend: document.querySelector('.atom-legend')?.style.display !== 'none' ? document.querySelector('.atom-legend').textContent : '',
+    ruler: document.querySelector('.atom-ruler b')?.textContent || '', nuc: [...document.querySelectorAll('.lbl.atom-tag')].map(l => l.textContent).find(x => /nucleus/.test(x)) || '' }));
+  const all = w.legend ? /2 · 8 · 14 · 2/.test(w.legend) : ['2', '8', '14'].every(n => w.rings.includes(n)) && w.rings.some(x => /2 electrons/.test(x));
+  const f = Number((/drawn ([\d,]+)× bigger/.exec(w.nuc) || [])[1]?.replace(/,/g, ''));
+  if (!all || !/^\d[\d,]* pm$/.test(w.ruler) || !(f > 0) || !/^[125]0*$/.test(String(f))) throw new Error(JSON.stringify(w));
+  return `${w.ruler}; ${w.nuc.replace('nucleus', '')}; ${w.legend || w.rings.join(' ')}`;
+});
+await step('atom place: one cloud of carbon: turns x, y, z; a paper sheet where the 2p cloud is never found; uranium in plain words', async () => {
+  await page.evaluate(() => window.__pt.set({ Z: 6 })); await page.waitForTimeout(400);
+  await page.locator('.atom-modes [data-mode="cloud"]').click(); await page.waitForTimeout(500);
+  const c = await page.evaluate(() => ({ turns: [...document.querySelectorAll('.atom-pick__turns [data-m]')].map(b => b.textContent), cap: document.querySelector('.atom-caption').textContent,
+    sheets: (() => { let n = 0; window.__pt.E.active.scene.traverse(o => { if (o.isMesh && o.material.type === 'MeshBasicMaterial' && o.visible) n++; }); return n; })() }));
+  await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(300);
+  await page.evaluate(() => window.__pt.set({ Z: 92 })); await page.waitForTimeout(500);
+  const u = await A();
+  await page.evaluate(() => window.__pt.set({ Z: 26 })); await page.waitForTimeout(400);
+  if (c.turns.join(' ') !== 'x y z all 3' || c.sheets !== 1 || !/paper sheet between them/.test(c.cap) || !/one electron sits in 6d instead of 5f/.test(u.cap) || /→/.test(u.cap)) throw new Error(JSON.stringify({ c, u: u.cap }));
+  return u.cap.slice(u.cap.indexOf('Uranium breaks'), u.cap.indexOf('Uranium breaks') + 80);
+});
 await step('atom place: its light dims the room; the brightest line is described with its source; daylight returns', async () => {
   await page.locator('.atom-modes [data-mode="light"]').click(); await page.waitForTimeout(800);
-  const on = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), band: !!document.querySelector('.atom-band:not([hidden]) .atom-spec__strip'), detail: document.querySelector('.atom-light__detail')?.textContent || '' }));
-  if (!on.kiln || !on.band || !/387\.9 nm: violet light/.test(on.detail)) throw new Error(JSON.stringify(on));
+  const on = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), band: !!document.querySelector('.atom-band:not([hidden]) .atom-spec__strip'), detail: document.querySelector('.atom-light__detail')?.textContent || '',
+    glow: window.__pt.E.active.scene.children.some(o => o.isMesh && o.visible && o.material.uniforms && o.material.uniforms.uProf) }));
+  // round 2: the line that looks brightest (NIST transition rates × the eye's sensitivity), and the glow on
+  if (!on.kiln || !on.band || !on.glow || !/538\.3 nm: green light/.test(on.detail) || !/its brightest line to the eye/.test(on.detail)) throw new Error(JSON.stringify(on));
   await page.locator('.atom-light__detail .atom-v').click();
   const pop = await page.locator('.popover').textContent();
   await page.keyboard.press('Escape');
   if (!/NIST/.test(pop)) throw new Error('source: ' + pop.slice(0, 80));
   await page.locator('.atom-band .atom-spec__strip').focus(); await page.keyboard.press('End'); await page.waitForTimeout(150);
   const last = await page.locator('.atom-light__detail').textContent();
-  if (!/527\.0 nm: green light/.test(last)) throw new Error('arrow keys: ' + last);
+  if (!/561\.6 nm: green light/.test(last) || !/as bright to the eye as its brightest line/.test(last)) throw new Error('arrow keys: ' + last);
   await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(700);
   const off = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), band: !document.querySelector('.atom-band') || document.querySelector('.atom-band').hidden }));
   if (off.kiln || !off.band) throw new Error(JSON.stringify(off));
@@ -443,7 +466,7 @@ await step('atom place: its light dims the room; the brightest line is described
 await step('atom place: "About this atom" shows the arrangement and the nucleus, each value with its source', async () => {
   await page.locator('.atom-about .ui-disclosure__summary').click(); await page.waitForTimeout(200);
   const txt = await page.locator('.atom-facts').textContent();
-  if (!/\[Ar\] 3d⁶ 4s²/.test(txt) || !/26 protons, 30 neutrons/.test(txt) || !/iron-56/.test(txt) || !/about 5\.4 of 26 protons \(4s\)/.test(txt)) throw new Error(txt.slice(0, 160));
+  if (!/\[Ar\] 3d⁶ 4s²/.test(txt) || !/26 protons, 30 neutrons/.test(txt) || !/iron-56/.test(txt) || !/about 5\.4 of 26 protons \(4s\)/.test(txt) || !/3\.74 fm \(measured\)/.test(txt)) throw new Error(txt.slice(0, 240));
   await page.locator('.atom-facts .atom-v').first().click();
   const pop = await page.locator('.popover').textContent();
   await page.keyboard.press('Escape');
@@ -472,11 +495,12 @@ await step('atom place (phone): the sheet stands under the atom, the band above 
   const m = await page.evaluate(() => {
     const s = document.querySelector('.atom-sheet').getBoundingClientRect(), b = document.querySelector('.atom-band').getBoundingClientRect();
     const wide = [...document.querySelectorAll('#ui *')].filter(el => el.offsetParent && el.getBoundingClientRect().right > window.innerWidth + 1).map(el => el.className).slice(0, 3);
-    return { top: Math.round(s.top), h: Math.round(s.height), bandBottom: Math.round(b.bottom), bandW: Math.round(b.width), wide, scrollW: document.documentElement.scrollWidth };
+    const d = document.querySelector('.atom-light__detail').getBoundingClientRect(), f = document.querySelector('.atom-sheet .ui-sheet__foot').getBoundingClientRect();
+    return { top: Math.round(s.top), h: Math.round(s.height), bandBottom: Math.round(b.bottom), bandW: Math.round(b.width), wide, scrollW: document.documentElement.scrollWidth, detail: Math.round(d.bottom), foot: Math.round(f.top) };
   });
   await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(300);
   await page.setViewportSize({ width: 1600, height: 900 }); await page.waitForTimeout(500);
-  if (m.h > 844 * 0.62 || m.bandBottom > m.top || m.bandW > 390 || m.wide.length || m.scrollW > 390) throw new Error(JSON.stringify(m));
+  if (m.h > 844 * 0.62 || m.bandBottom > m.top || m.bandW > 390 || m.wide.length || m.scrollW > 390 || m.detail > m.foot) throw new Error(JSON.stringify(m));
   return `sheet ${m.h}px from ${m.top}px; band ${m.bandW}px wide`;
 });
 
