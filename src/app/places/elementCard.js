@@ -144,9 +144,11 @@ export function buildElementCard(ui, hooks) {
     const heatSub = e.lat.kind !== 'lattice' && st.s !== 'gas' ? t('card.heatCard') : st.s === 'gas' ? t('card.heatGas') : glows ? t('card.heatGlow') : t('card.heatSub');
     const partner = byZ(partnerOf(e, hooks.defaultPartner));
     const hook = pairHook(e, partner);
+    // the sample place words its own door (liquids, gases, honest cards); null keeps the forge's
+    const sd = hooks.sampleDoor ? hooks.sampleDoor(e) : null;
     return h('div', { class: 'card-doors' },
       door({ title: t('card.inside'), sub: t('card.insideSub', { n: nE, s: shells }), onClick: () => hooks.onDoor('atom') }),
-      door({ title: st.s === 'gas' ? t('card.heatGasTitle') : t('card.heat'), sub: heatSub, onClick: () => hooks.onDoor('sample') }),
+      door({ title: sd ? sd.title : st.s === 'gas' ? t('card.heatGasTitle') : t('card.heat'), sub: sd ? sd.sub : heatSub, onClick: () => hooks.onDoor('sample') }),
       door({ title: t('card.pair'), sub: hook ? t('card.pairSubHook', { name: inSentence(partner), hook }) : t('card.pairSub', { name: inSentence(partner) }), onClick: () => hooks.onDoor('compare', partner.Z) }));
   }
 
