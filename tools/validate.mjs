@@ -213,6 +213,9 @@ export function runValidation({ report = false, quiet = false } = {}) {
   const glowBad = Object.entries(GLOW).filter(([s, [, ok]]) => !(E(s).lines.glow && ok(...E(s).lines.glow)));
   check('colour: glow of H, He, Ne, Ar, Na, Hg matches the gas-discharge lamp colours (Wikipedia table)', glowBad.length === 0,
     Object.keys(GLOW).map(s => `${s} ${JSON.stringify(E(s).lines.glow)}`).join(' · ') + (glowBad.length ? ' — off: ' + glowBad.map(([s, [w]]) => `${s} (${w})`).join(', ') : ''));
+  // Nuclear charge radii measured where Angeli & Marinova (2013) have the isotope we show.
+  const au = E('Au').f.rNuc;
+  check('golden: Au-197 rms charge radius 5.4371 fm, measured (Angeli & Marinova 2013)', au[0] === 5.4371 && au[1] === 'iaea-radii' && !(au[2] || {}).p, JSON.stringify(au));
 
   // ---- 10. second-source cross-check (SPEC: 20 random elements x 5 fields) --------------------
   const TOL = { mp: (a, b) => Math.abs(a - b) <= Math.max(2, 0.01 * a), bp: (a, b) => Math.abs(a - b) <= Math.max(2, 0.01 * a), density: (a, b) => Math.abs(a - b) <= 0.02 * a, ie1: (a, b) => Math.abs(a - b) <= 0.005 * a, aw: (a, b) => Math.abs(a - b) <= 0.001 * a + 0.001 };
