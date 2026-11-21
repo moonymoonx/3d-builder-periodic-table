@@ -146,7 +146,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
           // a glowing metal's own light outshines its glaze; by day the unit cell's atoms are verdigris
           float lit = clamp(uGlowK * 2.0, 0.0, 1.0);
           diffuseColor.rgb *= 1.0 - 0.7 * lit;
-          if (vHi > 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, uCellCol, 0.85 * (1.0 - lit));
+          if (vHi > 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, vHi > 1.5 ? vec3(0.03, 0.028, 0.025) : uCellCol, 0.85 * (1.0 - lit));
         #endif`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
         #ifdef FORGE_GLOW
@@ -260,7 +260,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     if (FORGE) updateCluster();
     for (let i = 0; i < n; i++) {
       v3.set(P[3 * i], P[3 * i + 1], P[3 * i + 2]);
-      const sc = occl[i] ? radius * 0.22 : radius;
+      const sc = occl[i] ? 0 : radius;
       m4.compose(v3, q, sv.set(sc, sc, sc));
       atoms.setMatrixAt(i, m4);
       if (molN === 2) {
@@ -302,7 +302,8 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   const occl = new Uint8Array(MAX);
   function updateCluster() {
     occl.fill(0, 0, n); hiAttr.array.fill(0, 0, Math.max(n, 1));
-    const solid = !!spk && current && current.kind === 'solid' && n > 12;
+    // by day only: in the kiln the opened cell read as a fiery cavity (hero review r5)
+    const solid = !!spk && current && current.kind === 'solid' && n > 12 && kilnTo !== 1;
     if (spk) spk.rods.count = 0;
     if (!solid) { hiAttr.needsUpdate = true; return; }
     const lift0 = world.userData.lift || 0;

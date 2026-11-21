@@ -32,7 +32,8 @@ export function buildHeat(ui, hooks) {
   const fill = h('div', { class: 'heat-fill' });
   const ticks = h('div', { class: 'heat-ticks', 'aria-hidden': 'true' });
   const flags = h('div', { class: 'heat-flags', 'aria-hidden': 'true' });
-  const track = h('div', { class: 'heat-track' }, ticks, h('div', { class: 'heat-rail' }, fill), input, flags);
+  const knob = h('div', { class: 'heat-knob', 'aria-hidden': 'true' });
+  const track = h('div', { class: 'heat-track' }, ticks, h('div', { class: 'heat-rail' }, fill), knob, input, flags);
   const play = h('button', { type: 'button', class: 'ui-btn ui-btn--primary heat-play', onclick: () => toggle() });
   const room = h('button', { type: 'button', class: 'ui-btn ui-btn--quiet heat-room', onclick: () => { stop(); setT(ROOM); } });
   const panel = h('section', { class: 'heat-panel', hidden: true },
@@ -68,8 +69,8 @@ export function buildHeat(ui, hooks) {
     const placed = []; // {x, r, a, b}
     const fitsAt = (x, r, a, b) => placed.every(p =>
       (p.r !== r || b + 8 < p.a || a - 8 > p.b) && // same row: no overlap
-      (p.r <= r || x < p.a - 5 || x > p.b + 5) &&  // my stem passes below p's row: must not cross p's text
-      (p.r >= r || p.x < a - 5 || p.x > b + 5));   // p's stem passes below my row: my text must not cover it
+      (p.r >= r || x < p.a - 5 || x > p.b + 5) &&  // p sits below my row: my stem rises through it, so must miss p's text
+      (p.r <= r || p.x < a - 5 || p.x > b + 5));   // p sits above my row: its stem rises through mine, so my text must miss it
     const spots = new Map();
     const sorted = [...events].sort((a, b) => rank[a.key] - rank[b.key] || a.T - b.T);
     for (const x of sorted) {
@@ -118,7 +119,7 @@ export function buildHeat(ui, hooks) {
     if (wd !== lastWord) { lastWord = wd; replace(word, wd); }
     // the thermometer fills up to the temperature, coloured like heated metal along the way
     const clip = `inset(0 ${(100 - parseFloat(pct(state.T))).toFixed(1)}% 0 0 round 6px)`;
-    if (clip !== lastClip) { lastClip = clip; fill.style.clipPath = clip; }
+    if (clip !== lastClip) { lastClip = clip; fill.style.clipPath = clip; knob.style.left = pct(state.T); } // knob, fill and ticks share one scale
     const v = String(toV(state.T));
     if (input.value !== v && document.activeElement !== input) input.value = v;
     if (state.T <= lo + 0.5 && !playing) say(startCaption());

@@ -88,7 +88,7 @@ await step('"All numbers & sources" keeps every sourced field', async () => {
 });
 await step('lens chips: heat map follows the temperature, melting point raises columns', async () => {
   if (await page.locator('[data-back=home]').count()) { await page.locator('[data-back=home]').click(); await settle(); } // chips live on the table without a card
-  await page.locator('.hero-lenses .ui-chip', { hasText: 'Heat map' }).click(); await settle();
+  await page.locator('.hero-lenses .ui-chip', { hasText: 'Solid, liquid, gas' }).click(); await settle();
   await page.evaluate(() => window.__pt.set({ T: 2000 }));
   const a = await page.evaluate(() => ({ lens: window.__pt.state.lens, color: window.__pt.state.color, T: window.__pt.state.T, slider: !!document.querySelector('.hero-heat input[type=range]') }));
   await page.locator('.hero-lenses .ui-chip', { hasText: 'Melting point' }).click(); await settle();

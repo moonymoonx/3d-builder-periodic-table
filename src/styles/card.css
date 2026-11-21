@@ -60,5 +60,7 @@
   .card-name { font-size: 30px; }
   .card-meta { margin-top: 2px; }
   .card-line { font-size: 17px; line-height: 1.45; margin: 10px 0 0; }
-  .card-doors { gap: 6px; margin: 12px 0 34px; } /* the sheet's edge fade falls on empty paper, never on half a sentence */
+  .card-doors { gap: 6px; margin: 12px 0 4px; }
+  .card-more { display: block; width: 100%; min-height: 44px; margin: 0 0 18px; border: 0; background: transparent; color: var(--verdigris);
+    font: 600 var(--t-label)/1.2 var(--font-sans); text-align: center; }
 }

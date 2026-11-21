@@ -10,7 +10,7 @@ const EN = {
   'home.try': 'Try {name}', 'home.find': 'Find an element', 'home.findShort': 'Find', 'home.menu': 'Menu', 'home.lenses': 'Ways to look at the table',
   'home.loading': 'Setting out the elements…',
 
-  'lens.families': 'Families', 'lens.heat': 'Heat map', 'lens.mp': 'Melting point', 'lens.density': 'Heft', 'lens.rCov': 'Atom size', 'lens.ie1': 'Grip on electrons',
+  'lens.families': 'Families', 'lens.heat': 'Solid, liquid, gas', 'lens.mp': 'Melting point', 'lens.density': 'Heft', 'lens.rCov': 'Atom size', 'lens.ie1': 'Grip on electrons',
   'lens.more': 'More', 'lens.en': 'Electron pull', 'lens.year': 'Discovered', 'lens.abund': 'How common in Earth’s crust', 'lens.bp': 'Boiling point',
   'lens.ea': 'Electron appetite', 'lens.aw': 'Weight of one atom', 'lens.rVdw': 'Atom size when touching', 'lens.zeff': 'Felt pull of the nucleus',
   'lens.families.hook': 'Elements in the same family behave alike. Their names are written on the table.',
@@ -95,6 +95,7 @@ const EN = {
   'forge.card': '{T}: the crystal changes into a form too complex for us to draw from our sources.',
   'key.pred': 'striped: predicted', 'key.none': 'pale, flat: not known',
   'card.tapSource': 'Tap a value to see where it comes from.',
+  'card.more': 'More about {name}',
 
   'menu.shapes': 'Other shapes of the table', 'menu.s18': '18 columns (standard)', 'menu.s32': '32 columns (wide)', 'menu.helix': 'Helix — de Chancourtois, 1862',
   'menu.more': 'More', 'menu.sources': 'Sources & credits', 'menu.settings': 'Settings', 'menu.keys': 'Keyboard shortcuts', 'menu.share': 'Share this view',
@@ -108,7 +109,7 @@ const VI = {
   'home.try': 'Thử {name}', 'home.find': 'Tìm nguyên tố', 'home.findShort': 'Tìm', 'home.menu': 'Menu', 'home.lenses': 'Các cách nhìn bảng',
   'home.loading': 'Đang bày các nguyên tố…',
 
-  'lens.families': 'Họ nguyên tố', 'lens.heat': 'Bản đồ nhiệt', 'lens.mp': 'Nhiệt độ nóng chảy', 'lens.density': 'Độ nặng', 'lens.rCov': 'Kích thước nguyên tử', 'lens.ie1': 'Độ giữ electron',
+  'lens.families': 'Họ nguyên tố', 'lens.heat': 'Rắn, lỏng, khí', 'lens.mp': 'Nhiệt độ nóng chảy', 'lens.density': 'Độ nặng', 'lens.rCov': 'Kích thước nguyên tử', 'lens.ie1': 'Độ giữ electron',
   'lens.more': 'Thêm', 'lens.en': 'Lực kéo electron', 'lens.year': 'Năm phát hiện', 'lens.abund': 'Độ phổ biến trong vỏ Trái Đất', 'lens.bp': 'Nhiệt độ sôi',
   'lens.ea': 'Sức nhận thêm electron', 'lens.aw': 'Khối lượng một nguyên tử', 'lens.rVdw': 'Kích thước khi chạm nhau', 'lens.zeff': 'Lực hút hạt nhân cảm nhận được',
   'lens.families.hook': 'Các nguyên tố cùng họ có tính chất giống nhau. Tên các họ được ghi ngay trên bảng.',
@@ -193,6 +194,7 @@ const VI = {
   'forge.card': '{T}: tinh thể chuyển sang một dạng quá phức tạp để vẽ từ các nguồn của chúng tôi.',
   'key.pred': 'kẻ sọc: dự đoán', 'key.none': 'nhạt, phẳng: chưa có số liệu',
   'card.tapSource': 'Chạm vào một số liệu để xem nguồn.',
+  'card.more': 'Thêm về {name}',
 
   'menu.shapes': 'Các hình dạng khác của bảng', 'menu.s18': '18 cột (chuẩn)', 'menu.s32': '32 cột (dàn rộng)', 'menu.helix': 'Hình xoắn — de Chancourtois, 1862',
   'menu.more': 'Thêm', 'menu.sources': 'Nguồn & ghi công', 'menu.settings': 'Cài đặt', 'menu.keys': 'Phím tắt', 'menu.share': 'Chia sẻ góc nhìn này',

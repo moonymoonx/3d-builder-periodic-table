@@ -353,3 +353,18 @@ Gemini's cold round-4 review: clarity 4.5, ease 4.5, beauty 4.0, smoothness 4.0,
   - Removed per-event work: atoms are one unit sphere scaled per instance, so phase changes no longer rebuild geometry.
   - With four Claude sessions sharing the CPU (load 6–12), an alternating A/B against round 4 was inconclusive: round 4's own p95 swung between 33 and 150 ms from run to run.
 - **Not taken this round:** the gas's "frog eggs" look (§B8; the vapour now fills the vessel, as the shot waits for it to spread), the phone landing's empty bands (§F11) and the card's phone "across the table" asymmetry (§F12, by design in STYLE §5).
+
+## Hero round 6 (`reviews/hero-r5.md`), 21 Nov 2026
+Gemini's cold round-5 review: clarity 4.5, ease 4.0, beauty 4.0, smoothness 4.0, delight 4.0; verdict "already better on feel overall". moony asked for small, safe changes toward 4.5. The calls are Claude's.
+
+- **The thermometer's thumb lags its ticks and fill; the bulb looks bitten: accepted.**
+  - A drawn knob now sits exactly where the fill ends (same scale as the ticks). The native thumb stays invisible and only takes the drag.
+  - The bulb is drawn above the rail.
+  - Tick labels sit higher, clear of the knob.
+- **The bare "1,394 °C" tick: accepted, and it was a bug.** The rule that keeps labels off other ticks' stems had its two row tests inverted, so a label could be refused room it had (and in round 5 that is what left 1,394 °C bare). Fixed: it reads "1,394 °C re-stacks" again, and no label crosses a stem.
+- **The unit-cell cutaway is messy in the kiln and hard to count by day: accepted.**
+  - By day the atoms in front are removed cleanly (no leftover pebbles). The chosen atom is ink and the neighbours it touches are verdigris, so "one atom touching 8" can be counted.
+  - In the glowing kiln the cutaway is not shown (it read as a fiery cavity). The caption and the readout ("solid · 12 neighbours each") carry the 12.
+- **The phone card hides its details: accepted.** A "More about Iron ⌄" row under the doors pulls the sheet up.
+- **"Heat map" reads like a colour gradient: accepted.** The lens is now "Solid, liquid, gas" (VI "Rắn, lỏng, khí").
+- **Not taken:** min/max labels on the heat-map slider (the readout and the "Room temperature" button frame it), and FPS re-measurement this round (no rendering change; the machine is shared by four sessions, load ~17).

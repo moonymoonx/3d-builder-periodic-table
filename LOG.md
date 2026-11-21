@@ -186,3 +186,12 @@
   - **Checks:** smoke 28/28 twice, unit tests 17/17, validator ALL PASS, no console errors, index.html 1,476 KB.
   - **FPS:** measured while four Claude sessions shared the machine (load 6–12), so the numbers are noisy. An A/B of playback against round 4 was inconclusive (round 4 alone ranged 33–150 ms p95).
   - **Review set:** `/workspace/out/redesign/hero-r5/` (30 PNG, fps.txt, README.txt).
+- 2026-11-21 ~07:46 (Saigon) — **Hero round 6** after Gemini's cold round-5 review (`reviews/hero-r5.md`: clarity 4.5, ease 4.0, beauty 4.0, smoothness 4.0, delight 4.0; "already better on feel overall"). Small, safe changes, with reasons in DECISIONS.md › Hero round 6.
+  - **Thermometer:** a drawn knob synced with the fill and ticks; the bulb above the rail; labels clear of the knob.
+  - **Bug:** the label stem rule had its row tests inverted. Fixed: "1,394 °C re-stacks" is back.
+  - **Unit cell:** a clean cutaway by day (ink atom, verdigris neighbours); not shown in the kiln.
+  - **Phone card:** a "More about …" row.
+  - **Lens rename:** "Heat map" → "Solid, liquid, gas".
+  - **Checks:** unit tests 17/17, validator ALL PASS, smoke 28/28, no console errors.
+  - **Review set:** `/workspace/out/redesign/hero-r6/` (30 PNG, README.txt). The 12b screenshot timed out once at machine load ~17 and was retaken alone.
+  - **Not redone:** FPS and the repo screenshots (time and load); they are as of round 5.

@@ -106,8 +106,8 @@ if (opt('set') === 'hero') { // the redesign's hero slice: landing, table, first
     { name: '05-card-gold-phone', vp: P, hash: '', touch: true, settle: 1900, act: page => tapTouch(page, 79) },
     { name: '06-card-gold-all-numbers-desktop', vp: D, hash: '', settle: 1600, act: async page => { await click(page, 79); await page.waitForTimeout(400); await page.locator('.ui-disclosure__summary').click(); await page.locator('.ui-sheet__body').evaluate(el => { el.scrollTop = 420; }); await page.mouse.move(700, 120); } }, // pointer off the card: no hover colour in the shot
     { name: '07-card-oxygen-gas-desktop', vp: D, hash: '', settle: 1900, act: page => click(page, 8) },
-    { name: '08-lens-heat-1000C-desktop', vp: D, hash: '', settle: 1900, act: async page => { await chipBtn(page, 'Heat map'); await page.evaluate(() => window.__pt.set({ T: 1273.15 })); } },
-    { name: '08-lens-heat-1000C-phone', vp: P, hash: '', touch: true, settle: 1900, act: async page => { await chipBtn(page, 'Heat map'); await page.evaluate(() => window.__pt.set({ T: 1273.15 })); } },
+    { name: '08-lens-heat-1000C-desktop', vp: D, hash: '', settle: 1900, act: async page => { await chipBtn(page, 'Solid, liquid, gas'); await page.evaluate(() => window.__pt.set({ T: 1273.15 })); } },
+    { name: '08-lens-heat-1000C-phone', vp: P, hash: '', touch: true, settle: 1900, act: async page => { await chipBtn(page, 'Solid, liquid, gas'); await page.evaluate(() => window.__pt.set({ T: 1273.15 })); } },
     { name: '09-lens-melting-desktop', vp: D, hash: '', settle: 2200, act: page => chipBtn(page, 'Melting point') },
     { name: '09-lens-heft-phone', vp: P, hash: '', touch: true, settle: 2200, act: page => chipBtn(page, 'Heft') },
     { name: '10-zoom-in-desktop', vp: D, hash: '', settle: 1500, act: async page => { const p = await top(page, 27); await page.mouse.move(p.x, p.y); for (let i = 0; i < 6; i++) { await page.mouse.wheel(0, -240); await page.waitForTimeout(60); } } },
