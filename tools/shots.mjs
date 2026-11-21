@@ -131,6 +131,14 @@ if (opt('set') === 'hero') { // the redesign's hero slice: landing, table, first
   ];
 }
 
+// any other set lives in its own file, tools/shots-<set>.mjs, exporting cases({ SIZES }) (PARALLEL.md: each
+// view session keeps its review set there, so the sessions never edit the same lines)
+if (opt('set') && !['views', 'hero'].includes(opt('set'))) {
+  const f = path.join(ROOT, 'tools', `shots-${opt('set')}.mjs`);
+  if (!fs.existsSync(f)) throw new Error(`no such set: ${f}`);
+  cases = (await import(`file://${f}`)).cases({ SIZES });
+}
+
 // --serve: a tiny static server for index.html only, bound to this machine
 let BASE = `file://${ROOT}`, server = null;
 if (args.includes('--serve')) {

@@ -272,6 +272,94 @@ await step('forge: the iron card door dives into the crystal; 930 °C re-stacks 
   return cap;
 });
 
+// ---- patterns ----
+// Patterns across the table (places/patterns.js) and Side by side (places/compare.js), reached from the card.
+const opened = sel => page.waitForFunction(s => { const el = document.querySelector(s); return el && !el.hidden; }, sel, { timeout: 8000 });
+const beadAt = z => page.evaluate(n => { const r = document.querySelector(`.patterns-bead[data-z="${n}"]`).getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, z);
+await step('patterns: the card\'s "↗ across the table" opens a question-led chart; tungsten melts hottest', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 26, card: true, hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15, lang: 'en' }));
+  await page.waitForTimeout(600);
+  await page.locator('.card-across').first().click();
+  await opened('.patterns'); await settle();
+  const r = await page.evaluate(() => ({ view: window.__pt.state.view, prop: window.__pt.state.prop, q: document.querySelector('.patterns-q').textContent, a: document.querySelector('.patterns-a').textContent,
+    beads: [...document.querySelectorAll('.patterns-bead')].filter(b => +b.getAttribute('opacity') > 0.5).length, notes: [...document.querySelectorAll('.patterns-note')].filter(n => !n.hidden).length,
+    back: document.querySelector('[data-back=card]')?.textContent || '' }));
+  if (r.view !== 'trends' || r.prop !== 'mp' || !/tungsten/.test(r.q) || !/3,422 °C/.test(r.a) || r.beads < 100 || r.notes < 2 || !/Iron/.test(r.back)) throw new Error(JSON.stringify(r));
+  return `${r.beads} dots, ${r.notes} notes`;
+});
+await step('patterns: tap a dot to pick it; its value opens its source', async () => {
+  const b = await beadAt(79); await page.mouse.click(b.x, b.y); await page.waitForTimeout(250);
+  if (await Z() !== 79) throw new Error('Z=' + await Z());
+  const v = await page.locator('.patterns-pin .patterns-v').textContent();
+  await page.locator('.patterns-pin .patterns-v').click();
+  const txt = await page.locator('.popover').textContent();
+  await page.keyboard.press('Escape');
+  if (!/1,064 °C/.test(v) || !/Source/.test(txt) || !/1,337 K/.test(txt)) throw new Error(`${v} / ${txt.slice(0, 80)}`);
+  return v;
+});
+await step('patterns: switch pattern, join down the columns, "More" holds the rest', async () => {
+  await page.locator('.patterns-chips .ui-chip', { hasText: 'Grip on electrons' }).click(); await settle();
+  const q = await page.locator('.patterns-q').textContent();
+  const notes = await page.evaluate(() => [...document.querySelectorAll('.patterns-note')].map(n => n.textContent).join(' | '));
+  await page.getByRole('button', { name: 'Down each column' }).click(); await page.waitForTimeout(200);
+  const line = await page.evaluate(() => window.__pt.state.trendLine);
+  await page.locator('.patterns-more').click();
+  const items = await page.locator('.patterns-menu button').count();
+  await page.locator('.patterns-menu button', { hasText: 'Electron pull' }).click(); await settle();
+  const prop = await page.evaluate(() => window.__pt.state.prop);
+  await page.getByRole('button', { name: 'Across each row' }).click();
+  if (!/sodium/.test(q) || !/beryllium and nitrogen/.test(notes) || line !== 'group' || items !== 8 || prop !== 'en') throw new Error(JSON.stringify({ q, notes, line, items, prop }));
+  return notes;
+});
+await step('patterns: "See it on the table" opens the matching lens; back from a chart restores the card', async () => {
+  await page.locator('.patterns-totable').click(); await settle();
+  const a = await page.evaluate(() => ({ view: window.__pt.state.view, lens: window.__pt.state.lens, prop: window.__pt.state.prop, flat: window.__pt.state.flat, card: window.__pt.state.card }));
+  await page.evaluate(() => window.__pt.set({ view: 'trends', Z: 26, prop: 'density' })); await opened('.patterns'); await settle();
+  await page.locator('[data-back=card]').click(); await settle();
+  const b = await page.evaluate(() => ({ view: window.__pt.state.view, card: window.__pt.state.card, prop: window.__pt.state.prop, lens: window.__pt.state.lens }));
+  if (a.view !== 'table' || a.lens !== 'en' || a.prop !== 'en' || a.flat || a.card || b.view !== 'table' || !b.card || b.prop !== 'en') throw new Error(JSON.stringify({ a, b }));
+  await page.evaluate(() => window.__pt.set({ lens: 'families', color: 'cat', flat: true }));
+});
+await step('side by side: the iron card\'s door shows iron and gold, and says why', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 26, card: true, hideSel: false }));
+  await page.waitForTimeout(500);
+  await page.locator('.ui-door', { hasText: 'Side by side' }).click();
+  await opened('.compare-sheet'); await settle();
+  const r = await page.evaluate(() => ({ view: window.__pt.state.view, Z2: window.__pt.state.Z2, lead: document.querySelector('.compare-lead').textContent, values: document.querySelectorAll('.compare-row .compare-v:not(.is-none)').length,
+    names: [...document.querySelectorAll('.lbl.compare-name')].filter(l => l.style.visibility === 'visible').map(l => l.textContent) }));
+  await page.locator('.compare-row .compare-v').nth(2).click();
+  const src = await page.locator('.popover').textContent(); await page.keyboard.press('Escape');
+  if (r.view !== 'compare' || r.Z2 !== 79 || !/gold/.test(r.lead) || !/2\.4/.test(r.lead) || r.values < 10 || r.names.length !== 2 || !/Source/.test(src)) throw new Error(JSON.stringify(r));
+  return r.lead;
+});
+await step('side by side: curated pairs, swap, carbon\'s two forms, pick any two', async () => {
+  await page.locator('.compare-pairs .ui-chip', { hasText: 'Gold · Mercury' }).click(); await settle();
+  const lead = await page.locator('.compare-lead').textContent();
+  await page.locator('.compare-swap').click(); await settle();
+  const sw = await page.evaluate(() => [window.__pt.state.Z, window.__pt.state.Z2]);
+  await page.locator('.compare-pairs .ui-chip', { hasText: 'Graphite · diamond' }).click(); await settle();
+  const cc = await page.evaluate(() => ({ Z: window.__pt.state.Z, Z2: window.__pt.state.Z2, rows: [...document.querySelectorAll('.compare-row')].map(r => r.textContent).join(' | ') }));
+  await page.locator('.compare-pick').click();
+  await page.locator('.compare-find').fill('sod');
+  await page.locator('.compare-result').first().click(); await settle();
+  const z2 = await page.evaluate(() => window.__pt.state.Z2);
+  if (!/One more proton/.test(lead) || sw[0] !== 80 || sw[1] !== 79 || cc.Z !== 6 || cc.Z2 !== 6 || !/Neighbours per atom\D*3\D*4/.test(cc.rows) || z2 !== 11) throw new Error(JSON.stringify({ lead, sw, cc, z2 }));
+  return 'carbon: graphite 3, diamond 4 neighbours';
+});
+await step('side by side (VI): sentences use the familiar Vietnamese names; sizes drawn when touching', async () => {
+  await page.evaluate(() => window.__pt.set({ Z: 26, Z2: 29, lang: 'vi' })); await settle();
+  const lead = await page.locator('.compare-lead').textContent();
+  await page.evaluate(() => window.__pt.set({ lang: 'en' })); await settle();
+  await page.locator('.compare-sheet .ui-disclosure__summary').click();
+  await page.getByRole('button', { name: 'when touching' }).click(); await settle();
+  const r = await page.evaluate(() => window.__pt.state.cmpR);
+  await page.locator('[data-back=card]').click(); await settle();
+  const back = await page.evaluate(() => ({ view: window.__pt.state.view, card: window.__pt.state.card, Z: window.__pt.state.Z }));
+  if (!/Sắt/.test(lead) || !/đồng/.test(lead) || r !== 'vdw' || back.view !== 'table' || !back.card || back.Z !== 26) throw new Error(JSON.stringify({ lead, r, back }));
+  await page.evaluate(() => window.__pt.set({ cmpR: 'cov' }));
+  return lead;
+});
+
 for (const [ok, name, info] of results) console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`);
 console.log(errors.length ? `console errors:\n  ${errors.join('\n  ')}` : 'no console errors');
 await browser.close();
