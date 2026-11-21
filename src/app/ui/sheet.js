@@ -83,7 +83,7 @@ export function rowsFor(e) {
   if (zo) add('zeff', zo, { more: true, text: `${fmtNum(zo[0], 2)} (${zo[2].n.split(' ')[0]})` });
   if (f.awStd) add('awStd', f.awStd, { more: true, label: `${t('f.aw')} (CIAAW)` });
   const ln = e.lines;
-  const lv = ln.none ? [null, 'none', { n: ln.none }] : [ln.v.length, 'nist-lines', { n: `${ln.n} lines listed by NIST in 380–750 nm; the ${ln.v.length} strongest are used` }];
+  const lv = ln.none ? [null, 'none', { n: ln.none }] : [ln.v.length, 'nist-lines', { n: `${ln.n} lines listed by NIST in 380–750 nm; the ${ln.v.length} that look brightest are used (NIST transition probabilities or relative intensities × the eye\'s sensitivity)` }];
   // no "glow colour" swatch: mixed from 8 lines it contradicts known lamp colours (neon came out green)
   add('lines', lv, { more: true, text: ln.none ? t('lines.none') : t('lines.count', { n: ln.n, k: ln.v.length }) });
   return rows;

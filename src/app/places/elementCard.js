@@ -194,7 +194,8 @@ export function buildElementCard(ui, hooks) {
         const PATTERNS = new Set(['mp', 'bp', 'density', 'rCov', 'ie1', 'en', 'ea', 'aw', 'rVdw', 'zeff', 'abund', 'year']);
         for (const r of rowsFor(e)) dl.append(h('dt', null, r.label), h('dd', null, valueBtn({ key: r.key, text: r.label }, r.v, e, r.text), r.extra || null,
           PATTERNS.has(r.key) && r.v ? h('button', { type: 'button', class: 'card-across card-across--row', title: t('card.acrossLabel'), 'aria-label': t('card.acrossLabel'), onclick: () => hooks.onPattern(r.key) }, '↗') : null));
-        body.append(phone ? h('p', { class: 'card-hint' }, t('card.tapValue')) : null, dl); // desktop says it once, under the facts (review S2 #15)
+        if (phone) body.append(h('p', { class: 'card-hint' }, t('card.tapValue'))); // desktop says it once, under the facts (review S2 #15)
+        body.append(dl); // (Element.append(null) would print "null")
       },
     });
     const nav = h('div', { class: 'card-nav' },

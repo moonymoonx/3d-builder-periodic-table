@@ -634,3 +634,35 @@ The answer to `reviews/patterns-p2.md` (committed with the sample round-2 merge)
 2. **A Gallium · Mercury hook ("solid at 20 °C, melts at 29.8 °C"): accepted for its next round,** provided the number is computed from our data (PubChem's 302.91 K = 29.76 °C) and not typed into a string.
 
 **Checks:** unit tests 45/45, validator, smoke 46/46 twice; index.html 1,778 KB. Reshoot: `/workspace/out/redesign/patterns-r3-merged/`.
+
+## Merge review: `view-atom-r2` (the atom place, round 2), 21 Nov 2026
+The answer to `reviews/atom-a1.md`. Reviewed against STYLE.md and the PARALLEL.md checklist: passed. The session's decisions are in `NOTES-atom.md` › Round 2.
+
+**Data proposals: both accepted.**
+- **The visible lines that look brightest:**
+  - Neutral-atom lines, 380–750 nm.
+  - Lines from levels above the first ionization energy are left out (sodium's core-excited lines).
+  - Brightness: radiant power at kT = 1 eV from NIST's graded transition probabilities where at least 3 lines are graded within 18 %, else NIST's relative intensities, times the eye's ȳ.
+  - Still at most 8 lines per element (the NIST policy is unchanged).
+  - Neon now shows 585.2–640.2 nm (checked by moony); sodium keeps its D doublet and the 568 nm pair.
+- **Measured nuclear charge radii** (Angeli & Marinova 2013, via the IAEA LiveChart API; the raw file stays local and only single values are used):
+  - 89 elements take the measured radius of the isotope we show; the others keep the flagged estimate.
+  - Gold-197 is 5.4371 ± 0.0038 fm (checked by moony).
+  - **At the merge:** the raw file was taken from the atom worktree after checking its SHA-256 against the branch's manifest; no symlink was added.
+  - The data was rebuilt from the merged build, which unites these with master's NUBASE uncertainties and oganesson-294 as the confirmed kind.
+
+**Its questions (decided as moony suggested):**
+1. **The glow:** accepted. It is the CIE mix of the element's measured lines, checked against the gas-discharge lamp table. The caption now says so ("computed from its measured lines"). Krypton (magenta) and xenon (too blue) fail the lamp check, so the data carries no glow for them, and the validator checks that.
+2. **The card's note:** now "the 8 that look brightest (NIST transition probabilities or relative intensities × the eye's sensitivity)".
+3. **Widening the window to 780 nm** for potassium's 766/770 nm lines: accepted for its next round, with an honest label (near-infrared edge). It needs the NIST lines fetched again.
+
+**Other proposals:**
+- **`color.js` clips** a spectral colour's negative channels instead of adding white (640 nm was crimson): applied.
+- **The bundler registers only the first name of `export const A = 1, B = 2`:** `color.js`'s line was mine (atom merge). It is split now; a bundler check is scheduled with the kit pass.
+- **The kit sheet's rows under the compact bar:** scheduled for the kit pass, with the shared thermometer and tokens.
+
+**Also fixed at the merge (main session):** the desktop card's "All numbers & sources" began with a stray "null". `Element.append(null)` prints it, a bug from the shared fixes (cf98e90).
+
+**The gold/iron ratio** (moony asked whether it now reads 2.45): it still reads "2.4×". Our cited densities are PubChem's 19.282 and 7.874 g/cm³: 2.4488, which is 2.4 to one decimal (2.45 only to two). No change.
+
+**Checks:** unit tests 47/47, validator (two new checks, plus krypton/xenon), smoke 48/48 twice; index.html 1,795 KB.

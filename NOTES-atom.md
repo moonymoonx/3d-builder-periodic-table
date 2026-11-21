@@ -114,3 +114,103 @@ Decisions of the atom session (PARALLEL.md scope 1), for the main session to mov
 - **Q-atom-2:** the plan asked for d_xy (m = ±2) first; we show d_xz (m = +1) so it faces you. Fine?
 - **Q-atom-3:** heavy atoms (Slater Z_eff) show outer clouds several times their measured size. The About row says so. Is a better radial model wanted (it would change the validated hydrogen-like nodes and normalisation)?
 - **Q-atom-4:** Vietnamese wording of every `atom.*` string (moony).
+
+---
+
+# Round 2 (branch `view-atom-r2`, 21 Nov 2026): answering the cold review `reviews/atom-a1.md`
+Review scores: clarity 3.5, ease 3.5, beauty 4.0, smoothness 4.0, delight 3.5. Every factual claim was checked against its primary source before changing anything; where a claim was wrong or not ours, it says so here. Shared-file changes are proposals: `PROPOSALS-atom.md` › Round 2; the two data changes are separate "PROPOSAL:" commits.
+
+## Facts
+- **Neon's lines: the review is right, for a reason it half-guessed.** NIST's relative intensities come from different papers on different scales, and NIST's own transition probabilities show it.
+  - 540.06 and 585.25 nm share an upper level (152,970.7 cm⁻¹), so their ratio is fixed at about 1 : 63, yet both are listed as 20,000.
+  - 614.31 and 692.95 nm share another; NIST's rates make 692.9 nm about 0.55 of 614.3 nm, but it is listed 10× brighter.
+  - Ranking by eye sensitivity alone does not fix it: NIST's intensities still make the green 533–540 nm lines neon's brightest.
+  - **New rule** (proposal r2 #1): brightness from NIST's transition probabilities graded within 18 %, for a gas at 1 eV (the NIST LIBS tool's default), where at least 3 visible lines have them; otherwise NIST's intensities. Lines from levels above the ionization energy are dropped. Of the lines left, the 8 that look brightest (× V(λ)) are kept.
+  - Neon now shows 585.2, 588.2, 594.5, 607.4, 609.6, 614.3, 626.6 and 640.2 nm, with 640.2 the brightest to the eye.
+  - 650.65 nm (which the review listed) is 9th by this rule, not shown.
+- **Sodium:**
+  - The "cyan-green" and violet lines were 507.1 and 386–443 nm, from **core-excited** levels near 36 eV (2p⁵ 3s 3d), far above the 5.14 eV ionization energy. They are real NIST entries but never seen in a flame or lamp. Gone.
+  - The 568.3/568.8 nm pair is now shown with the D doublet (589.0/589.6 nm). The doublet is kept as two lines (lines within 0.5 nm merge, the D lines are 0.6 nm apart).
+- **Iron:** the near-ultraviolet stack (382–393 nm) gave way to the lines the eye sees best (495.8–561.6 nm, green). Its glow, from all 651 graded lines, is a blue-violet: iron's many violet lines carry most of its radiant power. The card says the glow is "all of its lines mixed".
+- **Glow colour:** computed from all the element's lines (CIE 1931 chromaticity) and checked against Wikipedia's gas-discharge lamp table in the validator.
+  - **Agree:** neon red-orange, sodium orange-yellow, argon violet, mercury light blue, helium salmon (white to orange), hydrogen magenta-pink.
+  - **Off:** krypton (magenta vs "grey off-white to green") and xenon (too saturated a blue). Real tubes are not in equilibrium, and their ion lines are not in our neutral-atom data.
+  - **Flames:** potassium's lilac flame is not reproduced. Its 766/770 nm lines are outside 380–750 nm, and flames are far cooler than 1 eV.
+  - This answers DECISIONS.md Q-atom-1 ("a sourced lamp colour would be needed"): the colour is computed from sourced lines by a stated method and checked against the sourced lamp colours. It is not a hand-picked colour.
+- **Gold's nucleus: the review is right.** Gold-197's rms charge radius is measured, 5.4371 ± 0.0038 fm (Angeli & Marinova 2013, via the IAEA LiveChart API, whose guide cites them).
+  - The data now uses measured radii for 89 elements (proposal r2 #2); 29 keep the flagged estimate.
+  - The card shows "5.44 fm (measured)" with a caption "radius of its charge".
+- **Not changed, with reasons:**
+  - **Oganesson "680 ms":** not in this place, and wrong in the review. It is NUBASE2020's oganesson-295 (680 ± 540 ms), not oganesson-294 (DECISIONS / main's memory).
+  - **"Iron/gold 2.4×":** the card's, and right for our PubChem densities.
+- **The glaze "overlapping through the nodal plane":**
+  - The surfaces never crossed. Each sign's lobes were already taken from ψ itself.
+  - The fat 90 % lobes come within a fraction of a Bohr radius of the plane, and from 21° above, the far lobe showed through the near one's translucent glaze.
+  - Now a **paper sheet** marks each flat surface where the cloud is zero (planes computed from the real harmonics, tested: ψ = 0 on each). The two inks read as two separate lobes, and the caption says "The paper sheet between them marks where it is never found". d_z² and the f clouds' cones are not drawn as sheets; their caption says "Where they meet, it is never found".
+
+## Clarity
+- **Hooks:**
+  - The clouds' hook is one line, "Cloud shapes decide how atoms join." (the plan's first half).
+  - The light's hook: "Every element glows its own colours: it is how we know what the stars are made of." Sources: NIST ASD, Wikipedia "Astronomical spectroscopy", and Wikipedia "Helium" (first seen as a yellow line in sunlight, 1868).
+  - The element-specific sentence is the caption right under the ways to look.
+- **Red and blue in the whole atom:**
+  - The newest cloud is now drawn in vermilion only, and the caption names it: "The newest went into a 3d cloud, drawn in ● vermilion".
+  - A swatch of the ink stands before the word; the word keeps text colour, because vermilion on the card would be 4.3 : 1.
+  - The two phase inks appear only in "One cloud", where they are explained.
+- **Shorthand removed:**
+  - Filling-order exceptions read "Uranium breaks the usual filling order: one electron sits in 6d instead of 5f." The configuration the usual order predicts is a note in "About this atom". Tested for every exception in the data.
+  - "(medium and high quality)" is gone. The glaze sentence shows only where the glaze is drawn.
+  - The turns are ordered x, y, z (p) and xy, xz, yz, x²−y², z² (d), with "Each is named by the axes its lobes lie along."
+  - Brightness reads "its brightest line to the eye" or "about 25 % as bright to the eye as its brightest line".
+- **"Drawn N× bigger" no longer twitches:** the nucleus is drawn a round factor bigger (1, 2 or 5 × a power of ten), changing only when it must (under 2.4 px, past the first shell or far from the wanted size).
+
+## Ease
+- **Reading order:** hook → the three ways to look → what that way starts with (one cloud's picker, its light's picked line, the whole atom's caption) → About.
+  - The ways to look are three equal columns, so Vietnamese never wraps.
+  - On phones the sheet grows to show the chosen way's controls (at most 60 %), and switching never scrolls half a hook under the title bar.
+  - One cloud on phones: every subshell in one wrapping row (each tells its shell to screen readers), then the turns. At 390 × 844 all are above the footer.
+- **Scrolling:**
+  - Once the card scrolls, rows fade out under the compact title instead of being cut mid-glyph.
+  - The compact title's tile keeps its number (26 Fe).
+  - The kiln title bar is solid.
+- **Labels:**
+  - They stand on a small paper ground (kiln ground in the dark), so rings and dots never cut through words.
+  - They turn to the other side of their point rather than come within 14 px of the stage edge.
+  - Shell counts too small to place are listed in a legend beside the scale bar ("Shells from the inside out: 2 · 8 · 14 · 2 electrons"), so nothing disappears silently on phones.
+- **Stage aids:** a scale bar (a round number of picometres at the nucleus's depth, "a picometre is a trillionth of a metre"), and once per visit "Drag to turn the atom · scroll or pinch to zoom" beside the back link, gone at the first drag or zoom.
+- **The band:**
+  - The focus ring shows for the keyboard only (`:focus-visible`; the review's shot had used the End key).
+  - The selection box stays inside the band's rounded ends.
+
+## Beauty and delight
+- **Shells as glass globes:** a fine ink line on each silhouette, a veil thickening toward the rim, the side away from the key light a touch deeper, and a soft highlight at the upper left. One camera-facing quad per shell (exact for a sphere), so it costs almost nothing. In the dark room only a faint warm rim remains.
+- **s clouds' glaze:** true spheres at the radii where |ψ| crosses the 90 % level (solved on the radial function), so 4s has no facets left.
+- **Its light:**
+  - The outer cloud glows like a lamp's gas. Its brightness across the cloud is the outer electrons' density summed along the line of sight (from their own radial functions), on a lamp's tone curve, with a faint aura; the brightest part whitens a little.
+  - It is one additive draw, like the forge's glow; the stipple stays alpha-blended (STYLE §6, §10). The nucleus is lit by the glow instead of being a dark hole.
+  - Picking a line sends a soft ring of its colour down onto the outer shell (an electron dropping to a lower level gives off that colour) while the glow leans toward it. Under a second; none with reduced motion.
+  - The band's slits glow with a whiter core, as bright as each line looks.
+  - Line colours clip instead of adding white, so deep reds stay red, not crimson (proposal r2 #3).
+
+## Built with
+- `views/atom.js`: glass globes, the glow, the ripple, sheets, s spheres, round factor, labels kept in, scale bar, legend, hint.
+- `places/atom.js`: order, hooks, picker, light card, About.
+- `ui/spectrum.js`: brightness to the eye, glow colour, clipped line colours, glowing slits.
+- `strings-atom.js`, `atom.css`, `tests/atom.test.mjs` (8 tests), smoke `// ---- atom ----` (10 steps), `tools/shots-atom.mjs` (29 states).
+
+## Checks (round 2, final build)
+- Unit tests 41/41 (`tests/atom.test.mjs`: 8 tests, 3 new: the lines and glow, nodal planes / s spheres / turn order, round factors and plain filling-order phrases). The validator passes, with 3 new checks: the brightest-looking lines, the glow against Wikipedia's lamp table, gold-197's measured radius.
+- Smoke: all steps pass. The `// ---- atom ----` block has 10 steps, 2 new: every shell count shown, the scale bar and round factor; carbon's x/y/z turns and its paper sheet; uranium in plain words. The light and About steps now check the brightest-looking line, the glow and "3.74 fm (measured)", and the phone step checks the picked line's readout above the footer.
+- No console errors in the 29 review states.
+- **FPS** (`/workspace/out/redesign/atom-r2/fps.txt`), all bracketed by table-landing controls:
+  - Automatic path (SwiftShader → low tier): all 29 states hold a 60 FPS median. Three were first measured while another session's job started (load 12) and were measured again beside 60 FPS controls.
+  - Desktop p95 is 33–67 ms, against the control's own 33 ms in the same minutes; phones hold 60 (58–60 average in a quiet minute).
+  - While things move (+ proton every 0.8 s, switching ways to look, picking lines with the ripple): a 60 FPS median on desktop and phone.
+  - Forced medium/high tiers (never picked on SwiftShader): 30–15 FPS median, faster than the table landing itself at those tiers on the same renderer (12 and 7.5 FPS).
+
+## Open questions (round 2)
+- **Q-atom-r2-1, the glow model:**
+  - The glow colour is computed from NIST transition probabilities at 1 eV where they are graded, and checked against Wikipedia's lamp table. It matches neon, sodium, argon, mercury, helium and hydrogen; krypton (magenta vs "grey off-white to green") and xenon (too saturated a blue) are off.
+  - Is this method acceptable in place of DECISIONS Q-atom-1's "a sourced lamp colour per element"? If not, the glow can fall back to the dots in the lines' colours only. Dropping proposal r2 #1 removes `lines.glow`, and the view then draws no glow.
+- **Q-atom-r2-2, the sheet's wording:** `sheet.js`'s emission-line note still says "the 8 strongest are used" (proposal r2 #1 asks to change it).
+- **Q-atom-r2-3, flame colours:** potassium's lilac flame comes from lines beyond 750 nm and from a cooler source than the model's 1 eV. Should the fetch window grow to 780 nm (the CIE limit)? It would not change the model's verdict for potassium.
