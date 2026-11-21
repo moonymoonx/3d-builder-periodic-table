@@ -585,7 +585,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     const elementChanged = element !== e.Z;
     if (elementChanged) { n = 0; bain = null; current = null; morph = null; }
     if (force || key2 !== phaseKey) {
-      const prevKind = lastKind;
+      const prevKind = lastKind, box0 = boxL[0];
       if (ss.kind === 'solid') {
         buildSolid(e, ss.phase, !elementChanged && prevKind === 'solid');
         atoms.visible = true;
@@ -602,6 +602,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       phaseKey = key2; lastKind = ss.kind; element = e.Z;
       current = { Z: e.Z, ...ss };
       if (elementChanged || force) frame();
+      else if (Math.abs(boxL[0] - box0) > 0.2 * box0) frame(); // the vessel changed size (a card melts into a liquid): glide to it
     }
     applyLook(e, ss.kind);
     writeMatrices();
