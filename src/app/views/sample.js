@@ -104,6 +104,15 @@ export function blackbody(T) {
   return out;
 }
 
+/** A soft round contact shadow (alpha falloff) for a specimen resting on the hearth. */
+function contactShadowTexture(size = 128) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), r = size / 2;
+  const grd = g.createRadialGradient(r, r, 0, r, r, r);
+  grd.addColorStop(0, 'rgba(255,255,255,0.9)'); grd.addColorStop(0.45, 'rgba(255,255,255,0.45)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
 /** Soft round glow (white, alpha falloff) for the halo around hot metal. */
 function haloTexture(size = 128) {
   const c = document.createElement('canvas'); c.width = c.height = size;
@@ -228,13 +237,17 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   atoms.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   world.add(atoms);
   // forge: a crystal we do not draw (a molecular or complex solid, radon's predicted crystal) still shows
-  // its building block: one molecule or one atom stands in the vessel as the specimen, slowly turning
-  // (elements never made in bulk keep an empty vessel: there is nothing to show)
+  // its building block: one molecule or one atom rests on the hearth in a vessel sized to it, slowly
+  // turning about the vertical, with a soft contact shadow (elements never made in bulk keep an empty
+  // vessel: there is nothing to show)
   const specimen = new THREE.InstancedMesh(atoms.geometry, atomMat, 8);
   specimen.count = 0; specimen.visible = false; specimen.frustumCulled = false;
   world.add(specimen);
-  let spec = null; // { n, T (template), bond, r, extent, y }
-  const specQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.55, 0.35, 0)), specAx = new THREE.Vector3(0.3, 1, 0.15).normalize();
+  let spec = null; // { n, T (template, resting), bond, r, foot, lo, hi, y, yaw }
+  const specQ = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0);
+  const specShadow = FORGE ? new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: TOK.shadow, map: contactShadowTexture(), transparent: true, opacity: 0.4, depthWrite: false })) : null;
+  if (specShadow) { specShadow.renderOrder = 1; specShadow.visible = false; world.add(specShadow); }
   // forge: a soft incandescent glow around every hot atom, the molten pool, the glow pooling on the
   // hearth, and spokes from one atom to the neighbours it touches
   let glow = null, pool = null, decal = null, spk = null, spokeC = -1, poolK = 0;
@@ -352,16 +365,30 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     const measured = room.s !== 'unknown' && !room.p; // its matter is real: only its crystal is not drawn
     if (!(ss.card === 'molecular' || ss.card === 'complex' || (ss.card === 'predicted' && measured))) return null;
     const rc = e.f.rCov?.[0] || e.f.rVdw?.[0] * 0.6 || 120, gasN = e.ph.gas ? e.ph.gas[0] : 1;
-    if (ss.card === 'molecular' && gasN > 1) { // one molecule, as the fluid draws them
-      const T = molTemplate(gasN), bond = 2 * rc, r = rc * 0.95;
-      return { n: gasN, T, bond, r, extent: 2 * Math.max(...T.map(p => Math.hypot(p[0], p[1], p[2]))) * bond + 2 * r };
+    let sp;
+    if (ss.card === 'molecular' && gasN > 1) { // one molecule, as the fluid draws them, at rest: a pair lying
+      // down, the tetrahedron on a face, a ring standing on its rim (lying flat, seen from above the hearth,
+      // its far atoms hid its hole); the turning shows the ring face-on, then its crown edge-on
+      let T = molTemplate(gasN), q0 = null;
+      if (gasN === 4) q0 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 1, 1).normalize(), UP);
+      else if (gasN > 4) q0 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+      if (q0) T = T.map(p => new THREE.Vector3(...p).applyQuaternion(q0).toArray());
+      sp = { n: gasN, T, bond: 2 * rc, r: rc * molR(gasN) };
+    } else { // one atom, the liquid's size
+      const rv = e.f.rVdw?.[0] || 2 * rc;
+      sp = { n: 1, T: [[0, 0, 0]], bond: 0, r: 0.57 * (e.f.cat[0] === 'noble-gas' ? 1.6 * rv : 2.2 * rc) };
     }
-    const rv = e.f.rVdw?.[0] || 2 * rc, r = 0.57 * (e.f.cat[0] === 'noble-gas' ? 1.6 * rv : 2.2 * rc); // one atom, the liquid's size
-    return { n: 1, T: [[0, 0, 0]], bond: 0, r, extent: 2 * r };
+    // its reach: across the floor (it turns about the vertical, so a circle) and from bottom to top
+    sp.foot = Math.max(...sp.T.map(p => Math.hypot(p[0], p[2]))) * sp.bond + sp.r;
+    sp.lo = Math.min(...sp.T.map(p => p[1])) * sp.bond - sp.r; sp.hi = Math.max(...sp.T.map(p => p[1])) * sp.bond + sp.r;
+    sp.yaw = 0.6; // as the camera's bearing: a ring starts face-on, a pair across the view
+    return sp;
   }
   function writeSpecimen() {
     specimen.visible = !!spec;
+    if (specShadow) specShadow.visible = !!spec;
     if (!spec) { specimen.count = 0; return; }
+    specQ.setFromAxisAngle(UP, spec.yaw);
     for (let k = 0; k < spec.n; k++) {
       v3.set(spec.T[k][0] * spec.bond, spec.T[k][1] * spec.bond, spec.T[k][2] * spec.bond).applyQuaternion(specQ);
       v3.y += spec.y;
@@ -696,6 +723,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       // by day the glass edges catch more light on the cream paper; in the kiln they stay as they were
       glassMat.uniforms.uCol.value.copy(INK).lerp(KILN_TEXT, k); glassMat.uniforms.uK.value = 0.34 - 0.2 * k; glassMat.uniforms.uBase.value = 0.022 - 0.016 * k;
       glassFoot.material.opacity = 0.32 * (1 - k);
+      if (specShadow) specShadow.material.opacity = 0.4 * (1 - k);
       // the unit cell: verdigris atoms by day; warm-gold rims once the metal glows
       boxMat.color.copy(INK).lerp(KILN_TEXT, k); cellMat.color.copy(boxMat.color);
     } else {
@@ -733,9 +761,14 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         atoms.visible = false; cellLines.visible = false;
         if (spec) { // a vessel sized to the specimen; the fluid it froze from is forgotten (a melt starts afresh)
           n = 0;
-          const side = Math.max(600, spec.extent * 2.6); // the specimen fills about two fifths of the vessel's width
+          // about half the vessel's width, like an object in a museum case; it rests on the hearth
+          const side = Math.max((spec.n === 1 ? 5 : 4) * spec.foot, 1.9 * (spec.hi - spec.lo)); // a lone atom: two fifths
           setBox([side, side, side]);
-          spec.y = -side / 2 + side * 0.42; world.userData.lift = spec.y;
+          spec.y = -side / 2 - spec.lo; world.userData.lift = spec.y;
+          if (specShadow) { // under it, as wide as it is, just above the glaze
+            const w = 2 * spec.foot * 1.35;
+            specShadow.scale.set(w, 1, w); specShadow.position.set(0, -side / 2 + side * 0.003, 0);
+          }
         } else if (n === 0 || elementChanged) setBox([1200, 1200, 1200]);
       }
       if (!elementChanged && prevKind && prevKind !== ss.kind && hooks.onEvent) hooks.onEvent(prevKind, ss.kind, e);
@@ -813,7 +846,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         writeMatrices();
       }
       if (pool) pool.mesh.visible = false; // the melt is drawn as its atoms (continuity from solid to gas)
-      if (spec && !state.reduced) { specQ.premultiply(dq.setFromAxisAngle(specAx, dt * 0.35)); writeSpecimen(); return true; }
+      if (spec && !state.reduced) { spec.yaw += dt * 0.35; writeSpecimen(); return true; }
       return atoms.visible && !state.reduced;
     },
     current: () => current,
