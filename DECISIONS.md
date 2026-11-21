@@ -595,3 +595,27 @@ The sample session's answer to `reviews/sample-s1.md`, committed with this merge
 3. **The card's §6 items:**
    - The desktop card now gives the source hint, as phones do.
    - "Half-metals" keeps its break at the compound's own hyphen (like "Salt-makers"; the staircase is too narrow for one line at 14 px).
+
+## Shared sample fixes after the cold review `reviews/sample-s2.md`, 21 Nov 2026
+The shared items of the review, done by the main session on master. The sample-scope items went to `view-sample-r3`, which also commits the review.
+- **(A) The hearth floor:**
+  - **Cause:** the glass vessel's flat bottom face lay exactly on the hearth's top face and z-fought with it. That gave diagonal striping and a seam along the face's diagonal in the empty oganesson vessel; on a phone's steeper view the same diagonal read as the "hard horizontal band" on a glowing hearth.
+  - **Fix:** the vessel now stands open on the hearth (the flat bottom triangles are dropped; its rounded foot stays), and the decals lying on the hearth get a polygon offset.
+- **(B) The forge, as the sample place:**
+  - 20 °C in ink (ember once heated);
+  - "Room temperature" only once away from it ("Back to 20 °C" on phones);
+  - "◀ Cool it" once heated: a sweep back down that stops just past each event, primary at the top of the scale;
+  - "About this sample ›": a kit sheet with the state now, melting and boiling points, the stacking pattern, the box's side (with where it was measured), the neighbours and their distance, and how far atoms shake (Lindemann), every value tappable for its source, plus a note on what the drawing slows down. The router frames the crystal beside it, and Escape closes it first.
+
+  The sample place's own About stays in its file (`view-sample-r3` is open). The two are unified with the kit's thermometer.
+- **(C) A metal's finish belongs to the element, not its state** (STYLE.md §6):
+  - Mercury, the one metal liquid at room temperature (from our data), is quicksilver frozen, liquid or boiling. Its unit cell's atoms take the glaze, so the ink atom and its verdigris neighbours stay legible.
+  - Every other metal keeps its family glaze when it melts or boils: no snap from one finish to another, in the sample place or the forge.
+- **(D) The forge's vapour:**
+  - About a quarter of the atoms are drawn (was 40 %).
+  - Each keeps its own small glow (3.2× its radius, was 7.5×), and the bead's emission and core whitening are lower in a gas, so every atom stays a sphere: no white blob, no heavy bloom (STYLE §6, §10).
+  - It is also cheaper: p95 16.8 ms at 2,950 °C.
+- **(E) The card:**
+  - A predicted state reads "Predicted at 20 °C" with the value in italics on phones (the strip's `font` shorthand had reset the italics).
+  - The desktop card says "Tap a value…" once, under the facts, no longer again inside "All numbers & sources".
+- **Checks:** unit tests 45/45, validator, smoke 46/46 twice (a new forge-chrome step). Targeted shots in `/workspace/out/redesign/shared-fixes/` (`tools/shots-shared.mjs`).

@@ -50,6 +50,7 @@
 .card-strip__cell:first-child { padding-left: 0; }
 .card-strip__label { font-size: var(--t-caption); line-height: 17px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-strip .card-v { font: 600 17px/1.3 var(--font-serif); align-self: flex-start; max-width: 100%; white-space: nowrap; }
+.card-strip .card-v.is-est { font-style: italic; } /* the shorthand above would reset a prediction's italics */
 .card-notes { margin: 2px 0 10px; }
 .card-hint--strip { margin: 6px 0 0; }
 .card-hint--list { margin: 4px 0 12px; }

@@ -23,7 +23,8 @@ body.kiln .heat-panel { background: rgba(30, 23, 17, 0.88); color: var(--kiln-te
 @keyframes heat-say { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .heat-row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 22px; }
 .heat-readbox { min-width: 7.2em; }
-.heat-read { font: 600 36px/1.05 var(--font-serif); color: var(--ember); font-variant-numeric: tabular-nums; }
+.heat-read { font: 600 36px/1.05 var(--font-serif); color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.heat-read.is-hot { color: var(--ember); } /* ink at room temperature, ember once heated (as in the sample place) */
 body.kiln .heat-read { color: #F0874F; }
 .heat-word { margin-top: 3px; font: 500 13px/1.35 var(--font-sans); color: var(--ink-2); }
 body.kiln .heat-word { color: var(--kiln-text-2); }
@@ -70,16 +71,46 @@ body.kiln .heat-tick small { color: var(--kiln-text-2); }
 body.kiln .heat-flag--events b { color: var(--kiln-text); }
 body.kiln .heat-flag { color: var(--kiln-text-2); }
 .heat-actions { display: flex; justify-content: center; gap: 10px; }
-body.kiln .heat-play { background: #F0874F; color: var(--kiln); }
+body.kiln .heat-actions .ui-btn--primary { background: #F0874F; border-color: #F0874F; color: var(--kiln); }
+body.kiln .heat-actions .ui-btn--secondary { background: transparent; color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.3); }
 body.kiln .heat-room { color: #F0A070; }
 body.kiln .heat-room:hover { background: rgba(242, 232, 218, 0.08); }
 .heat-room:disabled { opacity: 0.45; cursor: default; }
+/* "About this sample ›" under the readout, as in the sample place */
+.heat-readbox { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.heat-about { position: relative; margin: 4px 0 0 -2px; padding: 0 2px; border: 0; background: transparent; color: var(--verdigris); font: 600 14px/1.3 var(--font-sans); cursor: pointer; white-space: nowrap; }
+.heat-about::before { content: ""; position: absolute; inset: -13px -8px; } /* the tap area reaches 44 px */
+.heat-about::after { content: " ›"; }
+.heat-about[aria-expanded="true"]::after { content: " ‹"; }
+.heat-about:hover { text-decoration: underline; text-underline-offset: 2px; }
+body.kiln .heat-about { color: #F0A070; }
+/* the About sheet: plain rows, every value tappable for its source */
+.heat-about__title { margin: 0 0 8px; padding-right: 44px; font: 600 var(--t-title)/var(--lh-title) var(--font-serif); font-size: 22px; line-height: 28px; }
+.heat-facts { margin: 4px 0 8px; display: grid; grid-template-columns: minmax(118px, 42%) 1fr; }
+.heat-facts dt, .heat-facts dd { margin: 0; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+.heat-facts dt { color: var(--ink-2); padding-right: 10px; }
+.heat-sub { display: block; margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+.heat-v { position: relative; border: 0; background: transparent; padding: 0; color: inherit; font: inherit; font-weight: 600; text-align: left; border-bottom: 1px dotted var(--ink-3); cursor: pointer; }
+.heat-v::before { content: ""; position: absolute; inset: -11px -4px; }
+.heat-v:hover { color: var(--verdigris); border-bottom-color: var(--verdigris); }
+.heat-v.is-est { font-style: italic; }
+.heat-v.is-none { border: 0; color: var(--ink-3); font-weight: 400; font-style: italic; cursor: default; }
+.heat-hint, .heat-note { margin: 6px 0; font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+body.kiln .heat-sheet { background: rgba(30, 23, 17, 0.9); color: var(--kiln-text); box-shadow: none; }
+body.kiln .heat-sheet .ui-sheet__bar, body.kiln .heat-sheet .ui-sheet__foot { background: rgba(30, 23, 17, 0.98); border-color: rgba(242, 232, 218, 0.12); }
+body.kiln .heat-sheet .ui-sheet__close { background: rgba(242, 232, 218, 0.08); color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.18); box-shadow: none; }
+body.kiln .heat-sheet .ui-sheet__handle span { background: rgba(242, 232, 218, 0.28); }
+body.kiln .heat-facts dt, body.kiln .heat-sub, body.kiln .heat-hint, body.kiln .heat-note { color: var(--kiln-text-2); }
+body.kiln .heat-facts dt, body.kiln .heat-facts dd { border-color: rgba(242, 232, 218, 0.12); }
+body.kiln .heat-v { border-bottom-color: var(--kiln-text-2); }
+body.kiln .heat-v:hover { color: #F0874F; border-bottom-color: #F0874F; }
+.heat-room__short { display: none; }
 
 @media (max-width: 760px) {
   .heat-panel { width: calc(100% - 16px); bottom: calc(8px + env(safe-area-inset-bottom)); padding: 12px 14px 10px; border-radius: 16px; gap: 6px; }
   .heat-caption { font-size: 16px; min-height: 4.4em; }
   .heat-row { grid-template-columns: 1fr; gap: 2px; }
-  .heat-readbox { display: flex; align-items: baseline; gap: 10px; }
+  .heat-readline { display: flex; align-items: baseline; gap: 10px; }
   .heat-read { font-size: 30px; }
   .heat-track { margin: 0 6px; }
 }

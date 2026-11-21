@@ -106,7 +106,7 @@ export function buildElementCard(ui, hooks) {
     // 1. state at room temperature
     const stV = [st.s, 'calc', { n: getLang() === 'vi' ? 'suy ra từ nhiệt độ nóng chảy / sôi ở 1 atm' : 'from the 1-atm melting and boiling points', p: st.p ? 1 : undefined }];
     out.push(st.s === 'unknown' ? { label: t('card.state'), short: t('card.sState'), none: t('card.notKnown') }
-      : { label: t('card.state'), short: t('card.sState'), text: cap(t('state.' + st.s)) + (st.p ? ` (${t('card.pred')})` : ''), sText: cap(t('state.' + st.s)), v: stV, src: t('f.state') });
+      : { label: t('card.state'), short: t(st.p ? 'card.sStatePred' : 'card.sState'), text: cap(t('state.' + st.s)) + (st.p ? ` (${t('card.pred')})` : ''), sText: cap(t('state.' + st.s)), v: stV, src: t('f.state') });
     // 2. melting (gases: where they turn liquid; some never melt or never freeze)
     if (ph.noSolid) {
       out.push({ label: t('card.melts'), text: t('card.neverFreezes'), v: ph.noSolid, src: t('f.mp'), note: t('card.boilsAt', { bp: degC(ph.bp[0]) }),
@@ -194,7 +194,7 @@ export function buildElementCard(ui, hooks) {
         const PATTERNS = new Set(['mp', 'bp', 'density', 'rCov', 'ie1', 'en', 'ea', 'aw', 'rVdw', 'zeff', 'abund', 'year']);
         for (const r of rowsFor(e)) dl.append(h('dt', null, r.label), h('dd', null, valueBtn({ key: r.key, text: r.label }, r.v, e, r.text), r.extra || null,
           PATTERNS.has(r.key) && r.v ? h('button', { type: 'button', class: 'card-across card-across--row', title: t('card.acrossLabel'), 'aria-label': t('card.acrossLabel'), onclick: () => hooks.onPattern(r.key) }, '↗') : null));
-        body.append(h('p', { class: 'card-hint' }, t('card.tapValue')), dl);
+        body.append(phone ? h('p', { class: 'card-hint' }, t('card.tapValue')) : null, dl); // desktop says it once, under the facts (review S2 #15)
       },
     });
     const nav = h('div', { class: 'card-nav' },

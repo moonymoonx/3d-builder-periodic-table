@@ -171,6 +171,28 @@ await step('sample view: "Heat it" raises the temperature', async () => {
   return `T rose to ${Math.round(T)} K`;
 });
 
+await step('forge chrome as the sample place\'s: ink 20 °C, no room button there; hot: ◀ Cool it and Room temperature; About this sample with sources; Escape closes it', async () => {
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }); p.openCard(26); });
+  await page.waitForTimeout(700);
+  await page.locator('.ui-door', { hasText: 'Hold a piece' }).click();
+  await page.waitForFunction(() => window.__pt.state.view === 'heat', null, { timeout: 8000 });
+  await page.waitForTimeout(1400);
+  const btns = () => page.evaluate(() => [...document.querySelectorAll('.heat-actions button')].map(b => b.textContent.trim()));
+  const cold = await btns(), hotRead = await page.evaluate(() => document.querySelector('.heat-read').classList.contains('is-hot'));
+  await page.evaluate(() => window.__pt.set({ T: 1873.15 })); await page.waitForTimeout(600);
+  const hot = await btns();
+  await page.locator('.heat-about').click(); await page.waitForTimeout(500);
+  const rows = await page.locator('.heat-sheet .heat-facts').textContent();
+  await page.locator('.heat-sheet .heat-v').nth(1).click(); await page.waitForTimeout(200);
+  const pop = await page.locator('.popover').textContent();
+  await page.keyboard.press('Escape'); await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+  const st = await page.evaluate(() => ({ view: window.__pt.state.view, about: window.__pt.heat.aboutOpen() }));
+  await page.locator('[data-back=card]').click(); await page.waitForTimeout(900);
+  if (cold.join('|') !== 'Heat it ▶' || hotRead) throw new Error('at 20 °C: ' + JSON.stringify({ cold, hotRead }));
+  if (!/Cool it/.test(hot.join('|')) || !/Room temperature/.test(hot.join('|'))) throw new Error('hot: ' + hot.join('|'));
+  if (!/Melts at\D*1,538/.test(rows) || !/Source/.test(pop) || st.view !== 'heat' || st.about) throw new Error(JSON.stringify({ rows: rows.slice(0, 120), st }));
+  return `${cold.join('|')} → ${hot.join('|')}`;
+});
 // (four legacy trends/compare steps retired at the patterns merge: the // ---- patterns ---- block covers them)
 await step('forge: the iron card door dives into the crystal; 930 °C re-stacks to 12 neighbours; back returns to the card', async () => {
   await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }); p.openCard(26); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes

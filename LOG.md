@@ -240,3 +240,12 @@
   - **Checks:** unit tests 45/45, validator ALL PASS, smoke 45/45 twice, no console errors, index.html 1,762 KB.
   - **Reshoot:** `/workspace/out/redesign/sample-r2-merged/` (34 sample states + hero spot checks).
   - **FPS:** not re-measured at the merge (usage limit). The session's own run (`sample-r2/fps.txt`) has all 34 states at a 60 FPS median.
+- 2026-11-21 ~11:16 (Saigon) — **Shared sample fixes** after `reviews/sample-s2.md` (on master; the sample session takes the rest on `view-sample-r3`). Details in DECISIONS.md › Shared sample fixes.
+  - **Hearth floor:** the glass's floor z-fought the hearth (striping, seam, the phone's band); the vessel now stands open.
+  - **Forge chrome:** matches the sample place's (ink 20 °C, room button only when away, ◀ Cool it, About this sample).
+  - **Mercury:** quicksilver in every state; STYLE.md §6 records the rule.
+  - **Vapour:** a sparse vapour of spheres.
+  - **Card:** oganesson's predicted state cue on phones; one source hint on the desktop card.
+  - **Checks:** unit tests 45/45, validator ALL PASS, smoke 46/46 twice, no console errors, index.html 1,773 KB.
+  - **FPS:** forge states at a 60 FPS median (load 8–9).
+  - **Shots:** `/workspace/out/redesign/shared-fixes/` (12 targeted states).
