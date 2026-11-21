@@ -104,12 +104,16 @@ test('one cloud: flat surfaces where it is zero, true spheres for s clouds, turn
 test('the nucleus is drawn a round factor bigger; filling-order surprises in plain words', async () => {
   assert.deepEqual([850, 1300, 1800, 3400, 7600].map(V.niceFactor), [1000, 1000, 2000, 5000, 10000]);
   await import('../src/app/content/strings-atom.js');
-  assert.equal(V.movePhrase(['5f: 4→3', '6d: 0→1']), 'one electron sits in 6d instead of 5f', 'uranium');
-  assert.equal(V.movePhrase(['4d: 8→10', '5s: 2→0']), 'two electrons sit in 4d instead of 5s', 'palladium');
-  assert.equal(V.movePhrase(bySym('Th').f.madelung[2].d), 'two electrons sit in 6d instead of 5f', 'thorium, from the data');
-  // every filling-order exception in the data reads as one plain phrase (no raw "5f: 4 → 3" shorthand)
+  // round 3: every cloud is named plainly first, its code after it (STYLE.md §4)
+  assert.equal(V.movePhrase(['5f: 4→3', '6d: 0→1']), 'one electron sits in shell 6’s clover clouds (6d) instead of shell 5’s many-lobed clouds (5f)', 'uranium');
+  assert.equal(V.movePhrase(['4d: 8→10', '5s: 2→0']), 'two electrons sit in shell 4’s clover clouds (4d) instead of shell 5’s round cloud (5s)', 'palladium');
   for (const Z of Array.from({ length: 118 }, (_, i) => i + 1)) {
     const e = (await import('../src/app/data.js')).byZ(Z), md = e.f.madelung;
-    if (md[0] === 'exception') assert.match(V.movePhrase(md[2].d), /^(one|two|three) electrons? sits? in \d[spdf] instead of \d[spdf]$|^its electrons sit in [\d\w, ]+ instead of [\d\w, ]+$/, `${e.sym}: ${V.movePhrase(md[2].d)}`);
+    if (md[0] === 'exception') assert.match(V.movePhrase(md[2].d), /^(one|two|three) electrons? sits? in shell \d’s [a-z -]+ \(\d[spdf]\) instead of shell \d’s [a-z -]+ \(\d[spdf]\)$/, `${e.sym}: ${V.movePhrase(md[2].d)}`);
   }
+  // the colour word names what is drawn: neon's 614.3 nm draws red, sodium's 589 nm yellow-orange
+  assert.equal(S.lineWord(614.31), 'red'); assert.equal(S.lineWord(589.0), 'yellowOrange'); assert.equal(S.lineWord(540), 'green');
+  // iron's glow (all its lines) is blue while its 8 shown lines mix to green: the card says why
+  const hue = ([r, g, b]) => { const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return (h * 60 + 360) % 360; };
+  assert.ok(Math.abs(hue(S.glowRGB(bySym('Fe'))) - hue(S.shownRGB(bySym('Fe')))) > 40, 'iron: glow and shown lines differ');
 });

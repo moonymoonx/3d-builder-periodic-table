@@ -13,8 +13,8 @@ import { byZ, name, isPred } from '../data.js';
 import { sheet, chip, button, disclosure } from '../ui/kit.js';
 import { showSource, closeSource } from '../ui/source.js';
 import { pigment, pigmentCB } from '../../design/tokens.js';
-import { subshellsOf, shellCounts, shapeOf, leadM, turnOrder, nodalPlanes, parseOrbital, movePhrase, STAGE_FOOT } from '../views/atom.js';
-import { spectrumStrip, looks, lineColour, colourWord, glowRGB } from '../ui/spectrum.js';
+import { subshellsOf, shellCounts, shapeOf, leadM, turnOrder, nodalPlanes, parseOrbital, movePhrase, subPhrase, turnWords, STAGE_FOOT } from '../views/atom.js';
+import { spectrumStrip, looks, lineColour, hueWord, glowRGB, shownRGB } from '../ui/spectrum.js';
 import { ATOM_KEYS } from '../content/strings-atom.js';
 import * as O from '../../physics/orbitals.js';
 import { toHex } from '../../physics/color.js';
@@ -29,7 +29,6 @@ const HOOK_SOURCES = {
 const SUP = d => String(d).split('').map(c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[c]).join('');
 /** "[Ar] 3d6 4s2" -> "[Ar] 3d⁶ 4s²" */
 export const prettyCfg = s => String(s).replace(/([spdf])(\d+)/g, (_, l, n) => l + SUP(n));
-const subName = x => `${x.n}${'spdf'[x.l]}`;
 /** Names inside a sentence: lower case; Vietnamese uses the 13 familiar GDPT-2018 names (sắt, đồng…). */
 const gdpt = e => getLang() === 'vi' && e.names.viAlt && e.names.viAlt[1] === 'gdpt';
 const inName = e => (gdpt(e) ? e.names.viAlt[0] : name(e)).toLowerCase();
@@ -62,7 +61,9 @@ export function buildAtom(ui, hooks) {
   const head = h('div', { class: 'atom-head' }, tile, h('div', { class: 'atom-head__text' }, title, counts));
   const hookText = h('span');
   const hookSrc = h('button', { type: 'button', class: 'atom-src', onclick: ev => openHookSources(ev.currentTarget) });
-  const hook = h('p', { class: 'atom-hook' }, hookText, ' ', hookSrc);
+  const hook = h('p', { class: 'atom-hook' }, hookText);
+  const tipText = h('span');
+  const tip = h('p', { class: 'atom-tip' }, tipText, hookSrc); // "Tap underlined values for sources" · the hook's own sources
   const modeBtns = {};
   for (const id of ['atom', 'cloud', 'light']) modeBtns[id] = chip({ label: '', onClick: () => setMode(id), attrs: { 'data-mode': id } });
   const modes = h('div', { class: 'atom-modes', role: 'group' }, Object.values(modeBtns));
@@ -77,7 +78,7 @@ export function buildAtom(ui, hooks) {
   const read = h('div', { class: 'atom-step__read' }, readB, readS); // the caption (a live region) announces each step
   const foot = h('div', { class: 'atom-step' }, minus, read, plus);
   sh.setFoot(foot);
-  replace(sh.body, head, hook, modes, modeBody, aboutSlot);
+  replace(sh.body, head, hook, tip, modes, modeBody, aboutSlot);
   // its light: the spectroscope band on the stage, under the atom
   const band = h('div', { class: 'atom-band', hidden: true });
   ui.append(band);
@@ -159,11 +160,11 @@ export function buildAtom(ui, hooks) {
     const ch = info.change, sub = ch.sub, shape = t('atom.cap.l' + sub.l);
     const prev = e.Z > 1 ? byZ(e.Z - 1) : null;
     const how = prev ? `${shownName(prev)} ${prettyCfg(prev.f.config[0])} → ${shownName(e)} ${prettyCfg(e.f.config[0])}` : prettyCfg(e.f.config[0]);
-    const subV = val(sub.key, t('f.config'), e.f.config, e, how);
+    const subV = val(subPhrase(sub), t('f.config'), e.f.config, e, how);
     if (ch.kind === 'add') out.push(h('p', null, tn('atom.cap.add', { sub: subV, shape, plus: inkWord('plus') })));
     else if (ch.kind === 'rearr') {
       const down = ch.diff.filter(x => x.to < x.from), up = ch.diff.filter(x => x.to > x.from);
-      if (down.length === 1 && up.length === 1 && up[0].to - up[0].from === 2 && down[0].from - down[0].to === 1) out.push(h('p', null, tn('atom.cap.moved', { sub: subV, from: subName(down[0]), shape, plus: inkWord('plus') })));
+      if (down.length === 1 && up.length === 1 && up[0].to - up[0].from === 2 && down[0].from - down[0].to === 1) out.push(h('p', { class: 'atom-caption__surprise' }, tn('atom.cap.moved', { sub: subV, from: subPhrase(down[0]), shape, plus: inkWord('plus') })));
       else out.push(h('p', null, tn('atom.cap.rearr', { phrase: val(movePhrase(ch.diff), t('f.config'), e.f.config, e, how), sub: subV, shape, plus: inkWord('plus') })));
     }
     const md = e.f.madelung;
@@ -172,13 +173,12 @@ export function buildAtom(ui, hooks) {
   }
   function cloudCaption(e, info) {
     const { sub, m } = info.sel, Name = cap(inName(e)), nm = inName(e), k = 2 * sub.l + 1;
-    const lines = [m == null ? t('atom.cloud.all', { k, sub: sub.key }) : t('atom.cloud.' + shapeOf(sub.l, m), { sub: sub.key })];
+    const lines = [m == null ? t('atom.cloud.all', { k, sub: subPhrase(sub) }) : t('atom.cloud.' + shapeOf(sub.l, m), { sub: subPhrase(sub) })];
     const gaps = sub.n - sub.l - 1;
     if (gaps > 0) lines.push(gaps === 1 ? t('atom.cloud.gap1') : t('atom.cloud.gaps', { k: gaps }));
     const nE = sub.occ;
     const occV = val(fmtNum(nE, 0), t('f.config'), e.f.config, e, prettyCfg(e.f.config[0]));
-    const cnt = sub.l === 0 ? tn(nE === 1 ? 'atom.cloud.countS1' : 'atom.cloud.countS', { Name, name: nm, n: occV, sub: sub.key })
-      : tn(nE === 1 ? 'atom.cloud.count1' : 'atom.cloud.count', { Name, name: nm, n: occV, k, sub: sub.key });
+    const cnt = tn(nE === 1 ? 'atom.cloud.count1' : 'atom.cloud.count', { Name, name: nm, n: occV, k, sub: subPhrase(sub) });
     const planes = m != null && sub.l > 0 ? nodalPlanes(sub.l, m).length : 0;
     const phase = [...tn('atom.cloud.phase', { Plus: inkWord('plus', true), plus: inkWord('plus'), minus: inkWord('minus') }), ' ',
       planes ? t(planes === 1 ? 'atom.cloud.sheet1' : 'atom.cloud.sheets') : sub.l > 0 ? t('atom.cloud.meet') : ''];
@@ -189,26 +189,26 @@ export function buildAtom(ui, hooks) {
 
   // ---- one cloud: shells and their clouds, then the turns of the chosen one -----------------------------
   function picker(e, info) {
-    const subs = subshellsOf(e), sel = info.sel;
-    const shells = [...new Set(subs.map(s => s.n))];
+    const subs = subshellsOf(e), sel = info.sel, s = sel.sub;
+    const shells = [...new Set(subs.map(x => x.n))];
     const elLabel = n => (n === 1 ? t('atom.pick.electron1') : t('atom.pick.electrons', { n: fmtNum(n, 0) }));
-    const rows = shells.map(n => h('div', { class: 'atom-pick__row' },
-      h('span', { class: 'atom-pick__shell' }, t('atom.pick.shell', { n })),
-      h('div', { class: 'atom-pick__chips' }, subs.filter(s => s.n === n).map(s => chip({
-        label: [s.key, h('small', { class: 'atom-pick__n' }, fmtNum(s.occ, 0))], pressed: s.key === sel.sub.key,
-        onClick: () => set({ orbital: `${s.key}:${leadM(s.l)}` }),
-        attrs: { 'data-key': s.key, 'aria-label': `${t('atom.pick.shell', { n })}: ${s.key}, ${elLabel(s.occ)}`, title: elLabel(s.occ) },
-      })))));
-    const box = h('div', { class: 'atom-pick', role: 'group', 'aria-label': t('atom.pick') }, rows);
-    const s = sel.sub;
+    const go = x => set({ orbital: `${x.key}:${leadM(x.l)}` });
+    const row = (label, chips, cls = '') => h('div', { class: 'atom-pick__row ' + cls }, h('span', { class: 'atom-pick__shell' }, label), h('div', { class: 'atom-pick__chips' }, chips));
+    // which shell; then which kind of cloud in it (round, dumbbells, clovers, many-lobed), with its electrons
+    const shellRow = row(t('atom.pick.shellRow'), shells.map(n => chip({ label: String(n), pressed: n === s.n,
+      onClick: () => { const here = subs.filter(x => x.n === n); go(here.find(x => x.l === s.l) || here[here.length - 1]); },
+      attrs: { 'data-shell': String(n), 'aria-label': t('atom.pick.shell', { n }) } })));
+    const kindRow = row(t('atom.pick.kindRow'), subs.filter(x => x.n === s.n).map(x => chip({
+      label: [t('atom.kindShort.' + x.l), h('small', { class: 'atom-pick__n' }, fmtNum(x.occ, 0))], pressed: x.key === s.key, onClick: () => go(x),
+      attrs: { 'data-key': x.key, 'aria-label': `${subPhrase(x)}: ${elLabel(x.occ)}`, title: `${subPhrase(x)} · ${elLabel(x.occ)}` } })));
+    const box = h('div', { class: 'atom-pick', role: 'group', 'aria-label': t('atom.pick') }, shellRow, kindRow);
     if (s.l > 0) {
       const k = 2 * s.l + 1;
-      box.append(h('div', { class: 'atom-pick__row atom-pick__turns' },
-        h('span', { class: 'atom-pick__shell' }, t('atom.pick.turn', { k })),
-        h('div', { class: 'atom-pick__chips' },
-          turnOrder(s.l).map(m => chip({ label: O.ORBITAL_SUFFIX[s.l][m], pressed: sel.m === m, onClick: () => set({ orbital: `${s.key}:${m}` }), attrs: { 'data-m': String(m), title: t('atom.shape.' + shapeOf(s.l, m)) } })),
-          chip({ label: t('atom.pick.all', { k }), pressed: sel.m == null, onClick: () => set({ orbital: `${s.key}:all` }), attrs: { 'data-m': 'all' } }))),
-        h('p', { class: 'atom-pick__axes' }, t('atom.pick.axes')));
+      // which one: numbered, named in plain words on the drawing and in the tooltip (the axis names stay in the sources)
+      box.append(row(t('atom.pick.turn', { k }), [
+        ...turnOrder(s.l).map((m, i) => chip({ label: String(i + 1), pressed: sel.m === m, onClick: () => set({ orbital: `${s.key}:${m}` }),
+          attrs: { 'data-m': String(m), title: turnWords(s.l, m), 'aria-label': `${i + 1}: ${turnWords(s.l, m)}` } })),
+        chip({ label: t('atom.pick.all', { k }), pressed: sel.m == null, onClick: () => set({ orbital: `${s.key}:all` }), attrs: { 'data-m': 'all' } })], 'atom-pick__turns'));
     }
     return box;
   }
@@ -224,7 +224,7 @@ export function buildAtom(ui, hooks) {
     const strip = spectrumStrip(e, {
       onPick: (m, user) => {
         picked = { Z: e.Z, lam: m.lam };
-        const text = t('atom.light.line', { nm: fmtNum(m.lam, 1, { minDigits: 1 }), colour: t('atom.col.' + colourWord(m.lam)) });
+        const text = t('atom.light.line', { nm: fmtNum(m.lam, 1, { minDigits: 1 }), colour: t('atom.col.' + hueWord(m.hue)) });
         const v = [m.lam, 'nist-lines', { n: `${fmtNum(m.lam, 3)} nm (air wavelength). How bright it looks: ${basisNote(e)}, times the eye's sensitivity (CIE 1931); ${Math.round(m.b * 1000)}/1000 of its brightest line to the eye` }];
         const p = m.b * 100, bright = m.b >= 0.995 ? t('atom.light.brightest') : p < 1 ? t('atom.light.faint') : t('atom.light.bright', { p: fmtNum(p >= 10 ? Math.round(p / 5) * 5 : Math.round(p), 0) });
         replace(detail, h('span', { class: 'atom-light__swatch', style: { background: toHex(m.hue) }, 'aria-hidden': 'true' }), val(text, t('f.lines'), v, e, `${fmtNum(m.lam, 3)} nm`),
@@ -239,12 +239,18 @@ export function buildAtom(ui, hooks) {
     let i = picked && picked.Z === e.Z ? strip.lines.findIndex(m => Math.abs(m.lam - picked.lam) < 1e-6) : -1;
     if (i < 0) strip.lines.forEach((m, j) => { if (i < 0 || m.b > strip.lines[i].b) i = j; });
     strip.pick(i);
-    return [detail, h('p', { class: 'atom-light__title' }, tn('atom.light.lines', { k: fmtNum(ln.length, 0),
+    return [detail, h('p', { class: 'atom-light__how' }, t('atom.light.how')), h('p', { class: 'atom-light__title' }, tn('atom.light.lines', { k: fmtNum(ln.length, 0),
       n: val(fmtNum(e.lines.n, 0), t('f.lines'), [e.lines.n, 'nist-lines', { n: `${e.lines.n} lines of the neutral atom listed by NIST between 380 and 750 nm; shown: the ${ln.length} that look brightest (${basisNote(e)}, times the eye's sensitivity, CIE 1931)` }], e) }))];
   }
+  /** Hue (degrees) of a display colour. */
+  const hueOf = ([r, g, b]) => { const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); if (!(d > 0)) return 0; const h0 = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return (h0 * 60 + 360) % 360; };
   function lightNotes(e) {
     if (!looks(e).length) return [];
-    return [h('p', { class: 'atom-caption__quiet' }, t('atom.light.how'), glowRGB(e) ? [' ', t('atom.light.glow')] : null),
+    const glow = glowRGB(e), shown = shownRGB(e);
+    const dh = glow && shown ? Math.abs(((hueOf(glow) - hueOf(shown) + 540) % 360) - 180) : 0;
+    // the glow mixes all the lines in our source; when that differs from the 8 shown, say why in one line
+    const why = dh > 40 ? h('p', { class: 'atom-caption__quiet' }, t('atom.light.why', { word: t('atom.col.' + hueWord(glow)), n: fmtNum(e.lines.used || e.lines.n, 0) })) : null;
+    return [why, h('p', { class: 'atom-caption__quiet' }, glow ? t('atom.light.glow') : null),
       e.lines.basis === 'gA' ? h('p', { class: 'atom-caption__quiet' }, t('atom.light.gA')) : null];
   }
   /** The band spans the free stage: beside the card on desktop, just above the sheet on phones. */
@@ -278,7 +284,7 @@ export function buildAtom(ui, hooks) {
     }
     // the pull felt by the outermost electrons (Clementi–Raimondi; Slater's rules beyond)
     const outer = info.subs.slice().sort((a, b) => b.n - a.n || b.l - a.l)[0];
-    if (outer.zSrc) row(t('atom.row.pull'), t('atom.row.pullCap'), val(t('atom.row.pullVal', { z: fmtNum(outer.Zeff, 1), Z: fmtNum(e.Z, 0), sub: outer.key }), t('f.zeff'), outer.zSrc, e), t('atom.row.pullNote'));
+    if (outer.zSrc) row(t('atom.row.pull'), t('atom.row.pullCap'), val(t('atom.row.pullVal', { z: fmtNum(outer.Zeff, 1), Z: fmtNum(e.Z, 0), sub: subPhrase(outer) }), t('f.zeff'), outer.zSrc, e), t('atom.row.pullNote'));
     // the size of the nucleus: measured (Angeli & Marinova 2013) where the data has it, else the estimate
     if (f.rNuc && info.factor) {
       const measured = !isPred(f.rNuc);
@@ -301,7 +307,7 @@ export function buildAtom(ui, hooks) {
     const e = byZ(state.Z);
     if (!info || info.e.Z !== e.Z) return; // the view builds first; it calls back (onBuilt)
     const focused = document.activeElement;
-    const keep = focused && sh.el.contains(focused) ? { key: focused.dataset.key, m: focused.dataset.m, mode: focused.dataset.mode, step: focused.dataset.step, about: focused.classList.contains('ui-disclosure__summary') } : null;
+    const keep = focused && sh.el.contains(focused) ? { shell: focused.dataset.shell, key: focused.dataset.key, m: focused.dataset.m, mode: focused.dataset.mode, step: focused.dataset.step, about: focused.classList.contains('ui-disclosure__summary') } : null;
     const pal = state.cb ? pigmentCB : pigment;
     const md = mode();
     replace(tile, h('small', null, String(e.Z)), e.sym);
@@ -309,13 +315,16 @@ export function buildAtom(ui, hooks) {
     replace(title, t('atom.inside', { name: inName(e) }));
     replace(counts, e.Z === 1 ? t('atom.counts1') : t('atom.counts', { p: fmtNum(e.Z, 0), e: fmtNum(e.Z, 0) }));
     replace(hookText, t(md === 'light' ? 'atom.light.hook' : 'atom.hook'));
-    replace(hookSrc, t('atom.source'));
+    replace(tipText, t('atom.tip'));
+    replace(hookSrc, t('atom.hookSrc'));
     hookSrc.setAttribute('aria-label', `${t('atom.source')}: ${t('atom.why')}`);
     for (const [id, b] of Object.entries(modeBtns)) { replace(b.lastChild, t('atom.mode.' + id)); b.setAttribute('aria-pressed', String(id === md)); }
     modes.setAttribute('aria-label', t('atom.modes'));
     if (md !== 'light') { band.hidden = true; replace(band); }
-    replace(pre, md === 'cloud' ? picker(e, info) : md === 'light' ? lightBody(e) : null);
-    replace(caption, md === 'cloud' ? cloudCaption(e, info) : md === 'light' ? lightNotes(e) : atomCaption(e, info));
+    // one cloud: what you see first (its shape, in one sentence), then the picker, then the rest
+    const cc = md === 'cloud' ? cloudCaption(e, info) : null;
+    replace(pre, md === 'cloud' ? [h('p', { class: 'atom-pre__lead' }, cc[0].textContent), picker(e, info)] : md === 'light' ? lightBody(e) : null);
+    replace(caption, md === 'cloud' ? cc.slice(1) : md === 'light' ? lightNotes(e) : atomCaption(e, info));
     modeBody.dataset.mode = md;
     // about this atom: rebuilt for each element, opening state kept
     replace(aboutSlot, disclosure({ summary: t('atom.about'), open: aboutOpen, build: body => aboutRows(body, e, info), onToggle: o => { aboutOpen = o; requestAnimationFrame(sh.updateMore); } }));
@@ -326,12 +335,12 @@ export function buildAtom(ui, hooks) {
     minus.disabled = !prev; plus.disabled = !next;
     minus.title = prev ? t('atom.removeTo', { name: shownName(prev) }) : ''; plus.title = next ? t('atom.addTo', { name: shownName(next) }) : '';
     replace(readB, e.Z === 1 ? t('atom.proton1') : t('atom.protons', { n: fmtNum(e.Z, 0) }));
-    replace(readS, shownName(e));
+    replace(readS, gdpt(e) ? `${shownName(e)} · ${name(e)}` : shownName(e)); // Vietnamese: the familiar name, then the international one
     sh.setBar(h('span', { class: 'atom-bar' }, h('span', { class: 'atom-bar__tile', style: { background: pal[e.f.cat[0]] } }, h('small', null, String(e.Z)), e.sym), h('b', null, t('atom.inside', { name: inName(e) }))));
     sh.el.setAttribute('aria-label', t('atom.label'));
     // focus stays on the control the visitor used
     if (keep) {
-      const sel = keep.key ? `[data-key="${keep.key}"]` : keep.m ? `[data-m="${keep.m}"]` : keep.mode ? `[data-mode="${keep.mode}"]` : keep.step ? `[data-step="${keep.step}"]` : keep.about ? '.ui-disclosure__summary' : null;
+      const sel = keep.shell ? `[data-shell="${keep.shell}"]` : keep.key ? `[data-key="${keep.key}"]` : keep.m ? `[data-m="${keep.m}"]` : keep.mode ? `[data-mode="${keep.mode}"]` : keep.step ? `[data-step="${keep.step}"]` : keep.about ? '.ui-disclosure__summary' : null;
       const target = sel && sh.el.querySelector(sel);
       if (target && !target.disabled) target.focus({ preventScroll: true });
     }
@@ -343,8 +352,8 @@ export function buildAtom(ui, hooks) {
   function peek() {
     if (!isPhone() || !sh.isOpen()) { sh.setPeek(null); return; }
     const md = mode();
-    const last = md === 'cloud' ? (pre.querySelector('.atom-pick__axes') || pre.querySelector('.atom-pick') || modes)
-      : md === 'light' ? (pre.querySelector('.atom-light__title') || pre.firstChild || modes)
+    const last = md === 'cloud' ? (pre.querySelector('.atom-pick') || modes)
+      : md === 'light' ? (pre.querySelector('.atom-light__how') || pre.firstChild || modes)
         : (aboutSlot.querySelector('.ui-disclosure__summary') || modes);
     const top = last.getBoundingClientRect().bottom - sh.body.getBoundingClientRect().top + sh.body.scrollTop;
     const bar = sh.el.querySelector('.ui-sheet__handle');

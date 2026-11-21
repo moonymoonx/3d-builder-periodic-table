@@ -69,13 +69,24 @@ export function stepChange(e) {
 }
 /** Changes in a configuration, plainly: "one electron sits in 6d instead of 5f" ("5f: 4→3", "6d: 0→1"). */
 export function movePhrase(changes) {
-  const parsed = changes.map(c => (typeof c === 'string' ? (/^(\d[spdf]):\s*(\d+)\s*→\s*(\d+)$/.exec(c) || []).slice(1) : [`${c.n}${'spdf'[c.l]}`, c.from, c.to])).filter(x => x.length === 3).map(([sub, a, b]) => ({ sub, d: Number(b) - Number(a) }));
+  const named = code => subPhrase({ n: Number(code[0]), l: 'spdf'.indexOf(code[1]) });
+  const parsed = changes.map(c => (typeof c === 'string' ? (/^(\d[spdf]):\s*(\d+)\s*→\s*(\d+)$/.exec(c) || []).slice(1) : [`${c.n}${'spdf'[c.l]}`, c.from, c.to])).filter(x => x.length === 3).map(([code, a, b]) => ({ sub: named(code), d: Number(b) - Number(a) }));
   const up = parsed.filter(x => x.d > 0), down = parsed.filter(x => x.d < 0);
   if (up.length === 1 && down.length === 1 && up[0].d === -down[0].d && up[0].d <= 3) {
     const k = up[0].d;
     return t(k === 1 ? 'atom.exc.one' : 'atom.exc.many', { k: t('atom.num.' + k), up: up[0].sub, down: down[0].sub });
   }
   return down.length ? t('atom.exc.mixed', { up: up.map(x => x.sub).join(', '), down: down.map(x => x.sub).join(', ') }) : up.map(x => x.sub).join(', ');
+}
+/** A cloud named plainly first, its code after it: "shell 3's clover clouds (3d)" (STYLE.md §4). */
+export const subPhrase = s => t('atom.sub', { n: s.n, kind: t((s.l === 0 ? 'atom.kind1.' : 'atom.kinds.') + s.l), code: `${s.n}${'spdf'[s.l]}` });
+/** One cloud of a subshell in plain words, for labels: "upright dumbbell", "lying-flat clover"… (the axis
+ *  names, xz or y(3x²−y²), stay in the source details). */
+export const TURN_WORD = { 1: { 1: 'across', '-1': 'deep', 0: 'up' }, 2: { 1: 'facing', '-1': 'side', '-2': 'flat', 2: 'flatAxes', 0: 'ring' } };
+export function turnWords(l, m) {
+  if (l === 0) return t('atom.shape.ball');
+  const w = TURN_WORD[l] && TURN_WORD[l][m];
+  return w ? t(`atom.turn.${l}.${w}`) : t('atom.shape.' + shapeOf(l, m));
 }
 /** Electrons in each shell, from the configuration: [[n, electrons], …] by n. */
 export function shellCounts(e) {
@@ -258,8 +269,8 @@ void main() {
   float shade = max(0.0, -dot(n, L)) * inside;
   float spec = pow(max(dot(n, normalize(L + vec3(0.0, 0.0, 1.0))), 0.0), 60.0) * inside;
   float day = 1.0 - uLight;
-  float aInk = (0.4 * line + 0.085 * fres + 0.035 * shade) * day;
-  float aHi = 0.55 * spec * day;
+  float aInk = (0.42 * line + 0.13 * fres + 0.06 * shade) * day;
+  float aHi = 0.75 * spec * day;
   float aRim = (0.3 * line + 0.07 * fres) * uLight;
   float a = aInk + aHi + aRim;
   if (a * uAlpha < 0.003) discard;
@@ -319,7 +330,7 @@ function glazeMaterial(col, side) {
 const THETA = 0.38, PHI = 1.2; // a three-quarter view from a little above: d_xz faces you, p_z stands up
 const easeOut = x => 1 - (1 - x) ** 3;
 const easeInOut = x => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
-const TONE_OUT = 0.3, TONE_MIN = 0.06; // ink strength of the outermost shell's dots; the floor for dense inner shells
+const TONE_OUT = 0.4, TONE_MIN = 0.07; // ink strength of the outermost shell's dots; the floor for dense inner shells
 const SHELL_ALPHA = 1;
 /** The strip the place keeps free under the atom for the scale bar (and the shells' legend), px. */
 export const STAGE_FOOT = { desk: 54, phone: 30 };
@@ -378,7 +389,31 @@ export function createAtomView(hooks = {}) {
     vertexShader: GLOW_VS, fragmentShader: RIPPLE_FS, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
   }));
   ripple.renderOrder = 5; ripple.frustumCulled = false; ripple.visible = false;
-  scene.add(glow, ripple);
+  // a filling-order surprise (vanadium -> chromium): one electron travels from the outer cloud into the newest one
+  const bead = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: phaseInk.plus, transparent: true, opacity: 0, depthTest: false }));
+  bead.renderOrder = 6; bead.frustumCulled = false; bead.visible = false;
+  scene.add(glow, ripple, bead);
+  let beadAnim = null;
+  function surprise(fromR) {
+    if (beadAnim) { beadAnim(); beadAnim = null; }
+    const cam = E.camera, start = new THREE.Vector3(), end = cloudAt.clone(), rr = new THREE.Vector3(), uu = new THREE.Vector3();
+    rr.setFromMatrixColumn(cam.matrixWorld, 0); uu.setFromMatrixColumn(cam.matrixWorld, 1);
+    start.copy(rr).multiplyScalar(fromR * 0.72).addScaledVector(uu, fromR * 0.69); // on the outer cloud, up and to the right
+    let t0 = 0;
+    const T = 1.4;
+    bead.visible = true;
+    beadAnim = animate(dt => {
+      t0 += dt;
+      const k = Math.min(1, t0 / T), e = easeInOut(k);
+      bead.position.lerpVectors(start, end, e);
+      const d = cam.position.length(), px = (2 * Math.tan((cam.fov * Math.PI) / 360) * d) / window.innerHeight;
+      bead.scale.setScalar(4.5 * px);
+      bead.material.opacity = Math.min(1, k * 6) * (k > 0.85 ? (1 - k) / 0.15 : 1);
+      invalidate();
+      if (k >= 1) { bead.visible = false; beadAnim = null; return false; }
+      return true;
+    });
+  }
 
   let info = null, built = '', layers = null, anim = null, lightK = 0, lightTo = 0, lastGoal = null, entering = false, factorShown = 0, factorNow = 0;
   const glowCol = KILN_TEXT.clone(), glowEmit = new THREE.Color();
@@ -595,6 +630,11 @@ export function createAtomView(hooks = {}) {
     else E.rig.flyTo({ ...g, theta: E.rig.theta, phi: E.rig.phi }, state.reduced ? 0 : motion.glide); // keep the visitor's angle
     lastGoal = g;
     transition(prev);
+    // the surprise of a filling-order exception, seen and not only read: the moved electron flies in
+    if (prev && mode === 'atom' && !state.reduced && info.change.kind === 'rearr' && e.Z > 1) {
+      const dn = info.change.diff.find(x => x.to < x.from), donor = dn && subshellsOf(byZ(e.Z - 1)).find(x => x.n === dn.n && x.l === dn.l);
+      if (donor) surprise(donor.r90);
+    }
     if (hooks.onBuilt) hooks.onBuilt(info);
     invalidate();
   }
@@ -606,8 +646,9 @@ export function createAtomView(hooks = {}) {
     labels.setText(lblNuc, t('atom.lbl.nucleus'), info.factor ? t('atom.lbl.drawn', { x: fmtNum(info.factor, 0) }) : '');
     const s = sel.sub, lobe = LOBE[sel.m == null ? (s.l === 0 ? 'ball' : 'clover') : shapeOf(s.l, sel.m)];
     cloudAt.set(lobe[0], lobe[1], lobe[2]).multiplyScalar(s.r90);
-    if (mode === 'atom') labels.setText(lblCloud, t('atom.lbl.cloud', { sub: s.key }), e.Z === 1 ? t('atom.lbl.only') : t('atom.lbl.newest'));
-    else labels.setText(lblCloud, t('atom.lbl.cloud', { sub: s.key }), sel.m == null ? t('atom.lbl.allOf', { k: 2 * s.l + 1 }) : t('atom.shape.' + shapeOf(s.l, sel.m)) + (O.ORBITAL_SUFFIX[s.l][sel.m] ? ` · ${O.ORBITAL_SUFFIX[s.l][sel.m]}` : ''));
+    const named = t('atom.lbl.cloud', { kind: t('atom.kind1.' + s.l), n: s.n });
+    if (mode === 'atom') labels.setText(lblCloud, named, e.Z === 1 ? t('atom.lbl.only') : t('atom.lbl.newest'));
+    else labels.setText(lblCloud, named, sel.m == null ? t('atom.lbl.allOf', { k: 2 * s.l + 1 }) : turnWords(s.l, sel.m));
     hint.textContent = t(window.innerWidth <= 760 ? 'atom.hint.dragTouch' : 'atom.hint.drag');
     rulerCap.textContent = t('atom.scale.cap');
     countsShown = '';
@@ -757,7 +798,7 @@ export function createAtomView(hooks = {}) {
     rippleAnim = animate(dt => {
       t0 += dt;
       const k = Math.min(1, t0 / T), e = easeInOut(k);
-      const r0 = Math.min(0.96, rippleShell * 1.45); // from a little outside the outer shell (a higher level) down onto it
+      const r0 = Math.min(0.96, rippleShell * 1.3, (info.frameR * 0.97) / glowR); // from a little outside the outer shell (a higher level) down onto it, inside the frame
       u.uRad.value = r0 - (r0 - rippleShell) * e;
       u.uW.value = 0.016 - 0.007 * e; // a fine ring of light, not a neon edge (STYLE §10)
       u.uA.value = 0.32 * Math.sin(Math.PI * Math.min(1, k * 1.05)) * lightK;
@@ -802,13 +843,13 @@ export function createAtomView(hooks = {}) {
     const cap = s1 / px >= 12 ? 0.6 * s1 : Infinity;
     let r;
     if (info.rTrue) {
-      const want = Math.min(Math.max(info.rBase, 3 * px), cap);
+      const want = Math.min(Math.max(info.rBase, 4 * px), cap);
       let f = factorNow || niceFactor(want / info.rTrue);
-      const ok = v => v * info.rTrue >= 2.4 * px && v * info.rTrue <= cap && v * info.rTrue <= want * 1.9 && v * info.rTrue >= want * 0.5;
+      const ok = v => v * info.rTrue >= 3.2 * px && v * info.rTrue <= cap && v * info.rTrue <= want * 1.9 && v * info.rTrue >= want * 0.5;
       for (let i = 0; i < 6 && !ok(f); i++) f = f * info.rTrue < want ? NICE_STEP(f).up : NICE_STEP(f).down;
       factorNow = f;
       r = f * info.rTrue;
-    } else r = Math.min(Math.max(info.rBase, 3 * px), cap);
+    } else r = Math.min(Math.max(info.rBase, 4 * px), cap);
     info.rDraw = r;
     layers.nuc.scale.setScalar(r);
     const rPx = r / px, geo = rPx < 9 ? beadGeo.min : rPx < 40 || info.e.Z > 60 ? beadGeo.lo : beadGeo.hi;
@@ -891,11 +932,24 @@ export function createAtomView(hooks = {}) {
       const a = toScreen(at, s0), b = lb.visible && toScreen(lb.pos, s1);
       if (!a || !b) { L.g.style.display = 'none'; return; }
       L.g.style.display = '';
-      const side = lb.anchor === 'left' ? 1 : -1;
-      const bx = b.x + side * 2, len = Math.hypot(bx - a.x, b.y - a.y) || 1, ux = (bx - a.x) / len, uy = (b.y - a.y) / len;
+      // the hairline ends on the label's ground, at the edge facing the point (never across its words)
+      const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(lb.el.style.transform || '');
+      let bx = b.x + (lb.anchor === 'left' ? 2 : -2), by = b.y;
+      if (m) {
+        const x0 = +m[1] - 2, y0 = +m[2] - 2, x1 = +m[1] + (lb.w || 0) + 2, y1 = +m[2] + (lb.h || 0) + 2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+        const dx = cx - a.x, dy = cy - a.y;
+        // where the ray from the point to the label's centre enters its box (slab method)
+        const tx = dx ? ((dx > 0 ? x0 : x1) - a.x) / dx : -Infinity, ty = dy ? ((dy > 0 ? y0 : y1) - a.y) / dy : -Infinity;
+        let tt = Math.max(tx, ty);
+        if (a.x > x0 && a.x < x1 && a.y > y0 && a.y < y1) tt = 0; // the point itself under the label: no line
+        tt = Math.max(0, Math.min(1, tt));
+        bx = a.x + dx * tt; by = a.y + dy * tt;
+      }
+      const len = Math.hypot(bx - a.x, by - a.y) || 1, ux = (bx - a.x) / len, uy = (by - a.y) / len;
       const start = i === 0 ? Math.max(4, (info.rDraw / ((2 * Math.tan((E.camera.fov * Math.PI) / 360) * E.camera.position.length()) / window.innerHeight)) + 3) : 0;
       L.l.setAttribute('x1', (a.x + ux * start).toFixed(1)); L.l.setAttribute('y1', (a.y + uy * start).toFixed(1));
-      L.l.setAttribute('x2', bx.toFixed(1)); L.l.setAttribute('y2', b.y.toFixed(1));
+      L.l.setAttribute('x2', bx.toFixed(1)); L.l.setAttribute('y2', by.toFixed(1));
+      if (len < 6) { L.g.style.display = 'none'; return; }
       L.c.setAttribute('cx', a.x.toFixed(1)); L.c.setAttribute('cy', a.y.toFixed(1));
       L.c.style.display = i === 0 ? 'none' : '';
     });
@@ -911,6 +965,7 @@ export function createAtomView(hooks = {}) {
       if (anim) { anim(); anim = null; }
       if (lightAnim) { lightAnim(); lightAnim = null; }
       if (rippleAnim) { rippleAnim(); rippleAnim = null; }
+      if (beadAnim) { beadAnim(); beadAnim = null; bead.visible = false; }
       for (const f of fading) dispose(f.L);
       fading = [];
       lightK = lightTo = 0; applyLight(); glow.visible = false; ripple.visible = false;
