@@ -94,7 +94,7 @@ function pixelRatioFor(cfg) {
 // Software renderers: when frames take longer than 1/60 s (tiles filling the screen when zoomed in),
 // lower the internal resolution in steps (down to 0.3 MP); raise it again once the camera has moved
 // well back out. Frames are paced at 60 Hz, so "cheap again" cannot be read from frame times alone.
-let resWin = [], resFail = null;
+let resWin = [], resFail = null, resSlow = 0, resLast = -1e9;
 function adaptResolution(dt) {
   if (!(E.software && E.tier === 'low' && state.quality === 'auto')) return;
   // proactive: tiles will fill the screen when the camera is much closer than the home framing
@@ -104,10 +104,15 @@ function adaptResolution(dt) {
   const w = resWin.sort((a, b) => a - b), med = w[w.length >> 1];
   resWin = [];
   let next = E.mp;
-  // step by about the speed-up needed (half the pixels for a 30 FPS median), so it settles within ~1.5 s
-  if (med > 20 && E.mp > 0.31) { resFail = { r: E.rig.r }; next = Math.max(0.3, E.mp * Math.min(0.85, Math.max(0.45, (16 / med) ** 1.1))); }
-  else if (med < 17.5 && E.mp < 0.75 && (!resFail || E.rig.r > resFail.r * 1.25)) { resFail = null; next = Math.min(0.75, E.mp / 0.7); }
-  if (next !== E.mp) { E.mp = next; E.renderer.setPixelRatio(pixelRatioFor(TIERS.low)); invalidate(); } // the size and the camera stay as they are
+  const slow = med > 20 && E.mp > 0.31;
+  resSlow = slow ? resSlow + 1 : 0;
+  // each step reallocates the canvas, itself a 50-67 ms frame on a software renderer: step only after two slow
+  // windows in a row, and at most once every 3 s (sample review s2; PROPOSALS-sample.md §0a)
+  if (performance.now() - resLast < 3000) return;
+  // step by about the speed-up needed (half the pixels for a 30 FPS median)
+  if (slow && resSlow >= 2) { resFail = { r: E.rig.r }; next = Math.max(0.3, E.mp * Math.min(0.85, Math.max(0.45, (16 / med) ** 1.1))); }
+  else if (!slow && med < 17.5 && E.mp < 0.75 && (!resFail || E.rig.r > resFail.r * 1.25)) { resFail = null; next = Math.min(0.75, E.mp / 0.7); }
+  if (next !== E.mp) { resLast = performance.now(); resSlow = 0; E.mp = next; E.renderer.setPixelRatio(pixelRatioFor(TIERS.low)); invalidate(); } // the size and the camera stay as they are
 }
 
 export function resize() {

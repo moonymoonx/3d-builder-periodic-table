@@ -4,6 +4,44 @@ Changes to shared files that this place needs or that I found while building it.
 files are separate `PROPOSAL: …` commits in the branch (§0–§2); the rest are suggestions for the main
 session, who decides. Nothing here is required for the place to work, except where marked.
 
+## 0a. Round 3 (`view-sample-r3`): answers to `reviews/sample-s2.md`
+
+**PROPOSAL commits on `views/sample.js`** (one concern each; the forge's heating path is untouched):
+
+| Commit | What | Review item |
+|---|---|---|
+| sample view: every bead stays inside the glass | walls a particle's reach inside the glass (a molecule: half its width) plus 1.2 % for the rounded edges; every bead clamped again after the liquid's push-apart, which could carry an edge bead through the wall | A1 (neon through the glass) |
+| sample view: molecules read as joined; S₈ is a crown | beads overlap (0.62 of a bond for pairs and P₄, 0.54 for a ring, so its hole stays open); S₈ drawn as its crown (S–S–S about 108°) | A4 (air between atoms), E20 |
+| sample view: the building block rests in a vessel sized to it | at rest on the hearth (a pair lying, P₄ on a face, S₈ on its rim), about half the vessel's width (an atom two fifths), turning about the vertical, on a baked contact shadow that fades in the kiln | A4 (floating giant ball) |
+
+**For the main session (shared files it is handling; text only, no code here):**
+- **Hearth floor: acne, the diagonal seam, the band on the glowing hearth (A2, A3).** Decals on the hearth
+  are lifted by hand: the glass foot at +0.1 % of the vessel's height, the glow decal at +0.2 %, and (new)
+  the specimen's contact shadow at +0.3 %. Two hypotheses, neither verified: (1) the lifts lose to depth
+  precision (with near R/200, a 24-bit depth buffer leaves them about ten steps; a 16-bit one, none), which
+  would stripe the floor; `material.polygonOffset` (factor −1, units −4) on these decals would rule it out.
+  If you switch, switch `specShadow` too; it was built like the glass foot. (2) The diagonal seam is the
+  hearth's top lit per triangle under the point light. I did not change the hearth.
+- **Frozen mercury and the forge's metals (A5):** solid mercury turns from quicksilver to family blue. Left
+  to the decision you scheduled together with iron (`DECISIONS.md`). The liquid's mirror lives in
+  `applyLook` (`uMirror`, `uBody`) and could take a weaker mirror for any metal by day.
+- **The forge's controls (B7, B8):** the rules in `places/sample.js` are ready to lift into the kit's
+  shared thermometer, 1:1: an About link under the readout; ink at and below 20 °C (`.sample-read.is-hot`
+  only above); "Room temperature" hidden at 20 °C ("Back to 20 °C" on phones); "◀ Cool it" whenever there
+  is somewhere to cool to (`renderButtons`, `endOf`).
+- **The card (C10, C15):** Gold's expanded card cuts a row mid-glyph above its footer (the kit's 22 px
+  fade; the sample sheet now uses 44 px); faint desktop underlines; oganesson's card "At 20 °C: Solid"
+  without the italic/≈ of a prediction.
+- **Sweep hitches (Smoothness, s16 and the forge's "Heat it"): the engine's adaptive resolution, not the
+  place.** A CPU profile of neon's "Cool it" sweep: the main thread is idle 92 % of the time, and the
+  place's own code (thermometer, buttons, captions, fluid step) costs under 30 ms in 8 s. The long frames
+  line up with `adaptResolution` (engine.js) changing the pixel ratio. Each step (0.75 → 0.34 → 0.3)
+  reallocates the canvas and is followed by a 50–67 ms frame, two in a 9 s sweep. Proposal: during a
+  sweep or a drag, only step down (never back up) and at most once per 3 s; step back up once the scene
+  is idle. Or require two slow windows in a row before stepping. Some 70–250 ms frames at the start of a
+  sweep showed an idle main thread: the software renderer under this machine's load (load average about
+  8), not page work.
+
 ## 0. Round 2 (`view-sample-r2`): PROPOSAL commits, one concern each
 Each answers an item of `reviews/sample-s1.md`; the commit message carries the reason.
 
@@ -57,6 +95,13 @@ component needs from each:
 - **buttons:** the sample hides a button with nowhere to go and reads "Warm it ▶" below room
   temperature; the forge keeps "Heat it again ▶" at its hot end. The kit should pick one rule.
 - **"About this … ›"** under the readout (the review asks the forge for it too, B7).
+- **Round 3, also ready to lift:**
+  - two fill layers: by day the heat reads terracotta → kit orange → `--ember` by 500 °C → glowing
+    metal (`HOT_DAY`); the kiln cross-fades to the forge's dark-to-bright gradient (`HOT`);
+  - events closer than a finger fan out on angled leaders (one SVG) instead of sharing a label;
+  - a play/pause pressed with a mouse holds the row's layout until the pointer leaves (the pressed
+    button stays under it as "Pause");
+  - a landmark under the knob fades, so it never seems to mark the knob's own temperature.
 
 Older notes from round 1, still open for the forge's copy:
 - **Bug in today's `heat.js` tick placement** (committed and in-progress versions): the stem test is

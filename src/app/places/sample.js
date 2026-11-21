@@ -36,11 +36,21 @@ const SUB = '₀₁₂₃₄₅₆₇₈₉';
 const formula = (e, n) => e.sym + String(n).split('').map(d => SUB[+d]).join('');
 /** Atoms per particle in the fluid (our data: N₂, P₄, S₈…; 1 for single atoms). */
 const perParticle = e => (e.ph.gas && e.ph.gas[0] > 1 ? e.ph.gas[0] : 1);
-/** The particles in the vessel, in words: "single atoms", "N₂ molecules". */
+/** The particles in the vessel, plain words first and the formula after: "pairs of nitrogen atoms (N₂)",
+ *  "rings of 8 sulfur atoms (S₈)", "single atoms". */
 function what(e, kind) {
-  const n = perParticle(e);
-  if (n > 1) return t('sample.what.mol', { f: formula(e, n) });
+  const n = perParticle(e), v = { name: nameIn(e), f: formula(e, n), n };
+  if (n > 1) return t(n === 2 ? 'sample.what.pairs' : n === 4 ? 'sample.what.tetra' : 'sample.what.rings', v);
   return t(kind === 'gas' ? 'sample.what.single' : 'sample.what.atoms');
+}
+/** Once the molecules have been named: "molecules" or "atoms". */
+const whatShort = e => t(perParticle(e) > 1 ? 'sample.what.molShort' : 'sample.what.atoms');
+/** What a crystal we do not draw shows in its vessel (as views/sample.js specimenFor): 'mol', 'atom' or null. */
+function shownOf(e, ss) {
+  if (ss.kind !== 'card') return null;
+  const room = stateAt(e, ROOM);
+  if (!(ss.card === 'molecular' || ss.card === 'complex' || (ss.card === 'predicted' && room.s !== 'unknown' && !room.p))) return null;
+  return ss.card === 'molecular' && perParticle(e) > 1 ? 'mol' : 'atom';
 }
 /** Typical (root-mean-square) speed of the gas particles at T: √(3RT/M), R from CODATA. */
 function speedOf(e, T) {
@@ -118,7 +128,10 @@ export function rangeOf(e) {
 // heat-map slider). Colours follow the temperature itself, so the forge's ramp lands where it does on
 // iron's scale (20 °C charcoal ... 3,200 °C yellow-white) and a 90 °C bromine stays charcoal.
 const HOT = [[0, '#3B2B24'], [0.14, '#5A2414'], [0.28, '#8E2E12'], [0.40, '#B93E12'], [0.56, '#E5612B'], [0.72, '#F59A47'], [0.88, '#FFD796'], [1, '#FFF2C2']]
-  .map(([f, c]) => [ROOM + f * 3180, c]); // the forge's gradient, placed on iron's scale (20 to 3,200 °C)
+  .map(([f, c]) => [ROOM + f * 3180, c]); // the forge's gradient, placed on iron's scale (20 to 3,200 °C): the kiln's
+// by day the same heat reads on the cream panel: muted terracotta, the kit's warm orange, ember (--ember)
+// where metals begin to glow (about 500 °C), then the colours of glowing metal (the forge's own stops)
+const HOT_DAY = [[ROOM, '#E3A27A'], [473.15, '#E8955A'], [773.15, '#B93E12'], [1273.15, '#E5612B'], [1773.15, '#F59A47'], [2473.15, '#FFD796'], [3473.15, '#FFF2C2']];
 const COLD = [[ROOM, '#A9CBD6'], [ROOM - 120, '#6E8FBF']]; // pale ice at room temperature, deeper blue as it gets colder
 const hex = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16));
 function rampAt(ramp, T) { // ramp: [[K, colour]] in order of distance from room temperature
@@ -161,7 +174,31 @@ function placeTicks(groups, W, x) {
       (p.r >= r || px < p.a - 5 || px > p.b + 5)); // p sits lower: my stem crosses its row, so its text must not cover my stem
     const spots = new Map();
     let misses = 0;
+    /** Two events closer than a finger (neon's −249 and −246 °C): each keeps its own label, fanned away from
+     *  the other on a short angled leader that clears the knob; apart in one row, else both to one side. */
+    const placeFan = g => {
+      const [A, B] = g.items, xa = x(A.T), xb = x(B.T), F = 16;
+      const wA = width([{ num: A.num, word: A.word }]), wB = width([{ num: B.num, word: B.word }]);
+      const layouts = [
+        r => [{ ev: A, r, a: xa - F - wA, b: xa - F, side: -1 }, { ev: B, r, a: xb + F, b: xb + F + wB, side: 1 }],
+        r => [{ ev: B, r, a: xb + F, b: xb + F + wB, side: 1 }, { ev: A, r: r + 1, a: xb + F, b: xb + F + wA, side: 1 }],
+        r => [{ ev: A, r, a: xa - F - wA, b: xa - F, side: -1 }, { ev: B, r: r + 1, a: xa - F - wB, b: xa - F, side: -1 }],
+      ];
+      for (const lay of layouts) for (let r = 0; r < 2; r++) {
+        const boxes = lay(r), n0 = placed.length;
+        let ok = boxes.every(bx => bx.r <= 2);
+        for (const bx of boxes) {
+          if (!ok) break;
+          ok = fitsAt(x(bx.ev.T), bx.r, bx.a, bx.b);
+          if (ok) placed.push({ x: x(bx.ev.T), r: bx.r, a: bx.a, b: bx.b });
+        }
+        if (ok) return { fan: boxes, r: Math.max(...boxes.map(bx => bx.r)), px: (xa + xb) / 2, dx: 0, parts: [] };
+        placed.length = n0;
+      }
+      return null;
+    };
     for (const g of order) {
+      if (g.items.length === 2) { const fan = placeFan(g); if (fan) { spots.set(g, fan); continue; } }
       const px = at(g);
       const others = groups.filter(o => o !== g).map(at);
       const left = Math.min(...others.filter(o => o < px).map(o => px - o), 1e9), right = Math.min(...others.filter(o => o > px).map(o => o - px), 1e9);
@@ -193,7 +230,8 @@ function placeTicks(groups, W, x) {
  * Returns { el, input, layout({ lo, hi, anchor, events, marks }), show(T), valueAt(v) }.
  */
 function thermometer() {
-  const fill = h('div', { class: 'sample-fill' });
+  const fillDay = h('div', { class: 'sample-fill__layer' }), fillKiln = h('div', { class: 'sample-fill__layer is-kiln' });
+  const fill = h('div', { class: 'sample-fill' }, fillDay, fillKiln); // by day and in the kiln (cross-fading)
   const rail = h('div', { class: 'sample-rail' }, fill);
   const bulb = h('div', { class: 'sample-bulb', 'aria-hidden': 'true' });
   const knob = h('div', { class: 'sample-knob', 'aria-hidden': 'true' });
@@ -201,21 +239,25 @@ function thermometer() {
   const flags = h('div', { class: 'sample-flags', 'aria-hidden': 'true' });
   const input = h('input', { type: 'range', class: 'sample-range', min: '0', max: '1000', step: '1' });
   const el = h('div', { class: 'sample-track' }, ticks, rail, bulb, knob, input, flags);
-  let lo = ROOM, hi = ROOM + 100, anchor = ROOM, lastShown = '';
+  let lo = ROOM, hi = ROOM + 100, anchor = ROOM, lastShown = '', flagAt = [], trackW = 620;
   const pct = T => Math.max(0, Math.min(100, ((T - lo) / (hi - lo)) * 100));
 
   function layout({ lo: l, hi: hh, anchor: a, events, marks }) {
     lo = l; hi = hh; anchor = a;
     const W = Math.max(220, el.clientWidth || (isPhone() ? 330 : 620));
     const x = T => (pct(T) / 100) * W;
-    // the fill: cold blues left of the anchor, heated-metal colours right of it, by temperature
-    const pa = pct(anchor), stops = [];
-    if (pa > 0) stops.push([0, rampAt(COLD, lo)], ...COLD.filter(([T]) => T > lo && T < anchor).reverse().map(([T, c]) => [pct(T), c]), [pa, rampAt(COLD, anchor)]);
-    stops.push([pa, rampAt(HOT, anchor)], ...HOT.filter(([T]) => T > anchor && T < hi).map(([T, c]) => [pct(T), c]), [100, rampAt(HOT, hi)]);
-    fill.style.background = `linear-gradient(90deg, ${stops.map(([p, c]) => `${c} ${p.toFixed(2)}%`).join(', ')})`;
+    // the fill: cold blues left of the anchor, heat's colours right of it, by temperature
+    const pa = pct(anchor);
+    const grad = hot => {
+      const stops = [];
+      if (pa > 0) stops.push([0, rampAt(COLD, lo)], ...COLD.filter(([T]) => T > lo && T < anchor).reverse().map(([T, c]) => [pct(T), c]), [pa, rampAt(COLD, anchor)]);
+      stops.push([pa, rampAt(hot, anchor)], ...hot.filter(([T]) => T > anchor && T < hi).map(([T, c]) => [pct(T), c]), [100, rampAt(hot, hi)]);
+      return `linear-gradient(90deg, ${stops.map(([p, c]) => `${c} ${p.toFixed(2)}%`).join(', ')})`;
+    };
+    fillDay.style.background = grad(HOT_DAY); fillKiln.style.background = grad(HOT);
     // the bulb, the thermometer's reservoir, at the anchor: at the left end it sits as the forge's does
     bulb.style.left = pa < 0.01 ? '-13px' : `calc(${pa.toFixed(2)}% - 9px)`;
-    // ticks: those closer than 14 px share one stem and one label; labels never cover a stem
+    // ticks: events closer than 14 px fan out on leaders (or, failing room, share one label); labels never cover a stem
     const sorted = [...events].sort((a, b) => a.T - b.T);
     const groups = [];
     for (const ev of sorted) {
@@ -223,8 +265,21 @@ function thermometer() {
       if (g && x(ev.T) - x(g.items[g.items.length - 1].T) < 14) g.items.push(ev); else groups.push({ items: [ev] });
     }
     const spots = placeTicks(groups, W, x);
-    replace(ticks, groups.flatMap(g => {
+    const NS = 'http://www.w3.org/2000/svg', leaders = document.createElementNS(NS, 'svg');
+    leaders.setAttribute('class', 'sample-leaders'); leaders.setAttribute('width', String(W)); leaders.setAttribute('height', '48');
+    replace(ticks, leaders, groups.flatMap(g => {
       const sp = spots.get(g);
+      if (sp.fan) return sp.fan.map(bx => { // its own label beside its leader: rail, knee, then out to the label
+        const ex = x(bx.ev.T), lx = bx.side < 0 ? bx.b + 3 : bx.a - 3, ly = 19 - 17 * bx.r;
+        const line = document.createElementNS(NS, 'polyline');
+        line.setAttribute('points', `${ex.toFixed(1)},46 ${ex.toFixed(1)},37 ${lx.toFixed(1)},${ly}`);
+        if (bx.ev.p) line.setAttribute('class', 'is-pred');
+        leaders.append(line);
+        const node = h('span', { class: `sample-tick is-fan${bx.ev.p ? ' is-pred' : ''}`, style: { left: `${((((bx.a + bx.b) / 2) / W) * 100).toFixed(2)}%` } },
+          h('span', null, h('b', null, bx.ev.num), bx.ev.word ? h('small', null, bx.ev.word) : null));
+        node.style.setProperty('--row', String(bx.r)); node.style.setProperty('--dx', '0px');
+        return node;
+      });
       const label = h('span', null, sp.parts.map((p, i) => [i ? h('small', { class: 'sample-tick__sep' }, ' · ') : null,
         h('b', null, p.num), p.word ? h('small', null, p.word) : null]));
       const node = h('span', { class: `sample-tick${g.items.some(ev => ev.p) ? ' is-pred' : ''}`, style: { left: `${((sp.px / W) * 100).toFixed(2)}%` } }, label);
@@ -250,12 +305,14 @@ function thermometer() {
       taken.push({ a, b: a + w });
       fl.push({ ...m, dx: a + w / 2 - px });
     }
+    flagAt = [];
     replace(flags, fl.map(m => {
       const f = h('span', { class: `sample-flag${m.room ? ' is-room' : ''}`, style: { left: `${pct(m.T).toFixed(2)}%` } }, m.text);
       f.style.setProperty('--dx', `${m.dx.toFixed(1)}px`);
+      if (!m.room) flagAt.push({ f, T: m.T, a: x(m.T) + m.dx - (textW(m.text, 400, true) + 6) / 2, b: x(m.T) + m.dx + (textW(m.text, 400, true) + 6) / 2 });
       return f;
     }));
-    lastShown = '';
+    trackW = W; lastShown = '';
   }
   function show(T) {
     // the fill runs from the bulb (room temperature) to the knob, which is drawn exactly where it ends
@@ -264,6 +321,10 @@ function thermometer() {
       lastShown = key;
       fill.style.clipPath = `inset(0 ${(100 - Math.max(p, pa)).toFixed(2)}% 0 ${Math.min(p, pa).toFixed(2)}% round 6px)`;
       knob.style.left = `${p.toFixed(2)}%`;
+      // a landmark under the knob steps back, so it never seems to mark the knob's own temperature, unless it
+      // does (helium a whisker above absolute zero); room temperature always stays
+      const kx = (p / 100) * trackW, near1 = 0.01 * (hi - lo);
+      for (const g of flagAt) g.f.classList.toggle('is-near', kx > g.a - 16 && kx < g.b + 16 && Math.abs(T - g.T) > near1);
     }
     const v = String(Math.round(p * 10));
     if (input.value !== v && document.activeElement !== input) input.value = v;
@@ -282,7 +343,7 @@ export function buildSample(ui, hooks = {}) {
   const thermo = thermometer();
   const coolBtn = h('button', { type: 'button', class: 'ui-btn sample-play', onclick: () => toggle(-1) });
   const heatBtn = h('button', { type: 'button', class: 'ui-btn sample-play', onclick: () => toggle(1) });
-  const roomBtn = h('button', { type: 'button', class: 'ui-btn ui-btn--quiet sample-room', onclick: () => { stop(); setT(ROOM); } });
+  const roomBtn = h('button', { type: 'button', class: 'ui-btn ui-btn--quiet sample-room', onclick: () => { release(); stop(); setT(ROOM); } });
   const actions = h('div', { class: 'sample-actions' });
   const row = h('div', { class: 'sample-row' }, h('div', { class: 'sample-readbox' }, h('div', { class: 'sample-readline' }, read, word), aboutBtn), thermo.el);
   const never = h('div', { class: 'sample-never' });
@@ -320,7 +381,7 @@ export function buildSample(ui, hooks = {}) {
     if (ss.kind === 'gas') s = t('sample.cap.gas', { at, what: what(el, 'gas'), v: kmh(speedOf(el, T).ms) });
     else if (ss.kind === 'liquid') s = t('sample.cap.liquid', { at, what: what(el, 'liquid') });
     else if (ss.kind === 'solid') s = t(cellShown(T) ? 'sample.cap.solidCnDay' : 'sample.cap.solidCn', { at, cn: ss.phase.cn });
-    else s = t(cardKey(ss), { at, n: el.lat.atoms, f: formula(el, perParticle(el)) });
+    else s = t(cardKey(ss), { at, n: el.lat.atoms, what: what(el, 'solid') });
     if (!room) return s;
     const inv = kind === 'card' ? (el.ph.sub ? 'sample.invite.sub' : 'sample.invite.melt')
       : dirs.cool && dirs.heat ? 'sample.invite.both' : dirs.cool ? 'sample.invite.cool' : 'sample.invite.heat';
@@ -337,7 +398,7 @@ export function buildSample(ui, hooks = {}) {
    *  "at room temperature" at −100 °C). up: the direction the thermometer last moved. */
   function stretch(T, ss, up) {
     const k = ss.kind === 'card' ? 'card' : ss.kind;
-    const now = t(`sample.stretch.${k}.${up ? 'warm' : 'cool'}`, { what: what(el, 'liquid') });
+    const now = t(`sample.stretch.${k}.${up ? 'warm' : 'cool'}`, { what: whatShort(el) });
     const next = up ? events.find(x => x.T > T + 0.05) : events.filter(x => x.T < T - 0.05).pop();
     if (!next) return !up && el.ph.noSolid && ss.kind === 'liquid' ? `${now} ${t('sample.next.never')}` : now;
     return `${now} ${t(`sample.next.${tickKey(next)}`, { T: next.p ? `≈${NB}${C(next.T)}` : degC(next.T) })}`;
@@ -347,10 +408,10 @@ export function buildSample(ui, hooks = {}) {
     const up = T1 > T0;
     const crossed = events.filter(x => (x.T - T0) * (x.T - T1) < 0).sort((a, b) => Math.abs(a.T - T1) - Math.abs(b.T - T1))[0];
     if (!crossed) return null;
-    const at = degC(crossed.T), w = what(el, ss.kind);
+    const at = degC(crossed.T), w = what(el, 'liquid');
     if (crossed.key === 'trans') return ss.kind === 'solid' ? t(cellShown(T1) ? 'sample.ev.restackDay' : 'sample.ev.restack', { T: at, cn: ss.phase.cn }) : t('sample.ev.restackCard', { T: at });
     if (crossed.key === 'sub') return up ? t('sample.ev.sub', { T: at, what: what(el, 'gas') }) : t('sample.ev.deposit', { T: at });
-    if (crossed.key === 'boil') return t(up ? 'sample.ev.boil' : 'sample.ev.condense', { T: at, what: what(el, 'liquid') });
+    if (crossed.key === 'boil') return t(up ? 'sample.ev.boil' : 'sample.ev.condense', { T: at, what: whatShort(el) });
     // melting point
     if (up) {
       if (ss.kind !== 'liquid') return null;
@@ -358,7 +419,7 @@ export function buildSample(ui, hooks = {}) {
       return lastSig.startsWith('card') ? t('sample.ev.meltCard', { T: at, what: w }) : t('sample.ev.melt', { T: at });
     }
     if (ss.kind === 'solid') return t(cellShown(T1) ? 'sample.ev.freezeCnDay' : 'sample.ev.freezeCn', { T: at, cn: ss.phase.cn });
-    if (ss.card === 'molecular') return t(perParticle(el) > 1 ? 'sample.ev.freezeMol' : 'sample.ev.freezeComplex', { T: at, f: formula(el, perParticle(el)) });
+    if (ss.card === 'molecular') return t(perParticle(el) > 1 ? 'sample.ev.freezeMol' : 'sample.ev.freezeComplex', { T: at, what: what(el, 'solid') });
     if (ss.card === 'complex') return t('sample.ev.freezeComplex', { T: at });
     if (ss.card === 'phase' || ss.card === 'unknown') return t('sample.ev.freezePhase', { T: at });
     return t('sample.ev.freezePred', { T: at });
@@ -410,7 +471,7 @@ export function buildSample(ui, hooks = {}) {
     if (ss.kind === 'gas') wd = t('sample.word.gas', { v: kmh(speedOf(el, T).ms) });
     else if (ss.kind === 'liquid') wd = t('sample.word.liquid');
     else if (ss.kind === 'solid') wd = t('sample.word.solidCn', { cn: ss.phase.cn });
-    else if (kind !== 'never') wd = t('sample.word.solidCard');
+    else if (kind !== 'never') { const sh = shownOf(el, ss); wd = t(sh === 'mol' ? 'sample.word.solidMol' : sh === 'atom' ? 'sample.word.solidAtom' : 'sample.word.solidCard'); }
     if (wd !== lastWord) { lastWord = wd; replace(word, wd); }
     const vt = wd ? `${rd} · ${wd}` : rd; // what a screen reader says for the thermometer (not 0–1000)
     if (vt !== lastVt) { lastVt = vt; thermo.input.setAttribute('aria-valuetext', vt); }
@@ -452,13 +513,17 @@ export function buildSample(ui, hooks = {}) {
       b.classList.toggle('ui-btn--secondary', ink !== d);
     }
     const keep = [canCool ? coolBtn : null, away ? roomBtn : null, canHeat ? heatBtn : null].filter(Boolean);
-    // the focused button stays in the page (a keyboard user keeps their place)
-    if (keep.length !== actions.childNodes.length || keep.some((b, i) => actions.childNodes[i] !== b)) replace(actions, keep);
+    // the focused button stays in the page (a keyboard user keeps their place); after a play or pause
+    // pressed with a mouse the row keeps its buttons where they are, so the pressed one stays under the
+    // pointer as "Pause" (re-centring slid "Room temperature" under it); it settles when the pointer leaves
+    if (keep.length !== actions.childNodes.length || keep.some((b, i) => actions.childNodes[i] !== b)) {
+      if (holdRow && actions.childNodes.length) heldRow = true; else replace(actions, keep);
+    }
     replace(aboutBtn, t('sample.about'));
   }
 
   // ---- "◀ Cool it" / "Heat it ▶": sweep to the end, stopping just past each event so its caption is read
-  function toggle(dir) { if (playing && playing.dir === dir) stop(); else start(dir); }
+  function toggle(dir) { holdRow = mouseOnRow; if (playing && playing.dir === dir) stop(); else start(dir); }
   function start(dir) {
     stop();
     const end = endOf(dir);
@@ -478,7 +543,7 @@ export function buildSample(ui, hooks = {}) {
       }
       T = dir > 0 ? Math.min(end, T2) : Math.max(end, T2);
       setT(T);
-      if (T === end) { playing = null; renderButtons(); return false; }
+      if (T === end) { playing = null; holdRow = false; heldRow = false; lastBtns = ''; renderButtons(); return false; } // the sweep is over: the row settles
       return true;
     });
     renderButtons();
@@ -574,10 +639,20 @@ export function buildSample(ui, hooks = {}) {
       const posNote = vi ? `vị trí nguyên tử: ${p.sitesSrc === 'sym' ? 'do đối xứng quy định' : 'theo mục COD'}` : `atomic positions: ${p.sitesSrc === 'sym' ? 'fixed by symmetry' : 'from the COD entry'}`;
       row(t('sample.d.pattern'), valBtn(gloss || tech, t('sample.d.pattern'), [p.name, p.sitesSrc, { n: posNote }]), gloss ? tech : null);
       // the cell's sides; where it was measured goes to the source (a "triple point" needs a sentence)
-      row(t('sample.d.cell'), valBtn(latText, t('sample.d.cell'), [p.cell.a, p.cellSrc, { n: [p.cond ? condText(p.cond) : null, p.cellNote].filter(Boolean).join(' · ') }]),
-        t(hexAxes ? 'sample.d.cellSubHex' : 'sample.d.cellSub'));
-      row(t('sample.d.perCell'), valBtn(String(p.sites.length), t('sample.d.perCell'), [p.sites.length, p.sitesSrc, { n: posNote }]),
-        rh && hexAxes && p.sites.length % 3 === 0 ? t('sample.d.perCellRh', { k: p.sites.length / 3 }) : null);
+      const measured = [p.cond ? condText(p.cond) : null, p.cellNote].filter(Boolean).join(' · ');
+      if (rh && hexAxes && p.sites.length % 3 === 0) {
+        // a rhombohedral crystal is listed on hexagonal axes (3 atoms); shown here as the slanted cube it
+        // is (1 atom), computed from the measured cell, with the measured cell itself on its own row
+        const A = p.cell.a, Cc = p.cell.c, side = Math.sqrt((A * A) / 3 + (Cc * Cc) / 9);
+        const ang = (Math.acos((2 * Cc * Cc - 3 * A * A) / (2 * Cc * Cc + 6 * A * A)) * 180) / Math.PI;
+        row(t('sample.d.cell'), valBtn(t('sample.d.cellRhV', { a: fmtNum(side, 1), ang: fmtNum(ang, 1) }), t('sample.d.cell'),
+          [side, 'calc', { n: t('sample.d.cellRhN', { ha: fmtNum(A, 2), hc: fmtNum(Cc, 2) }) }]), t('sample.d.cellSub'));
+        row(t('sample.d.perCell'), valBtn(String(p.sites.length / 3), t('sample.d.perCell'), [p.sites.length / 3, 'calc', { n: t('sample.d.perCellRhN', { k3: p.sites.length }) }]));
+        row(t('sample.d.hex'), valBtn(t('sample.d.hexV', { a: fmtNum(A, 2), c: fmtNum(Cc, 2), k: p.sites.length }), t('sample.d.hex'), [A, p.cellSrc, { n: measured }]), t('sample.d.hexSub'));
+      } else {
+        row(t('sample.d.cell'), valBtn(latText, t('sample.d.cell'), [p.cell.a, p.cellSrc, { n: measured }]), t(hexAxes ? 'sample.d.cellSubHex' : 'sample.d.cellSub'));
+        row(t('sample.d.perCell'), valBtn(String(p.sites.length), t('sample.d.perCell'), [p.sites.length, p.sitesSrc, { n: posNote }]));
+      }
       row(t('sample.d.neighbours'), valBtn(t('sample.d.neighboursV', { cn: p.cn, d: fmtNum(p.dNN, 0) }), t('sample.d.neighbours'), [p.dNN, 'calc', { n: t('sample.d.neighboursN') }]),
         cellShown(T) ? h('span', { class: 'sample-cell-word' }, t('sample.d.neighboursSub')) : null);
       const Tm = ph.mp?.[0] ?? ph.sub?.[0];
@@ -589,8 +664,7 @@ export function buildSample(ui, hooks = {}) {
     if (ss.kind === 'card') {
       const cr = e.f.crystal;
       row(t('sample.d.crystal'), valBtn(cr && cr[0] ? structText(cr[0]) : null, t('f.crystal'), cr));
-      const room = stateAt(e, ROOM), shown = ss.card === 'molecular' || ss.card === 'complex' || (ss.card === 'predicted' && room.s !== 'unknown' && !room.p);
-      const whyKey = !shown ? 'sample.d.whyEmpty' : ss.card === 'molecular' && perParticle(e) > 1 ? 'sample.d.whyMol' : 'sample.d.why';
+      const sh = shownOf(e, ss), whyKey = !sh ? 'sample.d.whyEmpty' : sh === 'mol' ? 'sample.d.whyMol' : 'sample.d.why';
       row(t(whyKey), valBtn(t('sample.d.whyV'), t(whyKey), [1, 'spec', { n: t('sample.d.whyN') }]));
     }
     if (sp) {
@@ -615,10 +689,10 @@ export function buildSample(ui, hooks = {}) {
     if (ss.kind === 'solid') notes.push(t('sample.d.n.expansion'));
     if (ss.kind === 'solid') notes.push(t('sample.d.n.pm'));
     if (ss.kind === 'gas' || ss.kind === 'liquid') notes.push(t('sample.d.n.slow', { w: bigWords(SLOWDOWN) }));
-    // the colours: the table's family colours, so the sample is recognisably the tile it came from; a
-    // liquid metal by day is a mirror, as real mercury is
-    const mirror = ss.kind === 'liquid' && METAL.includes(e.f.cat[0]) && cellShown(T);
-    notes.push(t(mirror ? 'sample.d.n.mirror' : 'sample.d.n.colour', { fam: famName(e), name: nameIn(e) }));
+    // the colours: the table's family colours, so the sample is recognisably the tile it came from; by day
+    // quicksilver (a metal liquid at room temperature: mercury) is a mirror, frozen, liquid or boiling
+    const mirror = METAL.includes(e.f.cat[0]) && stateAt(e, ROOM).s === 'liquid' && cellShown(T);
+    notes.push(t(mirror ? 'sample.d.n.mirror' : 'sample.d.n.colour', { fam: famName(e), name: nameIn(e), Name: Name(e) }));
     replace(about.body,
       h('div', { class: 'sample-d-head' }, h('h2', { class: 'sample-d-title' }, t('sample.d.title')), h('p', { class: 'sample-d-meta' }, `${Name(e)} · ${C(T)}`)),
       h('p', { class: 'sample-d-hook' }, t(`sample.d.hook.${hookKey}`)),
@@ -630,6 +704,7 @@ export function buildSample(ui, hooks = {}) {
   }
 
   function enter() {
+    holdRow = false; heldRow = false;
     el = byZ(state.Z);
     layout();
     const neverNow = kind === 'never';
@@ -642,6 +717,12 @@ export function buildSample(ui, hooks = {}) {
     if (!neverNow) { say(describe(state.T), Math.abs(state.T - ROOM) < 0.5 ? 'room' : 'state'); update(); renderButtons(); }
     if (about.isOpen()) { aboutSig = ''; renderAbout(); }
   }
+  // a play or pause pressed with a mouse holds the row's layout (holdRow) until the pointer leaves it or the
+  // sweep ends; a change it would have made waits (heldRow). Anything else re-lays it out at once.
+  let mouseOnRow = false, holdRow = false, heldRow = false;
+  function release() { holdRow = false; if (heldRow) { heldRow = false; lastBtns = ''; renderButtons(); } }
+  actions.addEventListener('pointerover', ev => { mouseOnRow = ev.pointerType === 'mouse'; });
+  actions.addEventListener('pointerleave', () => { mouseOnRow = false; release(); });
   // arriving by the scale dive, the panel steps aside until the camera has drawn back (STYLE §7)
   let arriving = null;
   function arrive(wait) {

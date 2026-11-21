@@ -104,6 +104,15 @@ export function blackbody(T) {
   return out;
 }
 
+/** A soft round contact shadow (alpha falloff) for a specimen resting on the hearth. */
+function contactShadowTexture(size = 128) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), r = size / 2;
+  const grd = g.createRadialGradient(r, r, 0, r, r, r);
+  grd.addColorStop(0, 'rgba(255,255,255,0.9)'); grd.addColorStop(0.45, 'rgba(255,255,255,0.45)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
 /** Soft round glow (white, alpha falloff) for the halo around hot metal. */
 function haloTexture(size = 128) {
   const c = document.createElement('canvas'); c.width = c.height = size;
@@ -228,13 +237,17 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   atoms.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   world.add(atoms);
   // forge: a crystal we do not draw (a molecular or complex solid, radon's predicted crystal) still shows
-  // its building block: one molecule or one atom stands in the vessel as the specimen, slowly turning
-  // (elements never made in bulk keep an empty vessel: there is nothing to show)
+  // its building block: one molecule or one atom rests on the hearth in a vessel sized to it, slowly
+  // turning about the vertical, with a soft contact shadow (elements never made in bulk keep an empty
+  // vessel: there is nothing to show)
   const specimen = new THREE.InstancedMesh(atoms.geometry, atomMat, 8);
   specimen.count = 0; specimen.visible = false; specimen.frustumCulled = false;
   world.add(specimen);
-  let spec = null; // { n, T (template), bond, r, extent, y }
-  const specQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.55, 0.35, 0)), specAx = new THREE.Vector3(0.3, 1, 0.15).normalize();
+  let spec = null; // { n, T (template, resting), bond, r, foot, lo, hi, y, yaw }
+  const specQ = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0);
+  const specShadow = FORGE ? new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: TOK.shadow, map: contactShadowTexture(), transparent: true, opacity: 0.4, depthWrite: false, ...ON_TOP })) : null;
+  if (specShadow) { specShadow.renderOrder = 1; specShadow.visible = false; world.add(specShadow); }
   // forge: a soft incandescent glow around every hot atom, the molten pool, the glow pooling on the
   // hearth, and spokes from one atom to the neighbours it touches
   let glow = null, pool = null, decal = null, spk = null, spokeC = -1, poolK = 0;
@@ -352,16 +365,30 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     const measured = room.s !== 'unknown' && !room.p; // its matter is real: only its crystal is not drawn
     if (!(ss.card === 'molecular' || ss.card === 'complex' || (ss.card === 'predicted' && measured))) return null;
     const rc = e.f.rCov?.[0] || e.f.rVdw?.[0] * 0.6 || 120, gasN = e.ph.gas ? e.ph.gas[0] : 1;
-    if (ss.card === 'molecular' && gasN > 1) { // one molecule, as the fluid draws them
-      const T = molTemplate(gasN), bond = 2 * rc, r = rc * 0.95;
-      return { n: gasN, T, bond, r, extent: 2 * Math.max(...T.map(p => Math.hypot(p[0], p[1], p[2]))) * bond + 2 * r };
+    let sp;
+    if (ss.card === 'molecular' && gasN > 1) { // one molecule, as the fluid draws them, at rest: a pair lying
+      // down, the tetrahedron on a face, a ring standing on its rim (lying flat, seen from above the hearth,
+      // its far atoms hid its hole); the turning shows the ring face-on, then its crown edge-on
+      let T = molTemplate(gasN), q0 = null;
+      if (gasN === 4) q0 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 1, 1).normalize(), UP);
+      else if (gasN > 4) q0 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+      if (q0) T = T.map(p => new THREE.Vector3(...p).applyQuaternion(q0).toArray());
+      sp = { n: gasN, T, bond: 2 * rc, r: rc * molR(gasN) };
+    } else { // one atom, the liquid's size
+      const rv = e.f.rVdw?.[0] || 2 * rc;
+      sp = { n: 1, T: [[0, 0, 0]], bond: 0, r: 0.57 * (e.f.cat[0] === 'noble-gas' ? 1.6 * rv : 2.2 * rc) };
     }
-    const rv = e.f.rVdw?.[0] || 2 * rc, r = 0.57 * (e.f.cat[0] === 'noble-gas' ? 1.6 * rv : 2.2 * rc); // one atom, the liquid's size
-    return { n: 1, T: [[0, 0, 0]], bond: 0, r, extent: 2 * r };
+    // its reach: across the floor (it turns about the vertical, so a circle) and from bottom to top
+    sp.foot = Math.max(...sp.T.map(p => Math.hypot(p[0], p[2]))) * sp.bond + sp.r;
+    sp.lo = Math.min(...sp.T.map(p => p[1])) * sp.bond - sp.r; sp.hi = Math.max(...sp.T.map(p => p[1])) * sp.bond + sp.r;
+    sp.yaw = 0; // the sway's phase; it faces the camera's bearing (0.6): a ring face-on, a pair across the view
+    return sp;
   }
   function writeSpecimen() {
     specimen.visible = !!spec;
+    if (specShadow) specShadow.visible = !!spec;
     if (!spec) { specimen.count = 0; return; }
+    specQ.setFromAxisAngle(UP, 0.6 + 0.65 * Math.sin(spec.yaw)); // a gentle sway about facing the visitor
     for (let k = 0; k < spec.n; k++) {
       v3.set(spec.T[k][0] * spec.bond, spec.T[k][1] * spec.bond, spec.T[k][2] * spec.bond).applyQuaternion(specQ);
       v3.y += spec.y;
@@ -500,15 +527,25 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   // ---- liquid and gas -------------------------------------------------------------------------
   /**
    * A molecule's atoms around its centre, in bond lengths (our data names the molecule: N₂, P₄, S₈):
-   * a pair; a regular tetrahedron (P₄); or a ring with neighbours one bond apart (S₈), drawn flat, since
-   * the ring's real crown shape needs bond angles our data does not hold.
+   * a pair; a regular tetrahedron (P₄); S₈ as the crown it is (every S–S–S angle about 108°, alternate
+   * atoms a little above and below the ring: the shape of cyclo-octasulfur); any other ring flat.
    */
   function molTemplate(nAt) {
     if (nAt === 2) return [[-0.5, 0, 0], [0.5, 0, 0]];
     if (nAt === 4) { const s = 1 / (2 * Math.SQRT2); return [[s, s, s], [s, -s, -s], [-s, s, -s], [-s, -s, s]]; }
+    const ang = k => (2 * Math.PI * k) / nAt;
+    if (nAt === 8) { // the crown: next-but-one atoms (same height) fix the ring's radius, neighbours one bond apart
+      const R = Math.sin((108 * Math.PI) / 360) / Math.sin((2 * Math.PI) / nAt);
+      const hh = 0.5 * Math.sqrt(Math.max(0, 1 - (2 * R * Math.sin(Math.PI / nAt)) ** 2));
+      return Array.from({ length: nAt }, (_, k) => [R * Math.cos(ang(k)), k % 2 ? hh : -hh, R * Math.sin(ang(k))]);
+    }
     const R = 0.5 / Math.sin(Math.PI / nAt);
-    return Array.from({ length: nAt }, (_, k) => [R * Math.cos((2 * Math.PI * k) / nAt), 0, R * Math.sin((2 * Math.PI * k) / nAt)]);
+    return Array.from({ length: nAt }, (_, k) => [R * Math.cos(ang(k)), 0, R * Math.sin(ang(k))]);
   }
+  // forge: a molecule's atoms overlap, so it reads as one joined body (the bond is about two covalent
+  // radii, an approximation): a pair or a tetrahedron's beads are 0.62 of a bond, a ring's 0.54 (joined,
+  // with its hole still open); the legacy look keeps its touching beads. In covalent radii:
+  const molR = nAt => (!FORGE ? 0.95 : nAt >= 6 ? 1.08 : 1.24);
   function prepareFluid(e, kind) {
     const gasN = e.ph.gas ? e.ph.gas[0] : 1;
     const rc = e.f.rCov?.[0] || e.f.rVdw?.[0] * 0.6 || 120;
@@ -520,20 +557,20 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       dNN = gasN > 1 || e.f.cat[0] === 'noble-gas' ? 1.6 * rv : 2.2 * rc;
       if (gasN > 1) { // a molecule is the particle: space them by its width (two touching atoms per bond)
         const t0 = molTemplate(gasN), reach = Math.max(...t0.map(p => Math.hypot(p[0], p[1], p[2])));
-        dNN = Math.max(dNN, 2 * reach * 2 * rc + 2 * rc * 0.95);
+        dNN = Math.max(dNN, 2 * reach * 2 * rc + 2 * rc * molR(gasN));
       }
       n = cnt;
       const side = Math.cbrt(n) * dNN * 2.1;
       setBox([side, side, side]);
       const spread = kind === 'gas' ? 0.9 : 0.6, h0 = kind === 'gas' ? 0.9 : 0.35;
       for (let i = 0; i < n; i++) { P[3 * i] = (rand() - 0.5) * boxL[0] * spread; P[3 * i + 1] = -boxL[1] / 2 + rand() * boxL[1] * h0 + dNN * 0.5; P[3 * i + 2] = (rand() - 0.5) * boxL[2] * spread; }
-      setAtomGeometry(gasN > 1 ? rc * 0.95 : 0.46 * dNN);
+      setAtomGeometry(gasN > 1 ? rc * molR(gasN) : 0.46 * dNN);
     }
     molN = gasN > 1 ? gasN : 1;
     bond = molN > 1 ? 2 * rc : 0; // bond length ~ two covalent radii (approximation)
     molT = molN > 1 ? molTemplate(molN) : null;
     if (molN > 1) {
-      molSize = 2 * Math.max(...molT.map(p => Math.hypot(p[0], p[1], p[2]))) * bond + 2 * rc * 0.95; // the molecule's width
+      molSize = 2 * Math.max(...molT.map(p => Math.hypot(p[0], p[1], p[2]))) * bond + 2 * rc * molR(molN); // the molecule's width
       for (let i = 0; i < n; i++) { // a random orientation and a steady spin about a random axis
         q4.set(gauss(), gauss(), gauss(), gauss()).normalize().toArray(Qr, 4 * i);
         ax.set(gauss(), gauss(), gauss()).normalize();
@@ -549,7 +586,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     morph = null;
     // forge: atoms from liquid to gas, never a change of scale (STYLE §6): the liquid's beads overlap a
     // little and blend into one glowing mass, and the vapour keeps them; molecules keep their touching atoms
-    if (FORGE) setAtomGeometry(molN > 1 ? rc * 0.95 : 0.57 * dNN);
+    if (FORGE) setAtomGeometry(molN > 1 ? rc * molR(molN) : 0.57 * dNN);
     // a puddle with the solid's volume: radius from n particles at spacing ~d_NN in a layer ~half as high as wide
     puddleR = FORGE ? boxL[0] * 0.44 : Math.cbrt((n * dNN ** 3) / Math.PI) * 0.9;
   }
@@ -560,7 +597,11 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     const gasN = e.ph.gas ? e.ph.gas[0] : 1;
     const M = (e.f.aw?.[0] || e.f.massNumber?.[0] || 2 * e.Z) * gasN;
     const vrms = rmsSpeed(state.T, M, data().constants.R[0]) * SPEED_SCALE;
-    const hx = L[0] / 2 - r, hy = L[1] / 2 - r, hz = L[2] / 2 - r;
+    // the walls keep every bead inside the glass: a particle's reach is its own radius, or a molecule's
+    // outermost atom (its centre tumbles freely); the forge's glass has rounded edges, so a little more
+    // (the floor is flat: beads rest on it at their own reach)
+    const reach = FORGE && molN > 1 ? molSize / 2 : r, inset = FORGE ? reach + L[0] * 0.012 : r;
+    const hx = L[0] / 2 - inset, hy = L[1] / 2 - inset, hz = L[2] / 2 - inset, fy = L[1] / 2 - reach;
     if (kind === 'gas') {
       // ideal gas: straight lines, elastic walls; rescale speeds smoothly toward the current temperature
       let s2 = 0; for (let i = 0; i < 3 * n; i++) s2 += Vv[i] * Vv[i];
@@ -569,7 +610,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         const o = 3 * i;
         for (let k = 0; k < 3; k++) { Vv[o + k] *= f; P[o + k] += Vv[o + k] * dt; }
         if (P[o] > hx || P[o] < -hx) { P[o] = Math.max(-hx, Math.min(hx, P[o])); Vv[o] *= -1; }
-        if (P[o + 1] > hy || P[o + 1] < -hy) { P[o + 1] = Math.max(-hy, Math.min(hy, P[o + 1])); Vv[o + 1] *= -1; }
+        if (P[o + 1] > hy || P[o + 1] < -fy) { P[o + 1] = Math.max(-fy, Math.min(hy, P[o + 1])); Vv[o + 1] *= -1; }
         if (P[o + 2] > hz || P[o + 2] < -hz) { P[o + 2] = Math.max(-hz, Math.min(hz, P[o + 2])); Vv[o + 2] *= -1; }
       }
     } else {
@@ -584,16 +625,16 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         const rx = P[o] - cx, rz = P[o + 2] - cz, rr = Math.hypot(rx, rz);
         // forge look: the pool gathers what reaches the floor; a drop still in the air falls like rain
         // (pulling it in at every height drew the condensing vapour into a tall column)
-        const wy = FORGE ? Math.max(0, Math.min(1, 1 - (P[o + 1] + hy - dNN * 4) / (dNN * 3))) : 1;
+        const wy = FORGE ? Math.max(0, Math.min(1, 1 - (P[o + 1] + fy - dNN * 4) / (dNN * 3))) : 1;
         if (rr > Rp && wy > 0) { const pull = (wy * (rr - Rp) * 6 * dt) / rr; Vv[o] -= rx * pull * 4; Vv[o + 2] -= rz * pull * 4; }
         // a round pool, never the crucible's corners; only at the floor, so condensing droplets fall freely
         // and drift in (snapping them in mid-air stood them in columns on the pool's rim)
-        if (FORGE && rr > Rp * 1.02 && P[o + 1] < -hy + dNN * 3) { const f = (Rp * 1.02) / rr; P[o] = cx + rx * f; P[o + 2] = cz + rz * f; Vv[o] *= 0.5; Vv[o + 2] *= 0.5; }
+        if (FORGE && rr > Rp * 1.02 && P[o + 1] < -fy + dNN * 3) { const f = (Rp * 1.02) / rr; P[o] = cx + rx * f; P[o + 2] = cz + rz * f; Vv[o] *= 0.5; Vv[o + 2] *= 0.5; }
         if (FORGE && rr > 1 && wy > 0) { const sw = (wy * dNN * 2.2 * dt) / rr; Vv[o] -= rz * sw; Vv[o + 2] += rx * sw; } // a slow swirl, as in a stirred melt
         const damp = Math.exp(-(wy > 0 ? 4 : 1.2) * dt); // less drag in the air: the drops fall, then settle
         for (let k = 0; k < 3; k++) { Vv[o + k] *= damp; P[o + k] += Vv[o + k] * dt; }
         if (P[o] > hx || P[o] < -hx) { P[o] = Math.max(-hx, Math.min(hx, P[o])); Vv[o] *= -0.3; }
-        if (P[o + 1] < -hy) { P[o + 1] = -hy; Vv[o + 1] *= -0.2; }
+        if (P[o + 1] < -fy) { P[o + 1] = -fy; Vv[o + 1] *= -0.2; }
         if (P[o + 1] > hy) { P[o + 1] = hy; Vv[o + 1] = 0; }
         if (P[o + 2] > hz || P[o + 2] < -hz) { P[o + 2] = Math.max(-hz, Math.min(hz, P[o + 2])); Vv[o + 2] *= -0.3; }
       }
@@ -619,6 +660,10 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
             P[p] += dx * push; P[p + 1] += dy * push; P[p + 2] += dz * push;
           }
         }
+      }
+      // the push apart can carry a bead at the edge of the pool back through the glass: walls last
+      if (FORGE) for (let i = 0; i < 3 * n; i += 3) {
+        P[i] = Math.max(-hx, Math.min(hx, P[i])); P[i + 1] = Math.max(-fy, Math.min(hy, P[i + 1])); P[i + 2] = Math.max(-hz, Math.min(hz, P[i + 2]));
       }
     }
     if (molN > 1) for (let i = 0; i < n; i++) { // tumbling molecules: each spins about its own axis
@@ -678,6 +723,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       // by day the glass edges catch more light on the cream paper; in the kiln they stay as they were
       glassMat.uniforms.uCol.value.copy(INK).lerp(KILN_TEXT, k); glassMat.uniforms.uK.value = 0.34 - 0.2 * k; glassMat.uniforms.uBase.value = 0.022 - 0.016 * k;
       glassFoot.material.opacity = 0.32 * (1 - k);
+      if (specShadow) specShadow.material.opacity = 0.4 * (1 - k);
       // the unit cell: verdigris atoms by day; warm-gold rims once the metal glows
       boxMat.color.copy(INK).lerp(KILN_TEXT, k); cellMat.color.copy(boxMat.color);
     } else {
@@ -715,9 +761,14 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         atoms.visible = false; cellLines.visible = false;
         if (spec) { // a vessel sized to the specimen; the fluid it froze from is forgotten (a melt starts afresh)
           n = 0;
-          const side = Math.max(600, spec.extent * 2.6); // the specimen fills about two fifths of the vessel's width
+          // about half the vessel's width, like an object in a museum case; it rests on the hearth
+          const side = Math.max((spec.n === 1 ? 5 : 4) * spec.foot, 1.9 * (spec.hi - spec.lo)); // a lone atom: two fifths
           setBox([side, side, side]);
-          spec.y = -side / 2 + side * 0.42; world.userData.lift = spec.y;
+          spec.y = -side / 2 - spec.lo; world.userData.lift = spec.y;
+          if (specShadow) { // under it, as wide as it is, on the glaze (a polygon offset wins the depth test)
+            const w = 2 * spec.foot * 1.35;
+            specShadow.scale.set(w, 1, w); specShadow.position.set(0, -side / 2 + side * 0.001, 0);
+          }
         } else if (n === 0 || elementChanged) setBox([1200, 1200, 1200]);
       }
       if (!elementChanged && prevKind && prevKind !== ss.kind && hooks.onEvent) hooks.onEvent(prevKind, ss.kind, e);
@@ -795,7 +846,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         writeMatrices();
       }
       if (pool) pool.mesh.visible = false; // the melt is drawn as its atoms (continuity from solid to gas)
-      if (spec && !state.reduced) { specQ.premultiply(dq.setFromAxisAngle(specAx, dt * 0.35)); writeSpecimen(); return true; }
+      if (spec && !state.reduced) { spec.yaw += dt * 0.45; writeSpecimen(); return true; }
       return atoms.visible && !state.reduced;
     },
     current: () => current,
