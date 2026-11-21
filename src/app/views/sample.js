@@ -447,7 +447,9 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     } else for (let i = 0; i < 3 * n; i++) Vv[i] *= 0.2;
     cellLines.visible = false;
     morph = null;
-    if (FORGE) setAtomGeometry(kind === 'gas' ? 0.26 * dNN : 0.57 * dNN); // liquid: beads overlap a little and blend into one glowing mass
+    // forge: atoms from liquid to gas, never a change of scale (STYLE §6): the liquid's beads overlap a
+    // little and blend into one glowing mass, and the vapour keeps them; molecules keep their touching atoms
+    if (FORGE) setAtomGeometry(molN === 2 ? Math.min(rc * 0.95, dNN * 0.3) : 0.57 * dNN);
     // a puddle with the solid's volume: radius from n particles at spacing ~d_NN in a layer ~half as high as wide
     puddleR = FORGE ? boxL[0] * 0.44 : Math.cbrt((n * dNN ** 3) / Math.PI) * 0.9;
   }
@@ -592,7 +594,6 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       } else if (ss.kind === 'liquid' || ss.kind === 'gas') {
         if (prevKind !== 'liquid' && prevKind !== 'gas') prepareFluid(e, ss.kind);
         else if (ss.kind === 'gas' && prevKind === 'liquid') prepareFluid(e, 'gas');
-        else if (FORGE && ss.kind === 'liquid' && prevKind === 'gas') setAtomGeometry(0.5 * dNN); // condensing: the beads touch again, as in any liquid
         atoms.visible = true;
       } else {
         atoms.visible = false; cellLines.visible = false;
