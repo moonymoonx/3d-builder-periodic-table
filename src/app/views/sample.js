@@ -17,6 +17,7 @@ import { roundedBox, softRectCanvas, GLAZE } from './tableArt.js';
 import { rng32 } from '../../physics/orbitals.js';
 
 const SPEED_SCALE = 3; // display pm/s per real m/s (the real motion is ~3 x 10^11 times faster)
+const METALS = ['alkali', 'alkaline-earth', 'transition', 'post-transition', 'lanthanide', 'actinide'];
 export const SLOWDOWN = 1e12 / SPEED_SCALE;
 
 // ---- what is in the box at temperature T -----------------------------------------------------
@@ -141,9 +142,9 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
 
   // atoms: instanced spheres; the solid vibrates in the vertex shader, liquid/gas positions are CPU-driven
   const MAX = 3200;
-  const atomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: FORGE ? 0.35 : 0.38, metalness: FORGE ? 0 : 0.15 });
+  const atomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: FORGE ? 0.24 : 0.38, metalness: FORGE ? 0 : 0.15 });
   const uni = { uTime: { value: 0 }, uAmp: { value: 0 } };
-  const glowU = { uGlowCol: { value: new THREE.Color() }, uGlowK: { value: 0 }, uHot: { value: 0 }, uGlaze: { value: 0.6 },
+  const glowU = { uGlowCol: { value: new THREE.Color() }, uGlowK: { value: 0 }, uHot: { value: 0 }, uGlaze: { value: 0.8 }, uBody: { value: 1 }, uMirror: { value: 0 },
     uCore: { value: new THREE.Vector3() }, uCoreR: { value: 1000 }, uRimCol: { value: new THREE.Color('#FFC98A') }, uCellCol: { value: new THREE.Color(TOK.verdigris) } };
   atomMat.onBeforeCompile = sh => {
     sh.uniforms.uTime = uni.uTime; sh.uniforms.uAmp = uni.uAmp;
@@ -151,17 +152,21 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     // forge: hot beads glow brightest where they face you and darker toward the rim, whitening at the
     // core as the temperature rises, so every atom still reads as a sphere while incandescent
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform vec3 uGlowCol; uniform float uGlowK; uniform float uHot; uniform vec3 uCore; uniform float uCoreR; uniform vec3 uRimCol; uniform vec3 uCellCol; uniform float uGlaze; varying float vHi; varying vec3 vWorldP;\n' + (FORGE ? GLAZE : ''))
+      .replace('#include <common>', '#include <common>\nuniform vec3 uGlowCol; uniform float uGlowK; uniform float uHot; uniform vec3 uCore; uniform float uCoreR; uniform vec3 uRimCol; uniform vec3 uCellCol; uniform float uGlaze; uniform float uBody; uniform float uMirror; varying float vHi; varying vec3 vWorldP;\n' + (FORGE ? GLAZE : ''))
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
         #ifdef FORGE_GLOW
           // glazed beads: the same soft studio the table's tiles reflect
-          reflectedLight.indirectSpecular += uGlaze * glazeStudio(inverseTransformDirection(normal, viewMatrix), inverseTransformDirection(geometryViewDir, viewMatrix), material.roughness);
+          vec3 wN = inverseTransformDirection(normal, viewMatrix), wV = inverseTransformDirection(geometryViewDir, viewMatrix);
+          reflectedLight.indirectSpecular += uGlaze * glazeStudio(wN, wV, material.roughness);
+          // a liquid metal is a mirror of that studio, barely tinted by its family colour (quicksilver)
+          float mF = 0.72 + 0.28 * pow(1.0 - clamp(dot(wN, wV), 0.0, 1.0), 5.0);
+          reflectedLight.indirectSpecular += uMirror * mF * studioLight(reflect(-wV, wN), material.roughness) * mix(vec3(1.0), diffuseColor.rgb / max(uBody, 1e-3), 0.3);
         #endif`)
       .replace('#include <color_fragment>', `#include <color_fragment>
         #ifdef FORGE_GLOW
           // a glowing metal's own light outshines its glaze; by day the unit cell's atoms are verdigris
           float lit = clamp(uGlowK * 2.0, 0.0, 1.0);
-          diffuseColor.rgb *= 1.0 - 0.7 * lit;
+          diffuseColor.rgb *= uBody * (1.0 - 0.7 * lit); // a liquid metal's body is darker: its reflections carry it
           diffuseColor.rgb *= mix(0.74, 1.0, smoothstep(0.25, 0.95, length(vWorldP - uCore) / max(uCoreR, 1.0))); // deeper atoms a little shaded
           if (vHi > 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, vHi > 1.5 ? vec3(0.03, 0.028, 0.025) : uCellCol, 0.85 * (1.0 - lit));
         #endif`)
@@ -615,7 +620,13 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       if (to !== kilnTo) { kilnTo = to; if (hooks.onKiln) hooks.onKiln(!!to); }
       const k = kilnK;
       hemi.intensity = 1.0 * (1 - 0.86 * k); key.intensity = 2.0 * (1 - 0.8 * k);
-      glowU.uGlaze.value = 0.6 * (1 - k); // the studio's reflections fade with the room light
+      // glazed beads catch the same soft studio as the table's tiles; a liquid metal by day (mercury) is
+      // a mirror: a crisper, stronger glaze over a darker body. The reflections fade with the room light.
+      const liquidMetal = kind === 'liquid' && METALS.includes(e.f.cat[0]);
+      atomMat.roughness = liquidMetal ? 0.1 : 0.24;
+      glowU.uBody.value = liquidMetal ? 0.22 : 1;
+      glowU.uGlaze.value = liquidMetal ? 0 : 0.8 * (1 - k);
+      glowU.uMirror.value = liquidMetal ? 1 - k : 0;
       heatLight.color.copy(col); heatLight.intensity = on * 1.8;
       heatLight.position.set(0, (world.userData.lift || 0) * 0.4, 0);
       // one soft aura behind the crystal (depth-tested: it shows around it, not through it)
