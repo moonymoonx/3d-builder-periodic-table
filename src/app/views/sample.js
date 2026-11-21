@@ -232,17 +232,18 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     for (let i = 0; i < n; i++) {
       v3.set(P[3 * i], P[3 * i + 1], P[3 * i + 2]);
       m4.compose(v3, q, one);
-      atoms.setMatrixAt(i, m4);
+      atoms.setMatrixAt(molN === 2 ? 2 * i : i, m4); // a molecule's two atoms sit side by side in the list
       if (molN === 2) {
         const o = 3 * i; // second atom of the molecule, along a tumbling axis stored in Q
         v3.set(P[o] + Q[o] * bond, P[o + 1] + Q[o + 1] * bond, P[o + 2] + Q[o + 2] * bond);
         m4.compose(v3, q, one);
-        atoms.setMatrixAt(n + i, m4);
+        atoms.setMatrixAt(2 * i + 1, m4);
       }
     }
     atoms.count = molN === 2 ? 2 * n : n;
     // forge: a hot gas is sparse; draw a share of the particles so it reads as atoms flying apart
-    if (FORGE && current && current.kind === 'gas') atoms.count = Math.ceil(atoms.count * 0.4);
+    // (whole molecules: a share of the pairs, never first atoms without their partners)
+    if (FORGE && current && current.kind === 'gas') atoms.count = molN * Math.ceil((atoms.count / molN) * 0.4);
     atoms.instanceMatrix.needsUpdate = true;
     if (glow) glow.mesh.count = atoms.count;
     updateSpokes();
