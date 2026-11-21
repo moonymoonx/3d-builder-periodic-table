@@ -1,7 +1,9 @@
 // Boot: data -> state (URL hash) -> engine -> views -> places; keyboard; the free-area framing.
 // Places (redesign): home = the table (places/home.js) with the element card (places/elementCard.js).
-// The card's doors lead into the views that have not been rebuilt yet (atom, sample, trends, compare);
-// those keep their own panels on a dark stage (body.legacy) with a back link to the card.
+// The card's doors lead into the deep places: the atom (places/atom.js), the forge (places/heat.js) or the
+// sample place (places/sample.js, view 'hold'), patterns and side by side (places/patterns.js, compare.js).
+// Only the legacy sample view (view 'sample') keeps its panels on a dark stage (body.legacy), until the
+// forge has carbon's graphite/diamond switch (DECISIONS.md, merge review of view-sample, §5).
 import * as THREE from 'three';
 import { loadData, bySym, byZ, elements, name, altName } from './data.js';
 import { state, set, on, readHash, initHash, LAYOUTS } from './state.js';
@@ -9,8 +11,7 @@ import { setLang, t } from './i18n.js';
 import { createEngine, registerView, switchView, E, invalidate, setSafe } from './engine.js';
 import { createTableView } from './views/table.js';
 import { createAtomView } from './views/atom.js';
-import { buildAtomPanel } from './ui/atomPanel.js';
-import { buildSpectrum } from './ui/spectrum.js';
+import { buildAtom } from './places/atom.js';
 import { createSampleView } from './views/sample.js';
 import { buildSampleUI } from './ui/samplePanel.js';
 import { buildPatterns } from './places/patterns.js';
@@ -63,12 +64,10 @@ function boot() {
   // ---- legacy views (rebuilt later against the same tokens and kit) ----------------------------------
   const shell = buildShell();
   const sheet = buildSheet(shell.right, { onView: v => set({ view: v }) });
-  const atomPanel = buildAtomPanel(shell.left);
-  const spectrum = buildSpectrum(ui); spectrum.box.hidden = true;
   const sampleUI = buildSampleUI(ui, shell.left);
   const patterns = buildPatterns(ui);
   const sideBySide = buildCompare(ui, { onBack: () => goBack(), onLayout: () => updateSafe() });
-  const atom = createAtomView({ onBuilt: info => { if (state.view === 'atom') atomPanel.render(info); } });
+  const atom = createAtomView({ onBuilt: info => atomPlace.onBuilt(info) });
   const sample = createSampleView({
     onState: info => { if (state.view === 'sample') sampleUI.render(info); },
     onEvent: (a, b, e) => { if (state.view === 'sample') sampleUI.onEvent(a, b, e); },
@@ -115,7 +114,8 @@ function boot() {
     onClose: () => closeCard(),
     onStep: d => { const Z = state.Z + d; openCard(Z < 1 ? 118 : Z > 118 ? 1 : Z, true); },
     onDoor: (v, Z2) => {
-      if (v === 'sample') { diveIntoHeat(forgeable(byZ(state.Z)) ? 'heat' : 'hold'); return; } // the wow path; the sample place for the rest
+      if (v === 'sample') { diveInto(forgeable(byZ(state.Z)) ? 'heat' : 'hold'); return; } // the wow path; the sample place for the rest
+      if (v === 'atom') { diveInto('atom'); return; } // into the tile, out through the atom's shells
       set({ view: v, ...(v === 'compare' ? { Z2 } : {}), ...(v === 'sample' ? { T: 293.15, allotrope: null } : {}) });
     },
     onPattern: prop => set({ view: 'trends', prop }),
@@ -128,7 +128,8 @@ function boot() {
   registerView('heat', forge);
   registerView('hold', holdView);
   const heat = buildHeat(ui, { onInteract: () => {} });
-  const holdPlace = buildSample(ui, { onDoor: v => set({ view: v, ...(savedT != null ? { T: savedT } : {}) }), onLayout: () => updateSafe() });
+  const holdPlace = buildSample(ui, { onDoor: v => set({ view: v, ...(v === 'atom' ? { orbital: null } : {}), ...(savedT != null ? { T: savedT } : {}) }), onLayout: () => updateSafe() });
+  const atomPlace = buildAtom(ui, { view: atom, onBack: () => goBack() });
   registerView('compare', createCompareView());
   registerView('trends', stubView());
 
@@ -158,19 +159,19 @@ function boot() {
   // ---- the scale dive: from the tapped tile into its crystal (STYLE.md §7: 1.4 s, crossfade at 70 %) ----
   const wait = ms => new Promise(r => setTimeout(r, ms));
   let savedT = null, diving = false;
-  async function diveIntoHeat(to = 'heat') {
+  async function diveInto(place) {
     if (diving) return;
     diving = true;
     const e = byZ(state.Z), reduced = state.reduced;
-    savedT = state.T;
+    if (place !== 'atom') savedT = state.T; // the forge and the sample place change the temperature; the atom does not
     diveEl.style.background = (state.cb ? pigmentCB : pigment)[e.f.cat[0]];
     document.body.classList.add('diving'); // the chrome steps aside for the plunge
     card.close();
     if (!reduced) { table.dive(e.Z, 1.0); await wait(700); }
     diveEl.classList.add('on'); // the tile's glaze fills the screen...
     await wait(reduced ? 120 : 320);
-    set({ view: to, T: 293.15, allotrope: null });
-    E.views[to].diveIn(reduced ? 0 : 1.2); // ...and opens into the crystal
+    set(place === 'atom' ? { view: 'atom', orbital: null } : { view: place, T: 293.15, allotrope: null });
+    E.views[place].diveIn(reduced ? 0 : 1.2); // ...and opens into the crystal, the sample or the atom
     await wait(60);
     document.body.classList.remove('diving');
     diveEl.classList.remove('on');
@@ -188,31 +189,32 @@ function boot() {
   }
 
   // ---- legacy panels per view --------------------------------------------------------------------
-  const leftPanels = { atom: atomPanel, sample: { panel: sampleUI.panel, render: () => sampleUI.render() } };
+  const leftPanels = { sample: { panel: sampleUI.panel, render: () => sampleUI.render() } };
   function renderLegacy() {
     const v = state.view;
     for (const [k, p] of Object.entries(leftPanels)) if (k !== v && p.panel.parentNode) p.panel.remove();
-    spectrum.box.hidden = v !== 'atom';
     sampleUI.show(v === 'sample');
-    if (v === 'atom') spectrum.render(byZ(state.Z));
     if (leftPanels[v]) {
       const p = leftPanels[v];
       if (!p.panel.parentNode) shell.left.append(p.panel);
-      p.render(v === 'atom' ? atom.info() : undefined);
+      p.render();
     }
-    if (v !== 'table' && v !== 'heat' && v !== 'hold' && v !== 'trends' && v !== 'compare') sheet.render();
+    if (v !== 'table' && v !== 'heat' && v !== 'hold' && v !== 'atom' && v !== 'trends' && v !== 'compare') sheet.render();
   }
   function applyPlace() {
-    const homeNow = state.view === 'table', heatNow = state.view === 'heat', holdNow = state.view === 'hold', ownNow = state.view === 'trends' || state.view === 'compare';
-    document.body.classList.toggle('legacy', !homeNow && !heatNow && !holdNow && !ownNow);
+    const homeNow = state.view === 'table', heatNow = state.view === 'heat', holdNow = state.view === 'hold', atomNow = state.view === 'atom', ownNow = state.view === 'trends' || state.view === 'compare';
+    document.body.classList.toggle('legacy', !homeNow && !heatNow && !holdNow && !atomNow && !ownNow);
     document.body.classList.toggle('place-home', homeNow);
     document.body.classList.toggle('place-heat', heatNow);
     document.body.classList.toggle('place-hold', holdNow);
-    if (!heatNow && !holdNow) document.body.classList.remove('kiln');
-    shell.left.hidden = homeNow || heatNow || holdNow || ownNow; shell.right.hidden = homeNow || heatNow || holdNow || ownNow;
-    document.querySelector('.mobile-bar').hidden = homeNow || heatNow || holdNow || ownNow;
+    document.body.classList.toggle('place-atom', atomNow);
+    if (!heatNow && !holdNow && !atomNow) document.body.classList.remove('kiln'); // the kiln: heat it, a glowing sample, its light
+    const own = homeNow || heatNow || holdNow || atomNow || ownNow; // places with their own chrome: no legacy panels
+    shell.left.hidden = own; shell.right.hidden = own;
+    document.querySelector('.mobile-bar').hidden = own;
     heat.show(heatNow);
     holdPlace.show(holdNow);
+    atomPlace.show(atomNow);
     patterns.show(state.view === 'trends');
     sideBySide.show(state.view === 'compare');
     if (homeNow && state.card) { if (!card.isOpen()) card.open(); else card.render(); }
@@ -230,11 +232,12 @@ function boot() {
     home.onState(ch);
     heat.onState(ch);
     holdPlace.onState(ch);
+    atomPlace.onState(ch);
     patterns.onState(ch);
     sideBySide.onState(ch);
     if ('lang' in ch || 'view' in ch) renderAll();
     else {
-      const legacyNow = state.view !== 'table' && state.view !== 'heat' && state.view !== 'hold' && state.view !== 'trends' && state.view !== 'compare';
+      const legacyNow = state.view !== 'table' && state.view !== 'heat' && state.view !== 'hold' && state.view !== 'atom' && state.view !== 'trends' && state.view !== 'compare';
       if (legacyNow && ['prop', 'log', 'layout', 'cb', 'T', 'Z', 'Z2', 'density', 'orbital', 'surf', 'tier', 'allotrope', 'trendLine', 'cmpR'].some(k => k in ch)) renderLegacy();
       if (legacyNow && ['Z', 'more', 'cb', 'T'].some(k => k in ch)) sheet.render();
       if (state.view === 'table' && state.card && ['Z', 'cb'].some(k => k in ch)) card.render();
@@ -292,6 +295,7 @@ function boot() {
       }
       return;
     }
+    if (state.view === 'atom') { setSafe(atomPlace.safe(tb.bottom)); return; } // beside the card, above the phone sheet
     if (state.view === 'heat') { // the crystal sits between the top bar and the thermometer
       const pr = heat.panel.getBoundingClientRect();
       setSafe({ left: 0, right: 0, top: tb.bottom + 8, bottom: H - pr.top + 12 });
@@ -311,14 +315,14 @@ function boot() {
     setSafe({ left: show(shell.left) ? L.right + 8 : 0, right: show(shell.right) ? W - R.left + 8 : 0, top: tb.bottom + 6, bottom: 0 });
   }
   const ro = new ResizeObserver(() => updateSafe());
-  for (const el of [shell.left, shell.right, home.top, home.bottom, home.head, card.el, heat.panel, holdPlace.panel, holdPlace.about.el]) ro.observe(el);
+  for (const el of [shell.left, shell.right, home.top, home.bottom, home.head, card.el, heat.panel, holdPlace.panel, holdPlace.about.el, atomPlace.el, atomPlace.band]) ro.observe(el);
   window.addEventListener('resize', () => { home.render(); updateSafe(); });
 
   renderAll();
   updateSafe();
   switchView(state.view);
   if (state.view === 'table' && state.card) table.focus(state.Z, 0);
-  if (!isPhone() && state.view !== 'table' && state.view !== 'heat' && state.view !== 'hold') shell.openPanel('right');
+  if (!isPhone() && state.view !== 'table' && state.view !== 'heat' && state.view !== 'hold' && state.view !== 'atom') shell.openPanel('right');
 
   // first five seconds: a light sweep, iron breathes, a "Try iron" tag after 4 s without a touch
   const loading = document.getElementById('loading');
@@ -332,7 +336,7 @@ function boot() {
     }
   }));
   for (const evName of ['pointerdown', 'wheel']) E.canvas.addEventListener(evName, firstTouch, { passive: true });
-  window.__pt = { state, set, E, table, home, card, heat, forge, diveIntoHeat, hold: holdPlace, holdView, strings: { atom: ATOM_KEYS, sample: SAMPLE_KEYS, patterns: PATTERNS_KEYS } }; // debugging / scripted screenshots
+  window.__pt = { state, set, E, table, home, card, heat, forge, diveIntoHeat: (to = 'heat') => diveInto(to), diveInto, openCard, hold: holdPlace, holdView, atomPlace, strings: { atom: ATOM_KEYS, sample: SAMPLE_KEYS, patterns: PATTERNS_KEYS } }; // debugging / scripted screenshots
 }
 
 boot();

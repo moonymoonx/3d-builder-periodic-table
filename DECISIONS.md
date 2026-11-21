@@ -450,3 +450,112 @@ Reviewed by the main session against STYLE.md and the PARALLEL.md checklist. The
     - No-break spaces between numbers and units in the shared formatters (together with the tests that match them).
     - A phone check of the hearth framing.
     - A guard in `heat.js` for a non-forgeable element opened by URL (the router already sends those to the sample place).
+
+## Merge review: `view-atom` (Look inside the atom), 21 Nov 2026
+Reviewed by the main session against STYLE.md and the PARALLEL.md checklist, with its shots (`/workspace/out/redesign/atom/`) beside the hero's. The session's own decisions are in `NOTES-atom.md` and its router lines in `WIRING-atom.md` (both kept as the record; the decisions there are accepted except where noted below).
+
+**Checklist: passed.**
+1. **Tokens:**
+   - It uses the kit sheet, chips, buttons and disclosure, and the type steps.
+   - Its only literals are the forge panel's kiln values (ember on kiln `#F0874F`, the panel ground, kiln-text alphas), the same as `heat.css` and sanctioned by STYLE §9 (→ proposal #3).
+   - The 11 px atomic number on the badge tile is decoration, as on the table's tiles.
+2. **Plain language:** a human phrase first, with the jargon as a caption ("Pull felt by the outer electrons · *effective nuclear charge*"), and "thin round gaps where the electron is never found" for radial nodes.
+3. **Sources:** every number is tappable for its source: shell counts, wavelengths, the "2,542 listed by NIST" (the data's `lines.n`) and the nucleus size (marked as an estimate).
+4. **Layer 1:**
+   - One visible control: the ± proton stepper in the always-visible footer, each button naming where it leads.
+   - A back link; kit targets (the inline Source pill and values extend their tap areas to 44 px).
+   - A 14 px floor with 13 px captions; reduced motion makes the camera, the reveal and the kiln instant.
+5. **Light:**
+   - Daylight for the clouds; the kiln (`#kiln`, `body.kiln`, not restyled) for "Its light".
+   - Alpha-blended ink stipple, phase inks only for the newest electron's cloud, thin glaze on medium/high tiers.
+   - No bloom and no additive glare.
+6. **Speed:** after the merge, all measured states hold a 60 FPS median (two passes, each with a table-landing control, load 4–6). Phones average 60; desktop p95 33 ms, the same as the control (`atom-merged/fps.txt`).
+7. **Languages:** English and Vietnamese complete; the phone step checks that nothing is wider than 390 px. One Vietnamese fix (below).
+8. **Tests:** unit 39/39 (6 new), validator passes (one check added), smoke 44/44 twice, index.html 1,703 KB.
+
+Consistency with the hero: the same card family (a 392 px side card / bottom sheet, the compact title on scroll, the footer), the same dive language (into the tile's glaze, out through the shells) and the same kiln in "Its light". Nothing sent back.
+
+**Proposals** (`PROPOSALS-atom.md`):
+1. **`color.js`, the spectrum's ends: accepted.** The fix is made in the shared module, not only in the atom band.
+   - **Problem:** the analytic CIE fit's x̄ falls off faster than its ȳ past ~650 nm, so 700 nm came out olive (#8c4a00) and 749 nm green (#008946); below 400 nm the colour turns teal. Real spectral light keeps one hue there (CIE 1931 spectral locus).
+   - **Fix:** `wavelengthToRGB` reads the hue no further out than 400 and 680 nm; only the brightness follows the wavelength. The validator checks that 700 and 749 nm stay red and 385 nm violet.
+   - **Why 680 nm (the session's tested choice), not 650 nm:** at 650 nm the fit's chromaticity is still right, but the existing white-add gamut mapping turns the true deep-red locus crimson (#ff0055), so neon's cloud would read pink. The fit's 680 nm hue displays as a clean red.
+   - `lineColour()` in `ui/spectrum.js` is now a thin wrapper.
+2. **The card's glow swatch: accepted, removed** from "All numbers & sources" (Q-atom-1).
+   - A mix of the 8 strongest lines contradicts known lamp colours: neon #00ff5d (green), iron #00ffb2, calcium #ff00fb. The tail fix does not save it: neon's mix is dominated by its 540 nm line.
+   - `glowColour` stays in `color.js` only for the validator's sodium check, with a comment saying why it is not shown.
+3. **Kiln tokens (`kilnPanel`, `kilnAccent`): accepted, scheduled** with the sample session's identical request (§4). One tokens pass covers the kiln panel, ember on kiln and the temperature ramp, together with the shared thermometer (sample §3).
+4. **Retire the four legacy atom-panel smoke steps: accepted** (the PROPOSAL commit is merged). The `// ---- atom ----` block covers their behaviour.
+5. **`--set=atom`: accepted, moved** to `tools/shots-atom.mjs`. Since the patterns merge (P5), every set lives in its own file and the generic loader finds it.
+6. **Retire the legacy panel: done.**
+   - Removed: `ui/atomPanel.js`, the legacy `buildSpectrum` strip, `glowOf` and `L_COLORS`. Nothing imports them now.
+   - The legacy `spec.*` strings in `i18n.js` are now unused; they go with the next i18n tidy-up.
+7. **Vietnamese back link: already done** on master at the patterns merge (P3). Checked in the reshoot: "← Sắt", "← Natri".
+
+**Open questions** (`NOTES-atom.md`):
+- **Q-atom-1** (keep the 8-line glow colour anywhere?): **no.** See #2. The atom place shows the lines themselves and colours the outer shell by them, in proportion to their intensities. A single lamp colour would need a sourced colour per element.
+- **Q-atom-2** (d_xz instead of d_xy): **accepted.** d_xy lies flat in our z-up scene and would be seen edge-on. d_xz is the same cloverleaf facing the viewer, the caption says "four of the five d clouds are cloverleaf-shaped", and the picker offers all five turns.
+- **Q-atom-3** (Slater outer clouds several times too large for heavy atoms): **kept as disclosed** ("About this atom" says so: uranium's 7s reaches ~1,750 pm in this model; its covalent radius is 196 pm).
+  - A better radial model would change the validated hydrogen-like nodes and normalisation, so it is not done at a merge.
+  - **Scheduled:** evaluate published effective charges (Clementi–Raimondi) for the outer clouds, as a data-reviewed change with its own tests.
+- **Q-atom-4** (Vietnamese wording): the drafts are accepted for moony's review.
+  - **Fixed at the merge:** the "Its light" hook said "sodium phát ánh sáng vàng" while the title beside it said "natri". Sodium keeps the familiar name natri (one of the 13 GDPT-2018 names), so the hook now says "natri".
+
+**Merge fixes** (main session):
+- **Router:**
+  - One dive, `diveInto(place)`, for the forge, the sample place and the atom (the sample wiring's `diveIntoHeat(to)` and the atom wiring's `diveInto(place)` combined). The forge and the sample place save the table's temperature and start at 20 °C; the atom keeps the temperature and opens on the whole atom.
+  - The sample place's door to the atom also clears the picked cloud.
+  - The header comment now names the deep places; only the legacy sample view keeps the dark stage.
+- **Smoke:**
+  - The four door steps (forge, side by side, sample, atom) open their card with the router's own `openCard`, now on `window.__pt`.
+  - A scripted `set({ card: true })` opens no card unless the view changes, so behind the sample block, which ends with the card closed, the atom block's door could not be found (6 of its 8 steps failed).
+  - The router gap itself (the card flag true while the card is closed, reachable only by a scripted set or a hand-edited hash) is noted and not changed: making the card follow the flag in the state listener would render it two or three times per tap.
+
+## Merge review: `view-patterns-r2` (patterns and side by side, round 2), 21 Nov 2026
+The patterns session's answer to the cold review `reviews/merged-m1.md` (committed with this merge). Reviewed by the main session against STYLE.md and the PARALLEL.md checklist, with its shots (`/workspace/out/redesign/patterns-r2/`) beside the hero's. Its decisions are in `NOTES-patterns.md` › Round 2 (accepted as recorded there).
+
+**Checklist: passed.**
+- Only the scope's own files changed.
+- **Tokens:** the kit's chips and segmented controls (44 px), the type steps and an ink-derived 5.5 % hairline for the minor gridlines.
+- **Plain language:** question-led charts with the jargon as captions.
+- **Sources:** every value tappable for its source; units bound to their numbers.
+- **Light:** daylight only.
+- **Speed:** 60 FPS median in every measured state, even at load 9–13.
+- **Languages:** English and Vietnamese, with the familiar names.
+- **Tests:** unit 45/45, validator, smoke 45/45 twice; index.html 1,736 KB.
+
+**The review's points, checked in the shots:**
+- The noble-gas note now lands on its own bead.
+- "Each line up: ×10" is literally true (a faint line at every power of ten).
+- Column mode draws one column, with column words.
+- The "repeating wave" footer shows for periodic properties only.
+- Labels and pills keep off peaks and curves.
+- One leader per note on phones.
+- On phones: "On the table →" beside "Other patterns ▾", the scrub guide follows the thumb, and "change ▾" under both tiles.
+- No stranded °C; "gases at 20 °C" only when the pair has a gas; the phone sheet scrolls.
+
+The side-by-side stage answers "two glossy marbles":
+- **The default is a litre of each at 20 °C on a balance:** a glazed block, a pool or a glass litre of drifting atoms. The beam tips by the weight ratio and hangs level for tungsten and gold; never-weighed oganesson stands on plinths.
+- **"One atom of each"** keeps soft-glazed beads with no hard catchlight.
+
+**Open questions and proposals:**
+1. **Real material colours on the side-by-side stage: yes for the litre stage, once they are sourced; the family pigment stays until then.**
+   - **Why real appearance:** a litre is a piece of the material, not an atom. For non-experts, a yellow block sinking against a silver pool is recognised without reading (moony's goal: feel and intelligibility).
+   - **Why not now:**
+     - We hold no sourced appearance data, so a "gold yellow" today would be an invented colour.
+     - PubChem's CPK colours are a molecular-model convention, not appearance (iron orange, sodium violet).
+     - The stage already tells gold from mercury by form (block or pool), by the beam and in words.
+   - **Path (scheduled after the round-2 merges):**
+     - The main session curates a cited appearance for each element ("lustrous metallic yellow", "shiny silvery liquid") and maps it to muted mineral-paint finishes: one pewter glaze for the silvery metals; their own finish for gold, copper, caesium, sulfur, bromine, iodine and chlorine.
+     - It amends STYLE.md §3/§6: litre specimens wear their sourced appearance; atoms, tiles and badges keep the family pigment.
+     - Then the patterns session switches the litre stage.
+2. **P6, the source popover's pale "Accessed" and "Licence" lines: accepted and applied.**
+   - `legacy.css` set `.small` to the old dark theme's #a9b6d3 everywhere (about 1.9 : 1 on paper).
+   - The rule is now scoped to `body.legacy`, and the popover keeps `--ink-2` even on the remaining legacy stage.
+   - This also fixes the menu's credits and settings captions on paper.
+3. **P7, the stage in the link (`cs=atoms`): accepted, scheduled.** It needs a state key and a router line, and `state.js` stays untouched while the sample and atom branches are open.
+4. **Vietnamese drafts: accepted** for moony's review. Spot-checked for the naming rule: Vàng, Thuỷ ngân, Natri; Chlorine (IUPAC, not one of the 13); Than chì / Kim cương.
+
+**Noted:**
+- The side-by-side sheet now says "A litre of gold weighs 2.4 times as much as a litre of iron" (exact).
+- The card's pair hook (`strings-home.js`) still says "weighs 2.4× more". The number is right for our PubChem densities (19.282 / 7.874 = 2.449; the review's 2.5 used CRC's 19.30). The wording waits for moony's call.

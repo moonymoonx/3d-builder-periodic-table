@@ -25,3 +25,14 @@ for the kit only if a second place needs it" — Patterns is the second.
 ## P5 (applied here). `tools/shots.mjs`: a generic set loader
 `--set=<name>` loads `tools/shots-<name>.mjs` (exporting `cases({ SIZES })`) when it is not `views` or `hero`, so
 each view session keeps its review set in its own file and nobody edits the same lines.
+
+## P6. Source popover: "Accessed" and "Licence" too pale (`styles/legacy.css`, `ui/source.js`)
+`legacy.css` comes last in `CSS_ORDER` and still sets `.small { color: var(--muted) }` (#a9b6d3, the old dark theme's
+pale blue) over base.css's `--ink-2`. In the paper popover (`ui/source.js` lines 29–30) that is about 1.9 : 1, below
+STYLE.md's 4.5 : 1 for text and off-palette. Scope the legacy rule to `body.legacy .small`, or give the popover's
+lines their own class. (Side by side's own references popover already uses `.patterns-refs__note`, in `--ink-2`.)
+
+## P7. The side-by-side stage in the link (`state.js`, the router)
+The stage (a litre of each / one atom of each) is a module holder in `ui/comparePanel.js` (`getStage`, `setStage`,
+`onStage`), so a shared link always opens the litre stage. A hash key (e.g. `cs=atoms`, omitted for the default)
+would make it linkable; the place already calls `setStage`, so only the state key and the router line are needed.

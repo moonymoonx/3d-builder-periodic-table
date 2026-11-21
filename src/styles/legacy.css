@@ -42,7 +42,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .chip { border: 1px solid var(--lg-line2); background: transparent; border-radius: 999px; padding: 4px 10px; font-size: 14px; color: var(--muted); }
 .chip[aria-pressed="true"] { border-color: var(--accent); color: var(--text); background: rgba(111, 211, 255, 0.14); }
 .check { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; color: var(--muted); }
-.small { font-size: 14px; color: var(--muted); }
+body.legacy .small { font-size: 14px; color: var(--muted); } /* scoped: on paper, .small is base.css's caption in --ink-2 (P6) */
+body.legacy .popover .small { color: var(--ink-2); } /* the source popover is paper even on the dark stage */
 .hint { font-size: 14px; color: var(--muted); }
 .why { font-size: 14px; color: var(--text); background: rgba(111, 211, 255, 0.08); border-left: 3px solid var(--accent); padding: 6px 10px; border-radius: 0 8px 8px 0; margin-top: 8px; }
 

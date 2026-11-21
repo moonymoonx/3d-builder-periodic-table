@@ -38,6 +38,7 @@
 .patterns-gridline { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
 .patterns-gridline.is-base { stroke: var(--line-strong); }
 .patterns-gridline.is-faint { stroke-dasharray: 2 4; }
+.patterns-gridline.is-minor { stroke: rgba(28, 26, 23, 0.055); }
 .patterns-tick { font: 400 13px var(--font-sans); fill: var(--ink-2); font-variant-numeric: tabular-nums; }
 .patterns-tick.is-ancient { font-style: italic; }
 .patterns-xtitle { font: 600 13px var(--font-sans); fill: var(--ink-2); }
@@ -64,6 +65,9 @@
 .patterns-pin::after, .patterns-tip::after { content: ""; position: absolute; left: var(--caret, 50%); bottom: -5px; width: 10px; height: 10px; margin-left: -5px; background: inherit;
   transform: rotate(45deg); border-radius: 0 0 2px 0; }
 .patterns-pin.is-below::after, .patterns-tip.is-below::after { bottom: auto; top: -5px; border-radius: 2px 0 0 0; }
+/* beside its bead: the caret on the side that faces it */
+.patterns-pin.is-left::after, .patterns-tip.is-left::after { left: auto; right: -5px; bottom: auto; top: var(--caret); margin: -5px 0 0; border-radius: 0 2px 0 0; }
+.patterns-pin.is-right::after, .patterns-tip.is-right::after { left: -5px; bottom: auto; top: var(--caret); margin: -5px 0 0; border-radius: 0 0 0 2px; }
 .patterns-pin { box-shadow: 0 0 0 1.5px var(--verdigris), var(--elev-float); }
 .patterns-pin b, .patterns-tip b { font: 600 16px/1.2 var(--font-serif); }
 .patterns-lbl__sw { width: 12px; height: 12px; border-radius: 3px; flex: none; box-shadow: inset 0 0 0 1px rgba(28, 26, 23, 0.18); }
@@ -77,8 +81,8 @@
 .patterns-v.is-est { font-style: italic; }
 
 /* the figure's caption: the key, and why patterns matter at all */
-.patterns-caption { display: flex; flex-direction: column; gap: 4px; padding: 4px 0 0 4px; }
-.patterns-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
+.patterns-caption { display: flex; flex-direction: column; gap: 6px; padding: 4px 0 0 4px; }
+.patterns-key { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
 .patterns-key > span { display: inline-flex; align-items: center; gap: 6px; }
 .patterns-key__bead { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 38% 32%, var(--card), var(--state-solid) 45%, var(--ink-3)); }
 .patterns-key__bead.is-pred { background: repeating-linear-gradient(135deg, var(--state-solid) 0 2px, var(--ink-3) 2px 3.4px); }
@@ -94,7 +98,11 @@
 .patterns-foot { display: flex; justify-content: center; }
 .patterns-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; animation: patterns-rise 700ms var(--ease) both 200ms; }
 .patterns-menu { z-index: 46; }
+.patterns-menu .patterns-menu__item > span { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 5px 0; }
+.patterns-menu__item small { font: 400 var(--t-caption)/1.25 var(--font-sans); color: var(--ink-2); }
+.patterns-totable-chip { color: var(--verdigris); }
 .patterns-refs ul { margin: 4px 0 8px; padding-left: 18px; }
+.patterns-refs__note { margin: 6px 0 0; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
 .patterns-refs li { margin: 4px 0; }
 .patterns-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; }
 
@@ -136,7 +144,18 @@
 /* ---- SIDE BY SIDE (places/compare.js, views/compare.js) ----------------------------------------------------
    The two atoms stand on the paper; the sheet beside them (a bottom sheet on phones) says why the pair is worth
    a look, then compares them in plain rows. The curated pairs are chips under the stage. */
-.compare-sheet .ui-sheet__body { padding-top: 18px; }
+.compare-sheet .ui-sheet__body { padding-top: 18px; padding-bottom: 28px; }
+/* rows slide under the compact title bar through a soft paper edge, never cut mid-letter */
+.compare-sheet .ui-sheet__bar::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 14px; background: linear-gradient(var(--card), transparent); pointer-events: none; }
+/* phones: while the sheet peeks, its bottom edge fades too, so a row cut by the screen edge reads as "more below" */
+@media (max-width: 760px) {
+  .compare-sheet.ui-sheet.has-more:not(.is-full) .ui-sheet__body { -webkit-mask: linear-gradient(#000 calc(100% - 30px), transparent); mask: linear-gradient(#000 calc(100% - 30px), transparent); }
+}
+/* the stage's control: a litre of each (state and heft) or one atom of each (size, to scale) */
+.compare-stage { position: absolute; top: 78px; left: 24px; right: 432px; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none !important; }
+.compare-stage > * { pointer-events: auto; }
+.compare-stage .ui-seg button { padding: 0 16px; font-size: 14px; letter-spacing: 0.01em; }
+.compare-stage__cap { margin: 0; font: italic 400 15px/1.3 var(--font-serif); color: var(--ink-2); text-align: center; text-shadow: 0 0 6px var(--paper); }
 .compare-eyebrow { margin: 0 0 8px; font: 600 var(--t-caption)/var(--lh-caption) var(--font-sans); color: var(--ink-2); letter-spacing: 0.02em; }
 .compare-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 6px; margin-right: 40px; }
 .compare-slot { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; min-height: 44px; padding: 8px 4px 6px; border: 1px solid transparent; border-radius: var(--r-card);
@@ -216,7 +235,7 @@
   .compare-slot__tile { width: 40px; height: 40px; font-size: 17px; border-radius: 10px; box-shadow: inset 0 -4px 0 rgba(28, 26, 23, 0.16); }
   .compare-slot__tile small { top: 3px; left: 5px; font-size: 10px; }
   .compare-slot__name { font-size: 16px; overflow-wrap: normal; }
-  .compare-slot__change { display: none; }
+  .compare-slot__change { font-size: 13px; }
   .compare-lead { margin-top: 8px; font-size: 17px; line-height: 1.42; }
   .compare-more { font-size: 14px; }
   .compare-rows { margin-top: 10px; }
@@ -224,6 +243,10 @@
   .compare-v { font-size: 16px; }
   .compare-pairsbox { left: 0; right: 0; bottom: auto; top: auto; gap: 0; }
   .compare-pairs__lbl { display: none; }
+  .compare-stage { top: 58px; left: 8px; right: 8px; gap: 2px; }
+  .compare-stage .ui-seg button { padding: 0 12px; font-size: 13px; }
+  .compare-stage__cap { font-size: 13px; }
+  .compare-picker { overflow-y: auto; }
   .compare-pairs { flex-wrap: nowrap; justify-content: flex-start; width: 100%; overflow-x: auto; scrollbar-width: none; padding: 2px 12px; gap: 6px;
     --fl: 0px; --fr: 0px; -webkit-mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
     mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent); }
