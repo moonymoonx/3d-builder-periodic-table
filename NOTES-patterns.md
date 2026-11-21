@@ -2,7 +2,7 @@
 
 Decisions of the "patterns" session (PARALLEL.md scope 3), for the main session to move into DECISIONS.md.
 Who proposed each: **plan** (REDESIGN-PLAN / DESIGN-STUDY / PLAN-CRITIQUE, already approved) or **Claude** (this
-session's craft call, with the reason). Review set: `/workspace/out/redesign/patterns/` (35 PNG at 1440×900 and
+session's craft call, with the reason). Review set: `/workspace/out/redesign/patterns/` (33 PNG at 1440×900 and
 390×844, `?q=med`), frame statistics in `/workspace/out/redesign/patterns/fps/fps.txt` (automatic quality path).
 
 ## Patterns across the table (`places/patterns.js`, `places/patternSpecs.js`, `ui/trends.js`)
