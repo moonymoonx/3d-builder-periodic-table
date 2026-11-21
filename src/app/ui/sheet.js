@@ -5,7 +5,6 @@ import { t, getLang, fmtNum, cap } from '../i18n.js';
 import { state, set } from '../state.js';
 import { data, byZ, name, altName, fmtField, fmtTemp, stateAt, outerZeff } from '../data.js';
 import { CATEGORY_COLORS, CATEGORY_COLORS_CB } from '../palette.js';
-import { glowColour, toHex } from '../../physics/color.js';
 import { showSource, closeSource } from './source.js';
 
 const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
@@ -84,12 +83,8 @@ export function rowsFor(e) {
   if (f.awStd) add('awStd', f.awStd, { more: true, label: `${t('f.aw')} (CIAAW)` });
   const ln = e.lines;
   const lv = ln.none ? [null, 'none', { n: ln.none }] : [ln.v.length, 'nist-lines', { n: `${ln.n} lines listed by NIST in 380–750 nm; the ${ln.v.length} strongest are used` }];
-  let sw = null;
-  if (!ln.none) {
-    const g = glowColour(ln.v, data().cmfFit.v, data().srgb.v);
-    if (g.ok) sw = h('span', { class: 'sw', style: { display: 'inline-block', verticalAlign: 'middle', marginLeft: '6px', background: toHex(g.rgb) }, title: 'approximate glow colour' });
-  }
-  add('lines', lv, { more: true, text: ln.none ? t('lines.none') : t('lines.count', { n: ln.n, k: ln.v.length }), extra: sw });
+  // no "glow colour" swatch: mixed from 8 lines it contradicts known lamp colours (neon came out green)
+  add('lines', lv, { more: true, text: ln.none ? t('lines.none') : t('lines.count', { n: ln.n, k: ln.v.length }) });
   return rows;
 }
 

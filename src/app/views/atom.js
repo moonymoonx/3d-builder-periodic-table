@@ -22,8 +22,6 @@ import { LabelLayer } from '../labels.js';
 import { t, fmtNum } from '../i18n.js';
 import { color as TOK, light as LIGHT, phaseInk, pigment, pigmentCB, motion } from '../../design/tokens.js';
 
-// legacy colours by l (kept for ui/atomPanel.js, the old panel the atom place replaces)
-export const L_COLORS = ['#8fd3ff', '#a6e88a', '#ffd27f', '#f4a3d6'];
 
 /** Occupied subshells of an element with Z_eff and 90 % radius (pm). */
 export function subshellsOf(e) {

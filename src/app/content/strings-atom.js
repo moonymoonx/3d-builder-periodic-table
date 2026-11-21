@@ -110,7 +110,7 @@ const VI = {
   'atom.cloud.countS': '{name} có {n} electron trong đám mây {sub}.', 'atom.cloud.countS1': '{name} có 1 electron trong đám mây {sub}.',
   'atom.pick': 'Chọn một đám mây', 'atom.pick.shell': 'Lớp {n}', 'atom.pick.turn': '{k} đám mây của nó', 'atom.pick.all': 'cả {k}',
   'atom.pick.electrons': '{n} electron', 'atom.pick.electron1': '1 electron',
-  'atom.light.hook': 'Khi bị nung nóng hay có dòng điện chạy qua, mỗi nguyên tố phát sáng với những màu riêng: neon phát ánh sáng đỏ cam, sodium phát ánh sáng vàng (các vạch {na} nm).',
+  'atom.light.hook': 'Khi bị nung nóng hay có dòng điện chạy qua, mỗi nguyên tố phát sáng với những màu riêng: neon phát ánh sáng đỏ cam, natri phát ánh sáng vàng (các vạch {na} nm).',
   'atom.light.title': 'Ánh sáng nhìn thấy của nguyên tử {name}', 'atom.light.tap': 'Chạm vào một vạch để xem màu và bước sóng.',
   'atom.light.line': '{nm} nm: ánh sáng {colour}', 'atom.light.bright': 'độ sáng {i} trên 1.000 (so với vạch sáng nhất)',
   'atom.light.none': 'Nguồn dữ liệu của chúng tôi không có ánh sáng nhìn thấy nào của nguyên tử {name}.', 'atom.light.gA': 'NIST không cho độ sáng của các vạch này: chiều cao vạch cho biết mỗi bước nhảy xảy ra thường xuyên đến đâu.',

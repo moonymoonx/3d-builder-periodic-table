@@ -194,6 +194,9 @@ export function runValidation({ report = false, quiet = false } = {}) {
   const cmf = D.cmfFit.v, M = D.srgb.v;
   const red = wavelengthToRGB(650, cmf, M), green = wavelengthToRGB(530, cmf, M), blue = wavelengthToRGB(450, cmf, M);
   check('colour: 650 nm reddest, 530 nm greenest, 450 nm bluest', red[0] > red[1] && red[0] > red[2] && green[1] > green[0] && green[1] > green[2] && blue[2] > blue[0] && blue[2] > blue[1]);
+  const deep = [700, 749].map(l => wavelengthToRGB(l, cmf, M)), nearUV = wavelengthToRGB(385, cmf, M);
+  check('colour: the ends keep their hue (700 and 749 nm red, 385 nm violet; the CIE fit\'s tails drift)', deep.every(([r, g, b]) => r > 2 * g && r > 2 * b) && nearUV[2] > nearUV[1] && nearUV[0] > nearUV[1],
+    [...deep, nearUV].map(c => c.map(x => x.toFixed(2)).join(',')).join(' / '));
   const naGlow = glowColour(E('Na').lines.v, cmf, M).rgb;
   check('colour: sodium glow is yellow-orange (R ≥ G > B)', naGlow && naGlow[0] >= naGlow[1] && naGlow[1] > naGlow[2], naGlow && naGlow.map(x => x.toFixed(2)).join(','));
 

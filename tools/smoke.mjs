@@ -173,7 +173,7 @@ await step('sample view: "Heat it" raises the temperature', async () => {
 
 // (four legacy trends/compare steps retired at the patterns merge: the // ---- patterns ---- block covers them)
 await step('forge: the iron card door dives into the crystal; 930 °C re-stacks to 12 neighbours; back returns to the card', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 26, card: true, hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }));
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }); p.openCard(26); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
   await page.waitForTimeout(700);
   await page.locator('.ui-door', { hasText: 'Hold a piece' }).click();
   await page.waitForFunction(() => window.__pt.state.view === 'heat', null, { timeout: 8000 });
@@ -241,7 +241,7 @@ await step('patterns: "See it on the table" opens the matching lens; back from a
   await page.evaluate(() => window.__pt.set({ lens: 'families', color: 'cat', flat: true }));
 });
 await step('side by side: the iron card\'s door shows iron and gold, and says why', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 26, card: true, hideSel: false }));
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false }); p.openCard(26); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
   await page.waitForTimeout(500);
   await page.locator('.ui-door', { hasText: 'Side by side' }).click();
   await opened('.compare-sheet'); await settle();
@@ -285,7 +285,7 @@ await step('side by side (VI): sentences use the familiar Vietnamese names; size
 const holdCaption = () => page.locator('.sample-caption').textContent();
 const holdAt = async (patch, ms = 500) => { await page.evaluate(p => window.__pt.set(p), patch); await page.waitForTimeout(ms); };
 await step('sample: the nitrogen card dives into the sample place; cooled it turns liquid at −196 °C and freezes at −210 °C; back returns to the card', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 7, card: true, hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }));
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }); p.openCard(7); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
   await page.waitForTimeout(700);
   await page.locator('.ui-door', { hasText: 'Hold a sample' }).click();
   await page.waitForFunction(() => window.__pt.state.view === 'hold', null, { timeout: 8000 });
@@ -385,7 +385,7 @@ await step('sample (VI): the caption uses the familiar name (thuỷ ngân)', asy
 const A = () => page.evaluate(() => ({ view: window.__pt.state.view, Z: window.__pt.state.Z, orbital: window.__pt.state.orbital, card: window.__pt.state.card,
   kiln: document.body.classList.contains('kiln'), title: document.querySelector('.atom-title')?.textContent || '', cap: document.querySelector('.atom-caption')?.textContent || '' }));
 await step('atom place: the card door dives into the atom; its own card, no legacy panels', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 26, card: true, hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15, lang: 'en' }));
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15, lang: 'en' }); p.openCard(26); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
   await page.waitForTimeout(700);
   await page.locator('.ui-door', { hasText: 'Look inside the atom' }).click();
   await page.waitForFunction(() => window.__pt.state.view === 'atom', null, { timeout: 8000 });
