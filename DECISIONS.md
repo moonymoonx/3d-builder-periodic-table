@@ -368,3 +368,28 @@ Gemini's cold round-5 review: clarity 4.5, ease 4.0, beauty 4.0, smoothness 4.0,
 - **The phone card hides its details: accepted.** A "More about Iron ⌄" row under the doors pulls the sheet up.
 - **"Heat map" reads like a colour gradient: accepted.** The lens is now "Solid, liquid, gas" (VI "Rắn, lỏng, khí").
 - **Not taken:** min/max labels on the heat-map slider (the readout and the "Room temperature" button frame it), and FPS re-measurement this round (no rendering change; the machine is shared by four sessions, load ~17).
+
+## Merge review: `view-patterns` (Patterns across the table + Side by side), 21 Nov 2026
+Reviewed by the main session (design owner) against STYLE.md and the PARALLEL.md checklist. The session's own decisions are in `NOTES-patterns.md` (kept in the repo as the record); its router lines are in `WIRING-patterns.md`.
+
+**Checklist: passed.**
+1. **Tokens:** the only literal colours are ink-derived alpha shadows and lines (the same as the kit's).
+2. **Plain language:** each chart opens with a question and a plain answer; jargon is a caption ("Grip on electrons · first ionization energy").
+3. **Sources:** every dot and every value opens its source, and the answers' Source pills list the pages behind the words. Claims were checked against those pages (one unverifiable one dropped), and `tests/patterns.test.mjs` pins each headline's premise to the data.
+4. **Layer 1:** back links are present and the controls are kit pills and segmented controls. Small type appears only in the atomic numbers printed on tiles (decoration, STYLE §4).
+5. **Look:** daylight, ink on paper, family beads, verdigris for the picked element; side by side shows glazed porcelain atoms at true scale with contact shadows.
+6. **Speed:** a 60 FPS median in every state of its review set.
+7. **Vietnamese:** complete (familiar GDPT names in sentences); nothing clipped at 390×844.
+8. **Tests:** unit 33/33 (16 new), validator passes, smoke 31/31. The build is 1,585 KB.
+
+Consistent with the hero: same type scale, kit, back links and card language. Nothing sent back.
+
+**Proposals** (`PROPOSALS-patterns.md`):
+- **P1, lens banners link to the pattern behind them: accepted, scheduled.** Applied after the remaining merges, with its own way back. From the table with no card open, "back" must return to the table, not to a card. Today's back link out of a place always returns to the card and names its element.
+- **P2, "All numbers & sources" rows open their pattern: accepted and applied.** Rows with a pattern behind them (melting, boiling, heft, sizes, grip, pull, appetite, weight, crust, discovered, felt pull) carry the same "↗" as the card's facts, with a 44 px tap area.
+- **P3, the Vietnamese back link uses the familiar name: accepted and applied.** It uses the card title's own rule (Sắt, Đồng…).
+- **P4, a loupe in the kit: accepted, scheduled.** Two places now draw it (home, patterns), which meets the PARALLEL.md rule. Moving it into the kit touches home and the patterns place, so it waits until the atom and sample branches are merged.
+- **P5, a generic `--set=<name>` loader in `tools/shots.mjs`: accepted** (applied in the branch).
+- **WIRING part 2, retire four legacy trends/compare smoke steps: accepted.** They tested the retired dark-stage panels; the `// ---- patterns ----` block covers the same ground.
+
+**Fixed at merge:** the hero shot script's "All numbers" step now targets the visible sheet. The side-by-side place has its own (hidden) kit sheet, so `.ui-sheet__body` matched two elements.

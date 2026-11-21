@@ -4,7 +4,7 @@
 //   bottom   — the one prompt; a quiet row of lens chips; a lens banner (hook + caption + control)
 //   on top   — the phone loupe while a thumb scrubs across the table
 import { h, replace, clear, isPhone, toast } from '../dom.js';
-import { t, getLang, fmtNum, oneLine } from '../i18n.js';
+import { t, getLang, fmtNum, oneLine, cap } from '../i18n.js';
 import { state, set, shareURL } from '../state.js';
 import { search, name, altName, byZ } from '../data.js';
 import { chip, backLink, iconButton, segmented, banner } from '../ui/kit.js';
@@ -213,7 +213,11 @@ export function buildHome(ui, hooks) {
   function renderBack() {
     let b = null;
     if (state.view === 'table' && state.card) b = backLink({ label: t('card.back'), onClick: () => hooks.onBack(), attrs: { 'data-back': 'home' } });
-    else if (state.view !== 'table') b = backLink({ label: name(byZ(state.Z)), onClick: () => hooks.onBack(), attrs: { 'data-back': 'card' } });
+    else if (state.view !== 'table') {
+      const e = byZ(state.Z); // the card's own title: in Vietnamese the familiar GDPT-2018 name (patterns proposal P3)
+      const label = getLang() === 'vi' && e.names.viAlt && e.names.viAlt[1] === 'gdpt' ? cap(e.names.viAlt[0]) : name(e);
+      b = backLink({ label, onClick: () => hooks.onBack(), attrs: { 'data-back': 'card' } });
+    }
     replace(backSlot, b);
   }
 

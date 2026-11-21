@@ -195,3 +195,8 @@
   - **Checks:** unit tests 17/17, validator ALL PASS, smoke 28/28, no console errors.
   - **Review set:** `/workspace/out/redesign/hero-r6/` (30 PNG, README.txt). The 12b screenshot timed out once at machine load ~17 and was retaken alone.
   - **Not redone:** FPS and the repo screenshots (time and load); they are as of round 5.
+- 2026-11-21 ~08:14 (Saigon) — **Merged `view-patterns`** (Patterns across the table + Side by side). It was reviewed against STYLE.md and the PARALLEL.md checklist and passed; details in DECISIONS.md › Merge review: view-patterns.
+  - **Round 7 parked first** on the local branch `wip-hero-r7` (3a4aa7e, not pushed).
+  - **Merge steps:** rebased on master (clean), applied WIRING-patterns.md (router patch; four legacy smoke steps retired), applied proposals P2 and P3; P1 and P4 scheduled after the remaining merges.
+  - **Checks:** unit tests 33/33, validator ALL PASS, smoke 31/31 twice, no console errors, index.html 1,585 KB.
+  - **Reshoot:** `/workspace/out/redesign/patterns-merged/` (the branch's review set on the merged build plus hero spot-checks).

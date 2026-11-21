@@ -181,7 +181,10 @@ export function buildElementCard(ui, hooks) {
       summary: t('card.all'),
       build: body => {
         const dl = h('dl', { class: 'card-facts' });
-        for (const r of rowsFor(e)) dl.append(h('dt', null, r.label), h('dd', null, valueBtn({ key: r.key, text: r.label }, r.v, e, r.text), r.extra || null));
+        // rows with a pattern behind them open it, like the three facts' "↗ across the table" (patterns proposal P2)
+        const PATTERNS = new Set(['mp', 'bp', 'density', 'rCov', 'ie1', 'en', 'ea', 'aw', 'rVdw', 'zeff', 'abund', 'year']);
+        for (const r of rowsFor(e)) dl.append(h('dt', null, r.label), h('dd', null, valueBtn({ key: r.key, text: r.label }, r.v, e, r.text), r.extra || null,
+          PATTERNS.has(r.key) && r.v ? h('button', { type: 'button', class: 'card-across card-across--row', title: t('card.acrossLabel'), 'aria-label': t('card.acrossLabel'), onclick: () => hooks.onPattern(r.key) }, '↗') : null));
         body.append(h('p', { class: 'card-hint' }, t('card.tapValue')), dl);
       },
     });
