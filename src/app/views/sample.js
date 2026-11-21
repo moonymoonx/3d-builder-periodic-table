@@ -476,15 +476,25 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   // ---- liquid and gas -------------------------------------------------------------------------
   /**
    * A molecule's atoms around its centre, in bond lengths (our data names the molecule: N₂, P₄, S₈):
-   * a pair; a regular tetrahedron (P₄); or a ring with neighbours one bond apart (S₈), drawn flat, since
-   * the ring's real crown shape needs bond angles our data does not hold.
+   * a pair; a regular tetrahedron (P₄); S₈ as the crown it is (every S–S–S angle about 108°, alternate
+   * atoms a little above and below the ring: the shape of cyclo-octasulfur); any other ring flat.
    */
   function molTemplate(nAt) {
     if (nAt === 2) return [[-0.5, 0, 0], [0.5, 0, 0]];
     if (nAt === 4) { const s = 1 / (2 * Math.SQRT2); return [[s, s, s], [s, -s, -s], [-s, s, -s], [-s, -s, s]]; }
+    const ang = k => (2 * Math.PI * k) / nAt;
+    if (nAt === 8) { // the crown: next-but-one atoms (same height) fix the ring's radius, neighbours one bond apart
+      const R = Math.sin((108 * Math.PI) / 360) / Math.sin((2 * Math.PI) / nAt);
+      const hh = 0.5 * Math.sqrt(Math.max(0, 1 - (2 * R * Math.sin(Math.PI / nAt)) ** 2));
+      return Array.from({ length: nAt }, (_, k) => [R * Math.cos(ang(k)), k % 2 ? hh : -hh, R * Math.sin(ang(k))]);
+    }
     const R = 0.5 / Math.sin(Math.PI / nAt);
-    return Array.from({ length: nAt }, (_, k) => [R * Math.cos((2 * Math.PI * k) / nAt), 0, R * Math.sin((2 * Math.PI * k) / nAt)]);
+    return Array.from({ length: nAt }, (_, k) => [R * Math.cos(ang(k)), 0, R * Math.sin(ang(k))]);
   }
+  // forge: a molecule's atoms overlap, so it reads as one joined body (the bond is about two covalent
+  // radii, an approximation): a pair or a tetrahedron's beads are 0.62 of a bond, a ring's 0.54 (joined,
+  // with its hole still open); the legacy look keeps its touching beads. In covalent radii:
+  const molR = nAt => (!FORGE ? 0.95 : nAt >= 6 ? 1.08 : 1.24);
   function prepareFluid(e, kind) {
     const gasN = e.ph.gas ? e.ph.gas[0] : 1;
     const rc = e.f.rCov?.[0] || e.f.rVdw?.[0] * 0.6 || 120;
@@ -496,20 +506,20 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       dNN = gasN > 1 || e.f.cat[0] === 'noble-gas' ? 1.6 * rv : 2.2 * rc;
       if (gasN > 1) { // a molecule is the particle: space them by its width (two touching atoms per bond)
         const t0 = molTemplate(gasN), reach = Math.max(...t0.map(p => Math.hypot(p[0], p[1], p[2])));
-        dNN = Math.max(dNN, 2 * reach * 2 * rc + 2 * rc * 0.95);
+        dNN = Math.max(dNN, 2 * reach * 2 * rc + 2 * rc * molR(gasN));
       }
       n = cnt;
       const side = Math.cbrt(n) * dNN * 2.1;
       setBox([side, side, side]);
       const spread = kind === 'gas' ? 0.9 : 0.6, h0 = kind === 'gas' ? 0.9 : 0.35;
       for (let i = 0; i < n; i++) { P[3 * i] = (rand() - 0.5) * boxL[0] * spread; P[3 * i + 1] = -boxL[1] / 2 + rand() * boxL[1] * h0 + dNN * 0.5; P[3 * i + 2] = (rand() - 0.5) * boxL[2] * spread; }
-      setAtomGeometry(gasN > 1 ? rc * 0.95 : 0.46 * dNN);
+      setAtomGeometry(gasN > 1 ? rc * molR(gasN) : 0.46 * dNN);
     }
     molN = gasN > 1 ? gasN : 1;
     bond = molN > 1 ? 2 * rc : 0; // bond length ~ two covalent radii (approximation)
     molT = molN > 1 ? molTemplate(molN) : null;
     if (molN > 1) {
-      molSize = 2 * Math.max(...molT.map(p => Math.hypot(p[0], p[1], p[2]))) * bond + 2 * rc * 0.95; // the molecule's width
+      molSize = 2 * Math.max(...molT.map(p => Math.hypot(p[0], p[1], p[2]))) * bond + 2 * rc * molR(molN); // the molecule's width
       for (let i = 0; i < n; i++) { // a random orientation and a steady spin about a random axis
         q4.set(gauss(), gauss(), gauss(), gauss()).normalize().toArray(Qr, 4 * i);
         ax.set(gauss(), gauss(), gauss()).normalize();
@@ -525,7 +535,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     morph = null;
     // forge: atoms from liquid to gas, never a change of scale (STYLE §6): the liquid's beads overlap a
     // little and blend into one glowing mass, and the vapour keeps them; molecules keep their touching atoms
-    if (FORGE) setAtomGeometry(molN > 1 ? rc * 0.95 : 0.57 * dNN);
+    if (FORGE) setAtomGeometry(molN > 1 ? rc * molR(molN) : 0.57 * dNN);
     // a puddle with the solid's volume: radius from n particles at spacing ~d_NN in a layer ~half as high as wide
     puddleR = FORGE ? boxL[0] * 0.44 : Math.cbrt((n * dNN ** 3) / Math.PI) * 0.9;
   }
