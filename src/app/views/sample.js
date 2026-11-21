@@ -559,7 +559,9 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         Vv[o] += gauss() * jig * dt * 6; Vv[o + 1] += gauss() * jig * dt * 6 - dNN * (FORGE ? 22 : 6) * dt; Vv[o + 2] += gauss() * jig * dt * 6; // forge: it visibly slumps into a puddle
         const rx = P[o] - cx, rz = P[o + 2] - cz, rr = Math.hypot(rx, rz);
         if (rr > Rp) { const pull = (rr - Rp) * 6 * dt / rr; Vv[o] -= rx * pull * 4; Vv[o + 2] -= rz * pull * 4; }
-        if (FORGE && rr > Rp * 1.02) { const f = (Rp * 1.02) / rr; P[o] = cx + rx * f; P[o + 2] = cz + rz * f; Vv[o] *= 0.5; Vv[o + 2] *= 0.5; } // a round pool, never the crucible's corners
+        // a round pool, never the crucible's corners; only at the floor, so condensing droplets fall freely
+        // and drift in (snapping them in mid-air stood them in columns on the pool's rim)
+        if (FORGE && rr > Rp * 1.02 && P[o + 1] < -hy + dNN * 3) { const f = (Rp * 1.02) / rr; P[o] = cx + rx * f; P[o + 2] = cz + rz * f; Vv[o] *= 0.5; Vv[o + 2] *= 0.5; }
         if (FORGE && rr > 1) { const sw = dNN * 2.2 * dt / rr; Vv[o] -= rz * sw; Vv[o + 2] += rx * sw; } // a slow swirl, as in a stirred melt
         const damp = Math.exp(-4 * dt);
         for (let k = 0; k < 3; k++) { Vv[o + k] *= damp; P[o + k] += Vv[o + k] * dt; }
@@ -678,6 +680,9 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       } else if (ss.kind === 'liquid' || ss.kind === 'gas') {
         if (prevKind !== 'liquid' && prevKind !== 'gas') prepareFluid(e, ss.kind);
         else if (ss.kind === 'gas' && prevKind === 'liquid') prepareFluid(e, 'gas');
+        else if (FORGE && ss.kind === 'liquid' && prevKind === 'gas') { // condensing: droplets rain down at different speeds, not as one block
+          for (let i = 0; i < n; i++) { Vv[3 * i] *= 0.3; Vv[3 * i + 2] *= 0.3; Vv[3 * i + 1] = -rand() * dNN * 6; }
+        }
         atoms.visible = true;
       } else {
         atoms.visible = false; cellLines.visible = false;
