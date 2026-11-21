@@ -619,3 +619,18 @@ The shared items of the review, done by the main session on master. The sample-s
   - A predicted state reads "Predicted at 20 °C" with the value in italics on phones (the strip's `font` shorthand had reset the italics).
   - The desktop card says "Tap a value…" once, under the facts, no longer again inside "All numbers & sources".
 - **Checks:** unit tests 45/45, validator, smoke 46/46 twice (a new forge-chrome step). Targeted shots in `/workspace/out/redesign/shared-fixes/` (`tools/shots-shared.mjs`).
+
+## Merge review: `view-patterns-r3` (side by side, round 3), 21 Nov 2026
+The answer to `reviews/patterns-p2.md` (committed with the sample round-2 merge). Reviewed against STYLE.md and the PARALLEL.md checklist: passed. Only scope files changed; the rebase was clean. The session's decisions are in `NOTES-patterns.md` › Round 3.
+- **Rows rest whole** under the phone sheet's compact header (scroll snapping).
+- **The phone rail** has its "Surprising pairs" label again, with "Pick any two…" always in view.
+- **"No weight known for oganesson"** replaces "weighed on a balance" where there is no balance.
+- **Text underlines** follow wrapped values.
+- **Look:** a glazed bone-porcelain balance with ink lacquer, and liquids with a window sheen. Hover colours appear only where a pointer hovers.
+- **Neon's sentence** now names both values.
+
+**Its questions:**
+1. **Chlorine's electron affinity:** PubChem's 3.617 eV ("3.62"). Our data rule takes electron affinity from PubChem (`tools/build-data.mjs`; the CRC value is only a cross-check), so every place shows 3.62; NIST's photodetachment 3.61 is not used.
+2. **A Gallium · Mercury hook ("solid at 20 °C, melts at 29.8 °C"): accepted for its next round,** provided the number is computed from our data (PubChem's 302.91 K = 29.76 °C) and not typed into a string.
+
+**Checks:** unit tests 45/45, validator, smoke 46/46 twice; index.html 1,778 KB. Reshoot: `/workspace/out/redesign/patterns-r3-merged/`.
