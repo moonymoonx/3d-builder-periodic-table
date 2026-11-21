@@ -283,3 +283,7 @@
   - **Neon:** beads keep a gap from the glass.
   - **Copy:** "all 651 visible lines"; no orphan full stop.
   - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48; the final set reshot for the affected states, fps.txt rows added.
+- 2026-11-21 ~13:57 (Saigon) — **Phosphorus caption** after `reviews/final-f2.md` (committed; every part ≥ 4, overall 4.5 on every axis).
+  - **Wording:** "a crystal of little pyramids, each 4 phosphorus atoms (P₄)" (EN and VI). The particle wording names the element's atoms, never the form.
+  - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48.
+  - **Reshoot:** `final/s-19-phosphorus-room-desktop.png`.

@@ -17,7 +17,7 @@ const EN = {
   'sample.word.liquid': 'liquid', 'sample.word.gas': 'gas · about {v}',
   // what fills the vessel
   'sample.what.atoms': 'atoms', 'sample.what.single': 'single atoms',
-  'sample.what.pairs': 'pairs of {name} atoms ({f})', 'sample.what.tetra': 'little pyramids of 4 {name} atoms ({f})',
+  'sample.what.pairs': 'pairs of {name} atoms ({f})', 'sample.what.tetra': 'little pyramids, each 4 {name} atoms ({f})',
   'sample.what.rings': 'rings of {n} {name} atoms ({f})', 'sample.what.molShort': 'molecules',
   // captions: the sample at a temperature; at room temperature an invitation follows
   'sample.at.room': '{Name} at room temperature', 'sample.at.T': '{Name} at {T}',
@@ -138,7 +138,7 @@ const VI = {
   'sample.word.solidMol': 'rắn · vẽ một phân tử', 'sample.word.solidAtom': 'rắn · vẽ một nguyên tử',
   'sample.word.liquid': 'lỏng', 'sample.word.gas': 'khí · khoảng {v}',
   'sample.what.atoms': 'nguyên tử', 'sample.what.single': 'nguyên tử riêng lẻ',
-  'sample.what.pairs': 'cặp nguyên tử {name} ({f})', 'sample.what.tetra': 'khối chóp nhỏ gồm 4 nguyên tử {name} ({f})',
+  'sample.what.pairs': 'cặp nguyên tử {name} ({f})', 'sample.what.tetra': 'khối chóp nhỏ, mỗi khối 4 nguyên tử {name} ({f})',
   'sample.what.rings': 'vòng {n} nguyên tử {name} ({f})', 'sample.what.molShort': 'phân tử',
   'sample.at.room': '{Name} ở nhiệt độ phòng', 'sample.at.T': '{Name} ở {T}',
   'sample.cap.gas': '{at}: chất khí gồm các {what} bay với tốc độ khoảng {v}.',

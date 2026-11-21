@@ -41,7 +41,8 @@ const perParticle = e => (e.ph.gas && e.ph.gas[0] > 1 ? e.ph.gas[0] : 1);
 /** The particles in the vessel, plain words first and the formula after: "pairs of nitrogen atoms (N₂)",
  *  "rings of 8 sulfur atoms (S₈)", "single atoms". */
 function what(e, kind) {
-  const n = perParticle(e), v = { name: nameIn(e), f: formula(e, n), n };
+  // the atoms are the element's, whatever form they make ("4 phosphorus atoms", not "4 white phosphorus atoms")
+  const n = perParticle(e), v = { name: gdpt(e) ? e.names.viAlt[0] : name(e).toLowerCase(), f: formula(e, n), n };
   if (n > 1) return t(n === 2 ? 'sample.what.pairs' : n === 4 ? 'sample.what.tetra' : 'sample.what.rings', v);
   return t(kind === 'gas' ? 'sample.what.single' : 'sample.what.atoms');
 }
