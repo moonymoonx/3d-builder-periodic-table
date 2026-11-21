@@ -213,7 +213,7 @@ export function buildElementCard(ui, hooks) {
     // phones: the sheet stands just tall enough for the doors and the previous / next footer
     if (phone) requestAnimationFrame(() => { // the doors and the "More about …" row, clear of the edge fade
       const m = sh.body.querySelector('.card-more');
-      const bottom = m ? m.offsetTop + m.offsetHeight + 26 : doorBox.offsetTop + doorBox.offsetHeight + 28;
+      const bottom = m ? m.offsetTop + m.offsetHeight + 2 : doorBox.offsetTop + doorBox.offsetHeight + 28; // ends at the "More about" row: nothing below peeks
       if (sh.isOpen()) sh.setPeek(Math.min(bottom + (nav.parentNode ? nav.parentNode.offsetHeight : 0), window.innerHeight * 0.7));
     });
     else sh.setPeek(null);

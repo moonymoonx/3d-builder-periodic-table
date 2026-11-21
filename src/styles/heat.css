@@ -32,12 +32,14 @@ body.kiln .heat-word { color: var(--kiln-text-2); }
 .heat-track { position: relative; height: 92px; margin-left: 18px; }
 .heat-rail { position: absolute; left: 0; right: 0; top: 40px; height: 12px; border-radius: 6px; background: var(--line); }
 /* a thermometer, not just a slider: the bulb at the cold end */
-.heat-rail::before { content: ""; position: absolute; z-index: 2; left: -16px; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: #C9CFD8; box-shadow: inset 0 0 0 2px rgba(28, 26, 23, 0.12); }
+/* the bulb: the thermometer's reservoir, joined to the rail (smaller than the knob, the rail's own colour) */
+.heat-rail::before { content: ""; position: absolute; z-index: 2; left: -13px; top: 50%; width: 18px; height: 18px; margin-top: -9px; border-radius: 50%; background: #3B2B24; box-shadow: 0 0 0 3px var(--card); }
 /* the knob is drawn where the fill ends; the native thumb is invisible (it only takes the drag) */
-.heat-knob { position: absolute; top: 46px; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; background: var(--card); border: 2px solid var(--ink);
-  box-shadow: 0 2px 8px rgba(28, 26, 23, 0.25); pointer-events: none; z-index: 3; }
-body.kiln .heat-knob { border-color: #F0874F; background: #2A2019; }
-body.kiln .heat-rail::before { background: #F0874F; box-shadow: 0 0 14px rgba(240, 135, 79, 0.6); }
+/* the knob: the one thing you drag — a solid cream disc with an ember ring and a soft shadow */
+.heat-knob { position: absolute; top: 46px; width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 50%; background: #FFFDF8; border: 3px solid var(--ember);
+  box-shadow: 0 3px 10px rgba(28, 26, 23, 0.3); pointer-events: none; z-index: 3; }
+body.kiln .heat-knob { border-color: #F0874F; background: #FFF6E8; box-shadow: 0 0 0 4px rgba(240, 135, 79, 0.18), 0 3px 10px rgba(0, 0, 0, 0.5); }
+body.kiln .heat-rail::before { background: #5A2414; box-shadow: 0 0 0 3px rgba(30, 23, 17, 0.88); }
 body.kiln .heat-rail { background: rgba(242, 232, 218, 0.14); }
 .heat-fill { position: absolute; inset: 0; border-radius: 6px;
   /* cold end dark, hot end bright: charcoal, ember, orange, yellow-white, like the metal's own glow */
@@ -60,6 +62,12 @@ body.kiln .heat-tick small { color: var(--kiln-text-2); }
 .heat-flags { position: absolute; left: 0; right: 0; top: 60px; height: 24px; pointer-events: none; }
 .heat-flag { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; font: italic 400 13px/1.2 var(--font-serif); color: var(--ink-3); padding-top: 6px; }
 .heat-flag::before { content: ""; position: absolute; top: 0; left: 50%; width: 1px; height: 6px; background: currentColor; }
+/* phones: close re-stack ticks drop a short stem to one shared label below the rail */
+.heat-tick.is-below::after { bottom: auto; top: 52px; height: 9px; }
+.heat-flag--events { font: 400 13px/1.2 var(--font-sans); font-style: normal; color: var(--ink-2); padding-top: 3px; }
+.heat-flag--events::before { display: none; }
+.heat-flag--events b { font-weight: 600; color: var(--ink); }
+body.kiln .heat-flag--events b { color: var(--kiln-text); }
 body.kiln .heat-flag { color: var(--kiln-text-2); }
 .heat-actions { display: flex; justify-content: center; gap: 10px; }
 body.kiln .heat-play { background: #F0874F; color: var(--kiln); }

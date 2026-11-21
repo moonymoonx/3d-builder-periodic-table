@@ -200,3 +200,8 @@
   - **Merge steps:** rebased on master (clean), applied WIRING-patterns.md (router patch; four legacy smoke steps retired), applied proposals P2 and P3; P1 and P4 scheduled after the remaining merges.
   - **Checks:** unit tests 33/33, validator ALL PASS, smoke 31/31 twice, no console errors, index.html 1,585 KB.
   - **Reshoot:** `/workspace/out/redesign/patterns-merged/` (the branch's review set on the merged build plus hero spot-checks).
+- 2026-11-21 ~08:23 (Saigon) — **Hero round 7** (resumed after the patterns merge; rebased on 23af106). Gemini's cold round-6 review (`reviews/hero-r6.md`: 4.5 / 4.0 / 4.0 / 4.0 / 4.0, passing). Details in DECISIONS.md › Hero round 7.
+  - **Forge:** a warming-up caption; a solid cream knob vs a reservoir bulb; the phones' shared re-stack label below the rail; a rounded glass vessel with sharper Fresnel edges; beads with the table's glaze studio and inner shading; the whole hearth framed, with a contact shadow; softer vapour.
+  - **Phone:** card peek ends at "More about …" (no fade, nothing sliced); heft from a little higher with a 2.6 cap.
+  - **Checks:** unit tests 33/33, validator ALL PASS, smoke 31/31 twice, no console errors.
+  - **Review set:** `/workspace/out/redesign/hero-r7/` (30 PNG, README.txt). No new FPS (machine load 15–20 from the parallel sessions).

@@ -215,7 +215,7 @@ export function createTableView(hooks) {
     else if (p.key === 'year') f = (x - lo) / Math.max(1e-9, hi - lo);
     else { const base = Math.min(0, lo); f = (x - base) / Math.max(1e-9, hi - base); }
     // phones see columns from lower down, so they stand taller there to read as heights
-    const hm = hooks.isPhone && hooks.isPhone() ? HMAX * 1.3 : HMAX;
+    const hm = hooks.isPhone && hooks.isPhone() ? 2.6 : HMAX;
     return H0 + Math.max(0, Math.min(1, f)) * (hm - H0);
   }
   const ranges = new Map();
@@ -364,7 +364,7 @@ export function createTableView(hooks) {
     const tall = !state.flat ? HMAX * 0.5 : 0;
     // flat tiles: a low, museum-like angle (phones: enough to see the tiles' glazed fronts);
     // columns: look more from above so the tall ones hide less of the rows behind them
-    const phi = portrait ? (state.flat ? 0.5 : 0.5) : s32 ? 0.62 : state.flat ? 0.78 : 0.33;
+    const phi = portrait ? (state.flat ? 0.5 : 0.45) : s32 ? 0.62 : state.flat ? 0.78 : 0.33;
     const rW = halfW / Math.tan(fov.h / 2);
     const rD = (halfD * Math.cos(phi) + (tall + 0.4) * Math.sin(phi)) / Math.tan(fov.v / 2) + halfD * Math.sin(phi);
     const r = Math.max(rW, rD) * 1.03;

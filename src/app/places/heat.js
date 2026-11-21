@@ -72,7 +72,12 @@ export function buildHeat(ui, hooks) {
       (p.r >= r || x < p.a - 5 || x > p.b + 5) &&  // p sits below my row: my stem rises through it, so must miss p's text
       (p.r <= r || p.x < a - 5 || p.x > b + 5));   // p sits above my row: its stem rises through mine, so my text must miss it
     const spots = new Map();
-    const sorted = [...events].sort((a, b) => rank[a.key] - rank[b.key] || a.T - b.T);
+    // phones: close re-stack ticks share one label below the rail ("912 · 1,394 °C re-stacks"), so the
+    // row above keeps only melting and boiling (no stacked, hard-to-trace labels)
+    const trans = events.filter(x => x.key === 'trans');
+    const below = isPhone() && trans.length >= 2 && (trans[trans.length - 1].T - trans[0].T) / (hi - lo) < 0.35;
+    if (below) for (const x of trans) spots.set(x, { r: 0, dx: 0, word: '', below: true });
+    const sorted = [...events].filter(x => !spots.has(x)).sort((a, b) => rank[a.key] - rank[b.key] || a.T - b.T);
     for (const x of sorted) {
       const px = pos(x), others = events.filter(o => o !== x).map(pos);
       const left = Math.min(...others.filter(o => o < px).map(o => px - o), 1e9), right = Math.min(...others.filter(o => o > px).map(o => o - px), 1e9);
@@ -92,6 +97,7 @@ export function buildHeat(ui, hooks) {
     }
     replace(ticks, events.map(x => {
       const sp = spots.get(x);
+      if (sp.below) return h('span', { class: `heat-tick is-${x.key} is-below`, style: { left: pct(x.T) } });
       const el2 = h('span', { class: `heat-tick is-${x.key}`, style: { left: pct(x.T) } }, h('span', null, h('b', null, C(x.T)), sp.word ? h('small', null, sp.word) : null));
       el2.style.setProperty('--row', String(sp.r)); el2.style.setProperty('--dx', `${sp.dx.toFixed(1)}px`);
       return el2;
@@ -106,7 +112,11 @@ export function buildHeat(ui, hooks) {
     const marks = LANDMARKS.map(s => bySym(s)).filter(x => x.Z !== el.Z).map(x => ({ x, T: propValue(x, 'mp')[0] }))
       .map(m => ({ ...m, text: t('forge.landmark', { name: name(m.x).toLowerCase(), T: C(m.T) }) }))
       .filter(m => (m.T - lo) / (hi - lo) > 0.03 && m.T < hi * 0.98 && fits(m.T, m.text.length));
-    replace(flags, marks.map(m => h('span', { class: 'heat-flag', style: { left: pct(m.T) } }, m.text)));
+    if (below) { // the shared re-stack label takes the row below the rail (no landmark flags on phones then)
+      const mid = (trans[0].T + trans[trans.length - 1].T) / 2;
+      const nums = trans.map((x, i) => (i < trans.length - 1 ? fmtNum(x.T - 273.15, 0) : C(x.T))).join(' · ');
+      replace(flags, h('span', { class: 'heat-flag heat-flag--events', style: { left: pct(mid) } }, h('b', null, nums), ' ', t('forge.tick.trans')));
+    } else replace(flags, marks.map(m => h('span', { class: 'heat-flag', style: { left: pct(m.T) } }, m.text)));
     input.setAttribute('aria-label', t('forge.label'));
   }
   let lastRead = '', lastWord = '', lastClip = '';
@@ -123,6 +133,7 @@ export function buildHeat(ui, hooks) {
     const v = String(toV(state.T));
     if (input.value !== v && document.activeElement !== input) input.value = v;
     if (state.T <= lo + 0.5 && !playing) say(startCaption());
+    else if (state.T > lo + 40 && lastCaption === startCaption()) say(t('forge.warming')); // never "at room temperature" at 396 °C
   }
   let lastBtn = '';
   function renderButtons() {

@@ -393,3 +393,20 @@ Consistent with the hero: same type scale, kit, back links and card language. No
 - **WIRING part 2, retire four legacy trends/compare smoke steps: accepted.** They tested the retired dark-stage panels; the `// ---- patterns ----` block covers the same ground.
 
 **Fixed at merge:** the hero shot script's "All numbers" step now targets the visible sheet. The side-by-side place has its own (hidden) kit sheet, so `.ui-sheet__body` matched two elements.
+
+## Hero round 7 (`reviews/hero-r6.md`), 21 Nov 2026
+Gemini's cold round-6 review: clarity 4.5, ease 4.0, beauty 4.0, smoothness 4.0, delight 4.0 (passing). moony listed the points to fix; the calls are Claude's.
+
+- **A stale "Iron at room temperature" caption at 396 °C: accepted.** A caption now names the warm-up ("Warming up: the atoms shiver harder as the temperature climbs.") between room temperature and the first glow.
+- **Solid bulb vs hollow knob: accepted.** The knob is the one thing you drag: a solid cream disc with an ember ring and a shadow. The bulb is the thermometer's reservoir, smaller and in the rail's own colour.
+- **Clipped text above the phone card footer: accepted.** While the sheet only peeks, it ends exactly at the "More about …" row and the edge fade is off (the row is the cue); nothing from below peeks.
+- **Cramped stacked tick labels on the phone thermometer: accepted.** On phones, close re-stack ticks share one label below the rail ("912 · 1,394 °C re-stacks", with short stems), and the row above keeps melting and boiling. Phones drop the landmark flags when that row is needed.
+- **The daylight forge start: accepted.**
+  - The glass vessel is rounded and its Fresnel term sharper: faces nearly clear, edges catching the light.
+  - The beads reflect the same soft studio as the table's tiles and are a little shaded toward the inside.
+  - The camera frames the whole hearth clear of the panel, and a soft contact shadow grounds the hearth.
+- **Column-on-symbol occlusion in the height lenses on phones: accepted.** Phones look a little more from above (φ 0.45) with a lower height cap (2.6).
+- **Molten / heating frame pacing: not changed this round.** Round 5 already removed per-frame and per-event work. With three other sessions on the machine (load 15–20), no measurement here can show a difference; it waits for a quiet machine.
+- **Also, from the review:**
+  - The vapour's per-atom glows and hearth glow are softer, so the vessel floor no longer blows out.
+  - STYLE.md now matches round 6, with no unit cell in the kiln (the review noted the mismatch).

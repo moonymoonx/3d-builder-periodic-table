@@ -13,7 +13,7 @@ import { cmfAt, mul3, gammaEncode } from '../../physics/color.js';
 import { CATEGORY_COLORS, CATEGORY_COLORS_CB } from '../palette.js';
 import { pigment, pigmentCB, color as TOK, light as LIGHT } from '../../design/tokens.js';
 import { glassMaterial, glowSprites, moltenPool } from './forgeArt.js';
-import { roundedBox } from './tableArt.js';
+import { roundedBox, softRectCanvas, GLAZE } from './tableArt.js';
 import { rng32 } from '../../physics/orbitals.js';
 
 const SPEED_SCALE = 3; // display pm/s per real m/s (the real motion is ~3 x 10^11 times faster)
@@ -110,11 +110,17 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   const boxMat = new THREE.LineBasicMaterial({ color: FORGE ? TOK.ink : 0x9fbcff, transparent: true, opacity: FORGE ? 0.22 : 0.35 });
   const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), boxMat);
   const glassMat = FORGE ? glassMaterial() : null;
-  const glass = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), FORGE ? glassMat : new THREE.MeshStandardMaterial({ color: 0x8fb0ff, transparent: true, opacity: 0.05, roughness: 0.1, depthWrite: false, side: THREE.BackSide }));
+  const glass = new THREE.Mesh(FORGE ? roundedBox(1, 1, 1, 0.035, 4) : new THREE.BoxGeometry(1, 1, 1), FORGE ? glassMat : new THREE.MeshStandardMaterial({ color: 0x8fb0ff, transparent: true, opacity: 0.05, roughness: 0.1, depthWrite: false, side: THREE.BackSide }));
   // forge: a glazed ceramic hearth (rebuilt to size in setBox) instead of a flat slab
   const floor = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: FORGE ? '#CBBAA4' : 0x101a2e, roughness: FORGE ? 0.4 : 0.9 }));
   box.visible = !FORGE; // the forge's vessel shows only at its glass edges
   world.add(box, glass, floor);
+  let hearthShadow = null;
+  if (FORGE) { // the hearth sits on the paper: a soft contact shadow under it
+    const tx = new THREE.CanvasTexture(softRectCanvas(128, 0.32, 0.18));
+    hearthShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: TOK.shadow, map: tx, transparent: true, opacity: 0.38, depthWrite: false }));
+    hearthShadow.renderOrder = -1; world.add(hearthShadow);
+  }
   const cellMat = new THREE.LineBasicMaterial({ color: FORGE ? TOK.ink : 0xffcf6b, transparent: true, opacity: FORGE ? 0.5 : 0.9 });
   const cellLines = new THREE.LineSegments(new THREE.BufferGeometry(), cellMat);
   world.add(cellLines);
@@ -132,7 +138,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   const MAX = 3200;
   const atomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: FORGE ? 0.35 : 0.38, metalness: FORGE ? 0 : 0.15 });
   const uni = { uTime: { value: 0 }, uAmp: { value: 0 } };
-  const glowU = { uGlowCol: { value: new THREE.Color() }, uGlowK: { value: 0 }, uHot: { value: 0 },
+  const glowU = { uGlowCol: { value: new THREE.Color() }, uGlowK: { value: 0 }, uHot: { value: 0 }, uGlaze: { value: 0.6 },
     uCore: { value: new THREE.Vector3() }, uCoreR: { value: 1000 }, uRimCol: { value: new THREE.Color('#FFC98A') }, uCellCol: { value: new THREE.Color(TOK.verdigris) } };
   atomMat.onBeforeCompile = sh => {
     sh.uniforms.uTime = uni.uTime; sh.uniforms.uAmp = uni.uAmp;
@@ -140,12 +146,18 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     // forge: hot beads glow brightest where they face you and darker toward the rim, whitening at the
     // core as the temperature rises, so every atom still reads as a sphere while incandescent
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform vec3 uGlowCol; uniform float uGlowK; uniform float uHot; uniform vec3 uCore; uniform float uCoreR; uniform vec3 uRimCol; uniform vec3 uCellCol; varying float vHi; varying vec3 vWorldP;')
+      .replace('#include <common>', '#include <common>\nuniform vec3 uGlowCol; uniform float uGlowK; uniform float uHot; uniform vec3 uCore; uniform float uCoreR; uniform vec3 uRimCol; uniform vec3 uCellCol; uniform float uGlaze; varying float vHi; varying vec3 vWorldP;\n' + (FORGE ? GLAZE : ''))
+      .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+        #ifdef FORGE_GLOW
+          // glazed beads: the same soft studio the table's tiles reflect
+          reflectedLight.indirectSpecular += uGlaze * glazeStudio(inverseTransformDirection(normal, viewMatrix), inverseTransformDirection(geometryViewDir, viewMatrix), material.roughness);
+        #endif`)
       .replace('#include <color_fragment>', `#include <color_fragment>
         #ifdef FORGE_GLOW
           // a glowing metal's own light outshines its glaze; by day the unit cell's atoms are verdigris
           float lit = clamp(uGlowK * 2.0, 0.0, 1.0);
           diffuseColor.rgb *= 1.0 - 0.7 * lit;
+          diffuseColor.rgb *= mix(0.74, 1.0, smoothstep(0.25, 0.95, length(vWorldP - uCore) / max(uCoreR, 1.0))); // deeper atoms a little shaded
           if (vHi > 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, vHi > 1.5 ? vec3(0.03, 0.028, 0.025) : uCellCol, 0.85 * (1.0 - lit));
         #endif`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
@@ -291,6 +303,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       floor.geometry.dispose();
       floor.geometry = roundedBox(w, hgt, w, Math.min(hgt * 0.45, w * 0.04), 3);
       floor.scale.set(1, 1, 1); floor.position.set(0, -L[1] / 2 - hgt / 2, 0);
+      hearthShadow.scale.set(w * 1.22, 1, w * 1.22); hearthShadow.position.set(L[0] * 0.03, -L[1] / 2 - hgt - L[1] * 0.002, L[2] * 0.04);
       decal.scale.set(L[0] * 1.5, 1, L[2] * 1.5); decal.position.set(0, -L[1] / 2 + L[1] * 0.002, 0);
     } else { floor.scale.set(L[0] * 1.25, L[1] * 0.04, L[2] * 1.25); floor.position.set(0, -L[1] / 2 - L[1] * 0.02, 0); }
   }
@@ -527,6 +540,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       if (to !== kilnTo) { kilnTo = to; if (hooks.onKiln) hooks.onKiln(!!to); }
       const k = kilnK;
       hemi.intensity = 1.0 * (1 - 0.86 * k); key.intensity = 2.0 * (1 - 0.8 * k);
+      glowU.uGlaze.value = 0.6 * (1 - k); // the studio's reflections fade with the room light
       heatLight.color.copy(col); heatLight.intensity = on * 1.8;
       heatLight.position.set(0, (world.userData.lift || 0) * 0.4, 0);
       // one soft aura behind the crystal (depth-tested: it shows around it, not through it)
@@ -536,7 +550,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       halo.position.set(0, (world.userData.lift || 0) * 0.5, 0);
       // a glow around every hot atom; larger and sparser in the vapour
       glow.mat.uniforms.uCol.value.copy(col);
-      glow.mat.uniforms.uK.value = kind === 'gas' ? on * 0.6 : on * 0.5;
+      glow.mat.uniforms.uK.value = kind === 'gas' ? on * 0.42 : on * 0.5;
       glow.mat.uniforms.uSize.value = radius * (kind === 'gas' ? 7.5 : 3.4);
       // per-atom glows are a fill cost software renderers cannot afford (low tier): there the beads'
       // own incandescence and a stronger aura carry the glow
@@ -544,7 +558,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       glow.mesh.visible = sprites && on > 0.02;
       if (!sprites) halo.material.opacity = Math.min(0.5, on * 0.55);
       // the glow pools on the hearth; the molten pool and the glass take its colour
-      decal.material.color.copy(col); decal.material.opacity = Math.min(kind === 'gas' ? 0.55 : 0.85, on * 0.95);
+      decal.material.color.copy(col); decal.material.opacity = Math.min(kind === 'gas' ? 0.4 : 0.85, on * 0.95);
       pool.uni.uCol.value.copy(col); pool.uni.uK.value = on * 1.5;
       glassMat.uniforms.uCol.value.copy(INK).lerp(KILN_TEXT, k); glassMat.uniforms.uK.value = 0.2 - 0.06 * k;
       // the unit cell: verdigris atoms by day; warm-gold rims once the metal glows
@@ -595,11 +609,11 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
 
   function frameGoal() {
     const fov = freeFov();
-    const R = Math.hypot(...boxL) * (FORGE ? 0.5 : 0.62);
+    const R = Math.hypot(...boxL) * (FORGE ? 0.57 : 0.62);
     const r = R / Math.sin(Math.min(fov.v, fov.h) / 2);
     E.camera.near = R / 200; E.camera.far = R * 50; E.camera.updateProjectionMatrix();
     E.rig.lim = { rMin: R * 0.4, rMax: R * 12, phiMin: 0.15, phiMax: 1.55 };
-    return { target: new THREE.Vector3(0, -boxL[1] * 0.05, 0), r, theta: FORGE ? 0.6 : 0.65, phi: FORGE ? 1.04 : 1.12 };
+    return { target: new THREE.Vector3(0, -boxL[1] * (FORGE ? 0.12 : 0.05), 0), r, theta: FORGE ? 0.6 : 0.65, phi: FORGE ? 1.04 : 1.12 };
   }
   function frame(dur = state.reduced ? 0 : 0.7) { E.rig.flyTo(frameGoal(), dur); }
 

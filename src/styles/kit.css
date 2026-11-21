@@ -79,6 +79,7 @@
 .ui-sheet__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 20px 22px 22px; }
 .ui-sheet.has-more .ui-sheet__body { -webkit-mask: linear-gradient(#000 calc(100% - 22px), transparent); mask: linear-gradient(#000 calc(100% - 22px), transparent); }
 .ui-sheet__foot { flex: none; padding: 2px 14px 6px; border-top: 1px solid var(--line); background: var(--card); }
+@media (max-width: 760px) { .ui-sheet:not(.is-full) .ui-sheet__body { -webkit-mask: none; mask: none; } } /* peeking: the "More about" row is the cue, nothing half-faded */
 .ui-sheet__foot .card-nav { border-top: 0; padding-top: 0; }
 .ui-sheet__close { position: absolute; top: 12px; right: 12px; z-index: 3; box-shadow: 0 2px 10px rgba(28, 26, 23, 0.12); }
 .ui-sheet__handle { display: none; }

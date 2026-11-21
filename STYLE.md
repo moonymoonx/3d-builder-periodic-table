@@ -96,7 +96,7 @@ No font files (SPEC deliverable), so we use two **system stacks**, one serif and
   - Default height is equal for all tiles. Height means something only inside a numbers lens.
   - Pointer parallax on desktop: the camera leans at most 1.2° toward the cursor (300 ms ease-out), as a depth cue. It is off on touch screens and with reduced motion.
 - **Specimen stage (Heat it):**
-  - Atoms are glazed beads (`roughness 0.35`) in the family pigment, inside a glass vessel that shows only at its edges (Fresnel, no wireframe), standing on a rounded glazed ceramic hearth. The unit cell is made visible: one atom a little inside the front corner and the neighbours it touches (8 in bcc, 12 in fcc) are verdigris by day and wear warm-gold rims in the kiln. Depth-tested rods join them, and a cutaway (the atoms in front shrink back) lets you count them. No flat overlays drawn on top of the 3D.
+  - Atoms are glazed beads (`roughness 0.35`) in the family pigment, inside a rounded glass vessel that shows only at its edges (Fresnel, no wireframe), standing on a rounded glazed ceramic hearth. The unit cell is made visible by day: one ink atom a little inside the front corner and the verdigris neighbours it touches (8 in bcc, 12 in fcc), joined by depth-tested rods and revealed by a clean cutaway (the atoms in front are removed). In the glowing kiln it is not shown (it read as a fiery cavity); the caption and the readout carry the count. No flat overlays drawn on top of the 3D.
   - When hot, the beads glow in the blackbody colour (decoded as sRGB), brightest where they face you and whitening at the core as the temperature rises, so each stays a sphere. Each hot atom has its own soft incandescent glow (one instanced additive draw). The glow lights the hearth (one point light) and pools on it, with a faint aura behind the crystal. No post-processing.
   - Molten: the same atoms, a dense, slowly swirling pool of incandescent beads, hotter at its centre. Boiling: a sparse, bright vapour whose glow keeps rising with temperature. Atoms from solid to gas, never a change of scale.
 - **Electron clouds (Inside the atom):**
@@ -155,6 +155,9 @@ Every number comes from our data (PubChem; Wikipedia/Arblaster transitions; COD 
   - "Heat it ▶" stops just past each event for about 2 s. The caption fades in at each moment.
   - The room dims when the glow begins (about 490 °C for iron) and returns as it cools.
   - On the kiln stage the panel turns dark (kiln text), and ember text brightens to `#F0874F` (7 : 1 on the panel; `--ember` would be 3.3 : 1 there). The back link becomes a dark pill.
+  - The knob is the one thing you drag: a solid cream disc with an ember ring, drawn exactly where the fill ends. The bulb is the thermometer's reservoir, smaller and in the rail's own colour.
+  - On phones, close re-stack ticks share one label below the rail ("912 · 1,394 °C re-stacks"); melting and boiling keep the row above.
+  - The caption names every stretch: room temperature, warming up, the glow, each event.
 - **An instant taste from home.** The **Heat map** lens chip on the table turns the temperature into a slider for all 118 tiles at once: drag it and watch whole regions melt and boil.
 
 ## 10. Do / Don't
