@@ -204,7 +204,7 @@ await step('patterns: the card\'s "↗ across the table" opens a question-led ch
   const r = await page.evaluate(() => ({ view: window.__pt.state.view, prop: window.__pt.state.prop, q: document.querySelector('.patterns-q').textContent, a: document.querySelector('.patterns-a').textContent,
     beads: [...document.querySelectorAll('.patterns-bead')].filter(b => +b.getAttribute('opacity') > 0.5).length, notes: [...document.querySelectorAll('.patterns-note')].filter(n => !n.hidden).length,
     back: document.querySelector('[data-back=card]')?.textContent || '' }));
-  if (r.view !== 'trends' || r.prop !== 'mp' || !/tungsten/.test(r.q) || !/3,422 °C/.test(r.a) || r.beads < 100 || r.notes < 2 || !/Iron/.test(r.back)) throw new Error(JSON.stringify(r));
+  if (r.view !== 'trends' || r.prop !== 'mp' || !/tungsten/.test(r.q) || !/3,422\s°C/.test(r.a) || r.beads < 100 || r.notes < 2 || !/Iron/.test(r.back)) throw new Error(JSON.stringify(r));
   return `${r.beads} dots, ${r.notes} notes`;
 });
 await step('patterns: tap a dot to pick it; its value opens its source', async () => {
@@ -214,7 +214,7 @@ await step('patterns: tap a dot to pick it; its value opens its source', async (
   await page.locator('.patterns-pin .patterns-v').click();
   const txt = await page.locator('.popover').textContent();
   await page.keyboard.press('Escape');
-  if (!/1,064 °C/.test(v) || !/Source/.test(txt) || !/1,337 K/.test(txt)) throw new Error(`${v} / ${txt.slice(0, 80)}`);
+  if (!/1,064\s°C/.test(v) || !/Source/.test(txt) || !/1,337 K/.test(txt)) throw new Error(`${v} / ${txt.slice(0, 80)}`);
   return v;
 });
 await step('patterns: switch pattern, join down the columns, "More" holds the rest', async () => {
@@ -265,6 +265,16 @@ await step('side by side: curated pairs, swap, carbon\'s two forms, pick any two
   const z2 = await page.evaluate(() => window.__pt.state.Z2);
   if (!/One more proton/.test(lead) || sw[0] !== 80 || sw[1] !== 79 || cc.Z !== 6 || cc.Z2 !== 6 || !/Neighbours per atom\D*3\D*4/.test(cc.rows) || z2 !== 11) throw new Error(JSON.stringify({ lead, sw, cc, z2 }));
   return 'carbon: graphite 3, diamond 4 neighbours';
+});
+await step('side by side: a litre of each on a balance (state and heft), or one atom of each to scale', async () => {
+  await page.locator('.compare-pairs .ui-chip', { hasText: 'Gold · Mercury' }).click(); await settle();
+  const names = () => page.evaluate(() => [...document.querySelectorAll('.lbl.compare-name')].filter(l => l.style.visibility === 'visible').map(l => l.textContent).join(' | '));
+  const litre = await names();
+  await page.locator('.compare-stage button', { hasText: 'One atom of each' }).click(); await settle();
+  const atoms = await names();
+  await page.locator('.compare-stage button', { hasText: 'A litre of each' }).click(); await settle();
+  if (!/solid\D*19\.3\skg/.test(litre) || !/liquid\D*13\.5\skg/.test(litre) || !/136\spm/.test(atoms)) throw new Error(JSON.stringify({ litre, atoms }));
+  return litre;
 });
 await step('side by side (VI): sentences use the familiar Vietnamese names; sizes drawn when touching', async () => {
   await page.evaluate(() => window.__pt.set({ Z: 26, Z2: 29, lang: 'vi' })); await settle();

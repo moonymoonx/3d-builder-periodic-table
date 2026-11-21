@@ -4,6 +4,7 @@
 // takeaways' premises are checked against it in tests/compare.test.mjs.
 import { elements, byZ, bySym, propValue, stateAt, isPred, data } from '../data.js';
 import { cellVolume } from '../../physics/lattice.js';
+import { fmtNum } from '../i18n.js';
 
 const ROOM = 293.15, K0 = 273.15;
 
@@ -107,6 +108,44 @@ export function curatedFacts(id) {
     return { r: og[0] / h[0], og, h, holds: !!(h && og) };
   }
   return { holds: false };
+}
+
+// ---- numbers as people read them -----------------------------------------------------------------------------------
+const NB = '\u00a0'; // a number never parts from its unit at a line end
+/** A temperature from kelvin: a tenth of a degree only where the source gives one; whole degrees above 1,000 °C. */
+export function tempC(K, pred = false) {
+  const c = K - K0, frac = Math.abs(K - Math.round(K)) > 0.004;
+  const d = pred || Math.abs(c) >= 1000 || !frac ? 0 : 1;
+  return `${pred ? `≈${NB}` : ''}${fmtNum(c, d, { minDigits: d })}${NB}°C`.replace('-', '−');
+}
+/** What a litre weighs, as people read it: grams for gases (0.17 g, 3.0 g), kilograms otherwise (0.97 kg, 19.3 kg). */
+export function litreText(kg, pred = false) {
+  const pre = pred ? `≈${NB}` : '';
+  if (kg < 0.1) { const g = kg * 1000, d = g < 1 ? 2 : 1; return `${pre}${fmtNum(g, d, { minDigits: d })}${NB}g`; }
+  const d = kg < 1 ? 2 : 1;
+  return `${pre}${fmtNum(kg, d, { minDigits: d })}${NB}kg`;
+}
+
+// ---- the stage: a litre of each on a balance (the default), or one atom of each to scale -------------------------
+let stageMode = 'litre';
+const stageWatchers = new Set();
+export const getStage = () => stageMode;
+export function setStage(m) {
+  if (m === stageMode || (m !== 'litre' && m !== 'atoms')) return;
+  stageMode = m;
+  for (const f of stageWatchers) f(m);
+}
+export const onStage = f => { stageWatchers.add(f); return () => stageWatchers.delete(f); };
+/**
+ * How far the balance tips toward the heavier litre, in radians: it grows with the ratio of the two weights
+ * (on a log scale, so 2.4× reads clearly and 136,000× does not fly off) and stops at about 11.5°.
+ * Positive: the second litre (B) is heavier.
+ */
+export const balanceTilt = (kgA, kgB) => 0.2 * Math.tanh(0.55 * Math.log(kgB / kgA));
+/** What the stage shows for an element at 20 °C: its state, its litre weight (kg; null if not known). */
+export function specimenOf(e) {
+  const st = stateAt(e, ROOM), l = litre(e);
+  return { state: st.s, pred: !!st.p, kg: l ? l.kg : null, kgPred: l ? l.pred : false, gas: l ? l.gas : st.s === 'gas' };
 }
 
 // ---- one element, two solid forms (carbon: graphite and diamond), from the measured crystals ------------------

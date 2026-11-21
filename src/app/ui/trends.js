@@ -110,6 +110,8 @@ export function createChart(hooks) {
       gGrid.append(S('line', { x1: m.l, x2: G.W - m.r, y1: yy, y2: yy, class: 'patterns-gridline' + (tk.base ? ' is-base' : '') }));
       gGrid.append(S('text', { x: m.l - 8, y: yy + 4.5, 'text-anchor': 'end', class: 'patterns-tick' }, tk.label));
     }
+    // a faint line at every other power of ten (log scale), so each line up is ×10
+    for (const k of model.y.minor || []) { const yy = G.Y(10 ** k); if (yy != null && yy >= m.t - 1 && yy <= G.base + 1) gGrid.append(S('line', { x1: m.l, x2: G.W - m.r, y1: yy, y2: yy, class: 'patterns-gridline is-minor' })); }
     for (const rf of model.ref || []) {
       const yy = G.Y(rf.y);
       if (yy == null || yy < m.t || yy > G.base) continue;
@@ -131,22 +133,24 @@ export function createChart(hooks) {
   }
   /** Reference-line labels ("room temperature") sit where no bead is in the way. */
   let refBoxes = [];
-  function placeRefs() {
+  function placeRefs(ix = spatialIndex([], []), taken = []) {
     refBoxes = [];
     for (const tx of gRef.querySelectorAll('.patterns-reflbl')) {
       const yy = +tx.dataset.y, w = tx.getComputedTextLength ? tx.getComputedTextLength() : 160;
-      const cands = [G.W - G.m.r - 4 - w, G.m.l + 6];
-      for (let i = 1; i < 8; i++) cands.push(G.m.l + (G.pw * i) / 8 - w / 2);
       let best = null;
-      for (const x0 of cands) {
-        if (x0 < G.m.l + 2 || x0 + w > G.W - G.m.r) continue;
-        const r = { x0, x1: x0 + w, y0: yy - 20, y1: yy - 2 };
-        let hits = 0;
-        for (let Z = 1; Z <= N; Z++) { if (Number.isNaN(to[Z]) || opTo[Z] < 0.5) continue; const x = G.X(Z); if (x > r.x0 - G.r && x < r.x1 + G.r && to[Z] > r.y0 - G.r && to[Z] < r.y1 + G.r) hits++; }
-        if (!best || hits < best.hits) best = { hits, r };
+      // along its line, just above or just below it: the spot with the fewest beads, curves and labels in the way
+      for (let i = 0; i <= 16; i++) for (const above of [true, false]) {
+        const x0 = G.m.l + 6 + ((G.pw - w - 12) * i) / 16;
+        const r = above ? { x0, x1: x0 + w, y0: yy - 19, y1: yy - 3 } : { x0, x1: x0 + w, y0: yy + 3, y1: yy + 19 };
+        if (r.y1 > G.base - 1) continue;
+        let cost = (above ? 0 : 3) + (i === 16 ? 0 : 1);
+        const [sn, ss] = segsThrough(ix, r);
+        cost += 20 * beadsOver(ix, r, G.r) + 14 * (sn + ss);
+        for (const b of taken) if (overlap(r, b)) cost += 200;
+        if (!best || cost < best.cost) best = { cost, r, above };
       }
       if (!best) continue;
-      tx.setAttribute('x', best.r.x0); tx.setAttribute('text-anchor', 'start');
+      tx.setAttribute('x', best.r.x0); tx.setAttribute('text-anchor', 'start'); tx.setAttribute('y', best.above ? yy - 6 : yy + 15);
       refBoxes.push(best.r);
     }
   }
@@ -212,31 +216,96 @@ export function createChart(hooks) {
     }
   }
 
+  // ---- geometry for the layout: beads, curves, boxes ------------------------------------------------------
+  /** The drawn curves as segments between neighbouring beads (at their final places). */
+  function segments() {
+    const out = [];
+    for (const [key, zs] of model.groups) {
+      let prev = 0;
+      for (const Z of zs) {
+        const ok = !Number.isNaN(to[Z]) && opTo[Z] > 0.5 && model.kindOf(Z) !== 'ancient';
+        if (ok && prev) out.push({ x1: G.X(prev), y1: to[prev], x2: G.X(Z), y2: to[Z], a: prev, b: Z, sel: key === model.selKey });
+        prev = ok ? Z : 0;
+      }
+    }
+    return out;
+  }
+  const beadList = () => model.points.filter(p => !Number.isNaN(to[p.Z]) && opTo[p.Z] > 0.5).map(p => ({ Z: p.Z, x: G.X(p.Z), y: to[p.Z] })).sort((a, b) => a.x - b.x);
+  /**
+   * Beads and curve segments indexed by x, so a candidate box or leader only checks what lies under it (the
+   * layout tries thousands of spots; checking all 118 beads for each cost a long frame at every switch).
+   */
+  function spatialIndex(segs, B) {
+    const S = segs.map(sg => Object.assign(sg, { sx0: Math.min(sg.x1, sg.x2), sx1: Math.max(sg.x1, sg.x2) })).sort((a, b) => a.sx0 - b.sx0);
+    const span = S.reduce((m, sg) => Math.max(m, sg.sx1 - sg.sx0), 0);
+    const lb = (arr, key, x) => { let lo = 0, hi = arr.length; while (lo < hi) { const k = (lo + hi) >> 1; if (arr[k][key] < x) lo = k + 1; else hi = k; } return lo; };
+    return { B, S, b0: x => lb(B, 'x', x), s0: x => lb(S, 'sx0', x - span) };
+  }
+  /** Beads within `pad` of a box (optionally skipping one element). */
+  function beadsOver(ix, r, pad, skipZ = 0) {
+    let n = 0;
+    for (let i = ix.b0(r.x0 - pad); i < ix.B.length && ix.B[i].x < r.x1 + pad; i++) { const b = ix.B[i]; if (b.Z !== skipZ && b.y > r.y0 - pad && b.y < r.y1 + pad) n++; }
+    return n;
+  }
+  /** Curve segments through a box: [plain, of the picked element's line]. */
+  function segsThrough(ix, r) {
+    let n = 0, sel = 0;
+    for (let i = ix.s0(r.x0); i < ix.S.length && ix.S[i].sx0 <= r.x1; i++) { const sg = ix.S[i]; if (sg.sx1 >= r.x0 && segHitsRect(sg, r)) { if (sg.sel) sel++; else n++; } }
+    return [n, sel];
+  }
+  const overlap = (r, b) => Math.min(r.x1, b.x1) > Math.max(r.x0, b.x0) && Math.min(r.y1, b.y1) > Math.max(r.y0, b.y0);
+  function segHitsRect(s, r) { // Liang–Barsky clip: does the segment pass through the box?
+    let t0 = 0, t1 = 1;
+    const dx = s.x2 - s.x1, dy = s.y2 - s.y1;
+    for (const [p, q] of [[-dx, s.x1 - r.x0], [dx, r.x1 - s.x1], [-dy, s.y1 - r.y0], [dy, r.y1 - s.y1]]) {
+      if (p === 0) { if (q < 0) return false; continue; }
+      const u = q / p;
+      if (p < 0) { if (u > t1) return false; if (u > t0) t0 = u; } else { if (u < t0) return false; if (u < t1) t1 = u; }
+    }
+    return true;
+  }
+  function segsCross(a, b) {
+    const d = (a.x2 - a.x1) * (b.y2 - b.y1) - (a.y2 - a.y1) * (b.x2 - b.x1);
+    if (Math.abs(d) < 1e-9) return false;
+    const u = ((b.x1 - a.x1) * (b.y2 - b.y1) - (b.y1 - a.y1) * (b.x2 - b.x1)) / d, v = ((b.x1 - a.x1) * (a.y2 - a.y1) - (b.y1 - a.y1) * (a.x2 - a.x1)) / d;
+    return u > 0 && u < 1 && v > 0 && v < 1;
+  }
+  function distToSeg(px, py, s) {
+    const dx = s.x2 - s.x1, dy = s.y2 - s.y1, L = dx * dx + dy * dy || 1;
+    const k = clamp(((px - s.x1) * dx + (py - s.y1) * dy) / L, 0, 1);
+    return Math.hypot(px - s.x1 - k * dx, py - s.y1 - k * dy);
+  }
+  /** A leader from a box to a bead: from the box's nearest point to just outside the bead's ring. */
+  function leaderTo(r, x, y) {
+    const ex = clamp(x, r.x0, r.x1), ey = clamp(y, r.y0, r.y1), dx = x - ex, dy = y - ey, d = Math.hypot(dx, dy);
+    if (d < G.r + 7) return null; // the note already touches its bead
+    return { x1: ex + (dx / d) * 3, y1: ey + (dy / d) * 3, x2: x - (dx / d) * (G.r + 3.5), y2: y - (dy / d) * (G.r + 3.5) };
+  }
+
   // ---- selection, hover -------------------------------------------------------------------------------
   const yOf = Z => (!Number.isNaN(cur[Z]) && opTo[Z] > 0.5 ? cur[Z] : G.base); // no value: at the axis
+  let pinPlace = null; // where the pinned label sits around its bead: { dx, dy, side }
   function placeSel() {
     const Z = model.selZ;
     const ok = Z && !Number.isNaN(cur[Z]) && opTo[Z] > 0.5;
-    ring.style.display = ok ? '' : 'none'; guide.style.display = ok ? '' : 'none';
-    if (ok) {
-      const x = G.X(Z), y = cur[Z];
-      ring.setAttribute('cx', x); ring.setAttribute('cy', y); ring.setAttribute('r', G.r + (G.phone ? 4.5 : 5.5));
-      guide.setAttribute('x1', x); guide.setAttribute('x2', x); guide.setAttribute('y1', y + G.r + 6); guide.setAttribute('y2', G.base);
-    }
     const hz = hover && hover !== Z && !Number.isNaN(cur[hover]) && opTo[hover] > 0.5 ? hover : 0;
+    // while a thumb scrubs, the guide follows the thumb; the picked element waits, dimmed
+    const gz = scrubbing && hz ? hz : ok ? Z : 0;
+    ring.style.display = ok ? '' : 'none'; guide.style.display = gz ? '' : 'none';
+    ring.style.opacity = scrubbing && hz ? '0.35' : '';
+    if (ok) { ring.setAttribute('cx', G.X(Z)); ring.setAttribute('cy', cur[Z]); ring.setAttribute('r', G.r + (G.phone ? 4.5 : 5.5)); }
+    if (gz) { const x = G.X(gz), y = cur[gz]; guide.setAttribute('x1', x); guide.setAttribute('x2', x); guide.setAttribute('y1', y + G.r + 6); guide.setAttribute('y2', G.base); }
     hoverRing.style.display = hz ? '' : 'none';
     if (hz) { hoverRing.setAttribute('cx', G.X(hz)); hoverRing.setAttribute('cy', cur[hz]); hoverRing.setAttribute('r', G.r + 3.5); }
-    placeLabel(pin, Z && !G.phone && !scrubbing ? Z : 0, hooks.pinNode);
+    placeLabel(pin, Z && !G.phone && !scrubbing ? Z : 0, hooks.pinNode, pinPlace);
     pin.classList.toggle('is-none', !!Z && !ok);
-    placeLabel(tip, hz && !G.phone && !scrubbing ? hz : 0, hooks.tipNode);
-    // a pinned label never sits under the hover label
-    if (!pin.hidden && !tip.hidden) {
-      const a = pin.getBoundingClientRect(), b = tip.getBoundingClientRect();
-      if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) pin.style.visibility = 'hidden'; else pin.style.visibility = '';
-    } else pin.style.visibility = '';
+    placeLabel(tip, hz && !G.phone && !scrubbing ? hz : 0, hooks.tipNode, null);
+    // the hover label never hides the pinned one: it goes below its bead instead
+    if (!pin.hidden && !tip.hidden && overlap(boxOf(pin), boxOf(tip))) placeLabel(tip, hz, hooks.tipNode, { below: true });
   }
+  const boxOf = el => { const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(el.style.transform) || [0, 0, 0]; return { x0: +m[1], y0: +m[2], x1: +m[1] + (el._size ? el._size[0] : 0), y1: +m[2] + (el._size ? el._size[1] : 0) }; };
   let pinZ = 0, tipZ = 0;
-  function placeLabel(el, Z, make, yAt = null) {
+  function placeLabel(el, Z, make, place) {
     if (!Z) { el.hidden = true; if (el === pin) pinZ = 0; else tipZ = 0; return; }
     const was = el === pin ? pinZ : tipZ;
     const fresh = was !== Z || el.dataset.lang !== state.lang;
@@ -244,69 +313,118 @@ export function createChart(hooks) {
     if (el.hidden) { el.hidden = false; el._size = null; }
     // measured once per content (reading sizes every animation frame would force a layout each frame)
     if (fresh || !el._size || !el._size[0]) el._size = [el.offsetWidth, el.offsetHeight];
-    const x = G.X(Z), y = yAt ?? yOf(Z), [w, hh] = el._size;
-    const below = y - hh - 16 < 4;
-    el.classList.toggle('is-below', below);
-    const lx = clamp(x - w / 2, 4, G.W - w - 4);
-    el.style.transform = `translate(${lx.toFixed(1)}px, ${(below ? y + 14 : y - hh - 14).toFixed(1)}px)`;
-    el.style.setProperty('--caret', `${(x - lx).toFixed(1)}px`);
+    const x = G.X(Z), y = yOf(Z), [w, hh] = el._size;
+    let lx, ly, side;
+    if (place && place.side) { lx = x + place.dx; ly = y + place.dy; side = place.side; }
+    else { side = place && place.below || y - hh - 16 < 4 ? 'below' : 'above'; lx = x - w / 2; ly = side === 'below' ? y + G.r + 10 : y - hh - G.r - 10; }
+    lx = clamp(lx, 4, G.W - w - 4);
+    el.classList.toggle('is-below', side === 'below'); el.classList.toggle('is-left', side === 'left'); el.classList.toggle('is-right', side === 'right');
+    el.style.transform = `translate(${lx.toFixed(1)}px, ${ly.toFixed(1)}px)`;
+    // the caret points at the bead: along the bottom or top edge, or on the side facing it
+    el.style.setProperty('--caret', side === 'left' || side === 'right' ? `${clamp(y - ly, 10, hh - 10).toFixed(1)}px` : `${clamp(x - lx, 12, w - 12).toFixed(1)}px`);
   }
-
-  // ---- callouts: italic ink notes, placed clear of the beads and of each other ---------------------------
-  /** Where the pinned label will rest (desktop), so notes keep clear of it. */
-  function pinRect() {
+  /**
+   * Where the picked element's label goes: the spot around its bead that covers the fewest beads and curves
+   * (its own row's curve counts double), so it never sits on the peaks it is about.
+   */
+  function layoutPin(ix) {
+    pinPlace = null;
     const Z = model.selZ;
     if (!Z || G.phone) return null;
-    placeLabel(pin, Z, hooks.pinNode, Number.isNaN(to[Z]) || opTo[Z] < 0.5 ? G.base : to[Z]);
-    const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(pin.style.transform);
-    return m ? { x0: +m[1], y0: +m[2], x1: +m[1] + pin.offsetWidth, y1: +m[2] + pin.offsetHeight } : null;
+    const has = !Number.isNaN(to[Z]) && opTo[Z] > 0.5, x = G.X(Z), y = has ? to[Z] : G.base;
+    placeLabel(pin, Z, hooks.pinNode, null);
+    const [w, hh] = pin._size, g = G.r + 11, lim = { x0: 4, x1: G.W - 4, y0: 2, y1: G.H - 4 };
+    const cands = [['above', -w / 2, -hh - g, 0], ['above', -w + 26, -hh - g, 5], ['above', -26, -hh - g, 5], ['below', -w / 2, g, 10], ['below', -w + 26, g, 13], ['below', -26, g, 13],
+      ['right', g, -hh / 2, 14], ['left', -w - g, -hh / 2, 14], ['above', -w / 2, -hh - g - 26, 18], ['below', -w / 2, g + 26, 22]];
+    let best = null;
+    for (const [side, dx, dy, pref] of cands) {
+      const r = { x0: x + dx, y0: y + dy, x1: x + dx + w, y1: y + dy + hh };
+      let cost = pref + 40 * (Math.max(0, lim.x0 - r.x0) + Math.max(0, r.x1 - lim.x1) + Math.max(0, lim.y0 - r.y0) + Math.max(0, r.y1 - lim.y1));
+      const [sn, ss] = segsThrough(ix, r);
+      cost += 60 * beadsOver(ix, r, G.r, Z) + 40 * sn + 90 * ss;
+      if (r.y0 < G.m.t - 3) cost += 45; // the row names along the top stay readable
+      if (!best || cost < best.cost) best = { cost, side, dx, dy, r };
+    }
+    pinPlace = { side: best.side, dx: best.dx, dy: best.dy };
+    return best.r;
   }
-  function layoutNotes() {
+
+  // ---- callouts: italic ink notes, placed in clear paper, their leaders never brushing another bead --------
+  function layoutNotes(ix, taken) {
     replace(gAnchors); replace(gLeaders);
-    const boxes = [];
-    // obstacles: the beads (at their final places), the reference labels and the pinned label
-    for (const p of model.points) { const y = to[p.Z]; if (!Number.isNaN(y)) boxes.push({ x0: G.X(p.Z) - G.r - 3, x1: G.X(p.Z) + G.r + 3, y0: y - G.r - 3, y1: y + G.r + 3, w: 70 }); }
-    for (const r of refBoxes) boxes.push({ x0: r.x0 - 4, x1: r.x1 + 4, y0: r.y0 - 2, y1: r.y1 + 4, w: 600 }); // text never over text
-    const pr = pinRect();
-    if (pr) boxes.push({ x0: pr.x0 - 6, x1: pr.x1 + 6, y0: pr.y0 - 6, y1: pr.y1 + 10, w: 600 });
-    const placed = [];
+    const placed = [...taken];
     const els = [...notes.children];
     const lim = { x0: G.m.l + 2, x1: G.W - G.m.r - 2, y0: G.m.t + 2, y1: G.base - 2 };
+    const near = G.phone ? [10, 22, 38, 60, 90] : [14, 30, 52, 80, 115, 160];
+    const step = G.phone ? 16 : 24, win = G.phone ? [170, 150] : [320, 210];
     model.callouts.forEach((c, i) => {
       const el = els[i];
       if (!el) return;
-      const lx = G.X(c.lead), ly = to[c.lead];
       // a note about the picked element alone would only repeat its pinned label
       const dup = c.anchors.length === 1 && c.anchors[0] === model.selZ;
-      if (Number.isNaN(ly) || dup) { el.hidden = true; return; }
+      const live = c.anchors.filter(Z => !Number.isNaN(to[Z]) && opTo[Z] > 0.5);
+      if (!live.length || dup) { el.hidden = true; return; }
       el.hidden = false;
-      const w = el.offsetWidth, hh = el.offsetHeight;
+      // the box hugs its text: a balanced wrap leaves the block at its full max-width, which strands the leader
+      el.style.width = '';
+      const rg = document.createRange(); rg.selectNodeContents(el);
+      el.style.width = `${Math.ceil(rg.getBoundingClientRect().width) + 1}px`;
+      const w = el.offsetWidth, hh = el.offsetHeight, anchors = new Set(live);
+      // a note about one or two elements points at each; about a whole family, at the one with the clearest view
+      const leads = live.length <= 2 ? [live.includes(c.lead) ? c.lead : live[0]] : live.slice(0, 6);
+      // phones have no room for two long leaders: one points, and the ink rings mark the other
+      const extra = live.length <= 2 && !G.phone ? live.filter(Z => Z !== leads[0]) : [];
       let best = null;
-      for (const dist of G.phone ? [12, 26, 44, 70, 100] : [16, 34, 60, 96, 140]) {
-        for (const [ax, ay] of [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]]) {
-          const cx = lx + ax * (dist + w / 2) * (ax ? 1 : 0), cy = ly + ay * (dist + hh / 2) * (ay ? 1 : 0);
-          const bx0 = ax === 0 ? lx - w / 2 : ax > 0 ? lx + dist : lx - dist - w;
-          const by0 = ay === 0 ? ly - hh / 2 : ay > 0 ? ly + dist : ly - dist - hh;
-          const r = { x0: bx0, y0: by0, x1: bx0 + w, y1: by0 + hh };
-          let cost = dist * 0.9 + (ay > 0 ? 6 : 0) + (ax !== 0 && ay !== 0 ? 4 : 0);
-          // keep inside the plot
-          const out = Math.max(0, lim.x0 - r.x0) + Math.max(0, r.x1 - lim.x1) + Math.max(0, lim.y0 - r.y0) + Math.max(0, r.y1 - lim.y1);
-          cost += out * 40;
-          for (const b of boxes) { const ox = Math.min(r.x1, b.x1) - Math.max(r.x0, b.x0), oy = Math.min(r.y1, b.y1) - Math.max(r.y0, b.y0); if (ox > 0 && oy > 0) cost += b.w; }
-          for (const b of placed) { const ox = Math.min(r.x1 + 6, b.x1) - Math.max(r.x0 - 6, b.x0), oy = Math.min(r.y1 + 4, b.y1) - Math.max(r.y0 - 4, b.y0); if (ox > 0 && oy > 0) cost += 400 + ox * oy; }
-          if (!best || cost < best.cost) best = { cost, r, cx, cy };
+      const score = (r, lead) => {
+        let cost = 40 * (Math.max(0, lim.x0 - r.x0) + Math.max(0, r.x1 - lim.x1) + Math.max(0, lim.y0 - r.y0) + Math.max(0, r.y1 - lim.y1));
+        if (best && cost >= best.cost) return Infinity;
+        for (const b of placed) if (overlap({ x0: r.x0 - 6, y0: r.y0 - 4, x1: r.x1 + 6, y1: r.y1 + 4 }, b)) cost += 600;
+        cost += 60 * beadsOver(ix, r, G.r + 2);
+        if (best && cost >= best.cost) return Infinity;
+        const [sn, ss] = segsThrough(ix, r);
+        cost += 40 * sn + 70 * ss;
+        for (const Z of [lead, ...extra]) {
+          const L = leaderTo(r, G.X(Z), to[Z]);
+          if (!L) continue;
+          cost += Math.hypot(L.x2 - L.x1, L.y2 - L.y1) * 0.32;
+          const lx0 = Math.min(L.x1, L.x2) - G.r - 3, lx1 = Math.max(L.x1, L.x2) + G.r + 3;
+          for (let k = ix.b0(lx0); k < ix.B.length && ix.B[k].x <= lx1; k++) { const b = ix.B[k]; if (!anchors.has(b.Z) && distToSeg(b.x, b.y, L) < G.r + 3) cost += 90; } // never seems to point at a neighbour
+          for (let k = ix.s0(lx0); k < ix.S.length && ix.S[k].sx0 <= lx1; k++) { const sg = ix.S[k]; if (sg.sx1 >= lx0 && sg.a !== Z && sg.b !== Z && segsCross(L, sg)) cost += 28; }
+          for (const b of placed) if (segHitsRect(L, b)) cost += 300;
         }
+        return cost;
+      };
+      for (const lead of leads) {
+        const lx = G.X(lead), ly = to[lead];
+        const tryAt = (x0, y0, pref) => { const r = { x0, y0, x1: x0 + w, y1: y0 + hh }; const c2 = score(r, lead) + pref; if (!best || c2 < best.cost) best = { cost: c2, r, lead }; };
+        for (const dist of near) {
+          tryAt(lx - w / 2, ly - dist - hh, 0); tryAt(lx - w / 2, ly + dist, 6);
+          tryAt(lx + dist, ly - hh / 2, 3); tryAt(lx - dist - w, ly - hh / 2, 3);
+          tryAt(lx + dist * 0.7, ly - dist * 0.7 - hh, 2); tryAt(lx - dist * 0.7 - w, ly - dist * 0.7 - hh, 2);
+          tryAt(lx + dist * 0.7, ly + dist * 0.7, 7); tryAt(lx - dist * 0.7 - w, ly + dist * 0.7, 7);
+        }
+        for (let gx = lx - win[0]; gx <= lx + win[0]; gx += step) for (let gy = ly - win[1]; gy <= ly + win[1]; gy += step) tryAt(gx - w / 2, gy - hh / 2, 10);
       }
       const r = best.r;
       placed.push(r);
       el.style.transform = `translate(${r.x0.toFixed(1)}px, ${r.y0.toFixed(1)}px)`;
-      // a leader from the note's nearest edge to the bead it is about
-      const ex = clamp(lx, r.x0, r.x1), ey = clamp(ly, r.y0, r.y1);
-      const dx = lx - ex, dy = ly - ey, d = Math.hypot(dx, dy);
-      if (d > G.r + 8) gLeaders.append(S('line', { x1: ex + (dx / d) * 3, y1: ey + (dy / d) * 3, x2: lx - (dx / d) * (G.r + 3), y2: ly - (dy / d) * (G.r + 3), class: 'patterns-leader', 'data-i': i }));
+      el.style.textAlign = G.X(best.lead) > r.x1 - 2 ? 'right' : 'left'; // the lines lean toward their leader
+      for (const Z of [best.lead, ...extra]) {
+        const L = leaderTo(r, G.X(Z), to[Z]);
+        if (L) gLeaders.append(S('line', { ...L, class: 'patterns-leader', 'data-i': i }));
+      }
       // every element the note is about wears a fine ink ring
-      for (const Z of c.anchors) if (!Number.isNaN(to[Z])) gAnchors.append(S('circle', { cx: G.X(Z), cy: to[Z], r: G.r + 2.6, class: 'patterns-anchor', 'data-i': i }));
+      for (const Z of live) gAnchors.append(S('circle', { cx: G.X(Z), cy: to[Z], r: G.r + 2.6, class: 'patterns-anchor', 'data-i': i }));
     });
+  }
+  /** The whole layout, in order of importance: the picked label, the reference labels, then the notes. */
+  function layoutAll() {
+    const ix = spatialIndex(segments(), beadList());
+    const pr = layoutPin(ix);
+    const taken = pr ? [{ x0: pr.x0 - 6, y0: pr.y0 - 6, x1: pr.x1 + 6, y1: pr.y1 + 6 }] : [];
+    placeRefs(ix, taken);
+    for (const r of refBoxes) taken.push({ x0: r.x0 - 4, y0: r.y0 - 3, x1: r.x1 + 4, y1: r.y1 + 4 });
+    layoutNotes(ix, taken);
   }
   function revealNotes(k) {
     const els = [...notes.children];
@@ -336,8 +454,7 @@ export function createChart(hooks) {
       if (mode === 'enter' && has) cur[Z] = from[Z];
     }
     replace(notes, ...next.callouts.map(c => h('p', { class: 'patterns-note' + (c.strong ? ' is-strong' : '') }, c.text)));
-    placeRefs();
-    layoutNotes();
+    layoutAll();
     const reduced = state.reduced || mode === 'none' || !prev && mode !== 'enter';
     if (reduced) {
       for (let Z = 1; Z <= N; Z++) { cur[Z] = to[Z]; op[Z] = opTo[Z]; }
@@ -373,7 +490,7 @@ export function createChart(hooks) {
     model.selZ = Z; model.selKey = selKey;
     if (rows) { model.rows = rows; drawFrameRows(); }
     drawLines();
-    layoutNotes(); revealNotes(tween ? notesK : 1); // notes make way for the new pinned label
+    layoutAll(); revealNotes(tween ? notesK : 1); // the label and the notes make way for each other again
     placeSel();
   }
   function drawFrameRows() {
@@ -387,12 +504,11 @@ export function createChart(hooks) {
     styleBeads();
     const tg = targetsFor();
     for (let Z = 1; Z <= N; Z++) { to[Z] = tg[Z]; if (!tween) { cur[Z] = tg[Z]; op[Z] = opTo[Z]; } }
-    placeRefs();
-    layoutNotes();
+    layoutAll();
     if (!tween) { placeBeads(); drawLines(); lineReveal(1); revealNotes(1); }
     placeSel();
   }
-  function refreshLabels() { pinZ = 0; tipZ = 0; placeSel(); }
+  function refreshLabels() { pinZ = 0; tipZ = 0; if (model && G) layoutAll(); placeSel(); }
 
   // ---- pointer: hover and click on desktop, thumb-scrub on phones -------------------------------------
   function zAt(clientX, clientY) {

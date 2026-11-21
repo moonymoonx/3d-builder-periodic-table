@@ -510,3 +510,52 @@ Consistency with the hero: the same card family (a 392 px side card / bottom she
   - The four door steps (forge, side by side, sample, atom) open their card with the router's own `openCard`, now on `window.__pt`.
   - A scripted `set({ card: true })` opens no card unless the view changes, so behind the sample block, which ends with the card closed, the atom block's door could not be found (6 of its 8 steps failed).
   - The router gap itself (the card flag true while the card is closed, reachable only by a scripted set or a hand-edited hash) is noted and not changed: making the card follow the flag in the state listener would render it two or three times per tap.
+
+## Merge review: `view-patterns-r2` (patterns and side by side, round 2), 21 Nov 2026
+The patterns session's answer to the cold review `reviews/merged-m1.md` (committed with this merge). Reviewed by the main session against STYLE.md and the PARALLEL.md checklist, with its shots (`/workspace/out/redesign/patterns-r2/`) beside the hero's. Its decisions are in `NOTES-patterns.md` › Round 2 (accepted as recorded there).
+
+**Checklist: passed.**
+- Only the scope's own files changed.
+- **Tokens:** the kit's chips and segmented controls (44 px), the type steps and an ink-derived 5.5 % hairline for the minor gridlines.
+- **Plain language:** question-led charts with the jargon as captions.
+- **Sources:** every value tappable for its source; units bound to their numbers.
+- **Light:** daylight only.
+- **Speed:** 60 FPS median in every measured state, even at load 9–13.
+- **Languages:** English and Vietnamese, with the familiar names.
+- **Tests:** unit 45/45, validator, smoke 45/45 twice; index.html 1,736 KB.
+
+**The review's points, checked in the shots:**
+- The noble-gas note now lands on its own bead.
+- "Each line up: ×10" is literally true (a faint line at every power of ten).
+- Column mode draws one column, with column words.
+- The "repeating wave" footer shows for periodic properties only.
+- Labels and pills keep off peaks and curves.
+- One leader per note on phones.
+- On phones: "On the table →" beside "Other patterns ▾", the scrub guide follows the thumb, and "change ▾" under both tiles.
+- No stranded °C; "gases at 20 °C" only when the pair has a gas; the phone sheet scrolls.
+
+The side-by-side stage answers "two glossy marbles":
+- **The default is a litre of each at 20 °C on a balance:** a glazed block, a pool or a glass litre of drifting atoms. The beam tips by the weight ratio and hangs level for tungsten and gold; never-weighed oganesson stands on plinths.
+- **"One atom of each"** keeps soft-glazed beads with no hard catchlight.
+
+**Open questions and proposals:**
+1. **Real material colours on the side-by-side stage: yes for the litre stage, once they are sourced; the family pigment stays until then.**
+   - **Why real appearance:** a litre is a piece of the material, not an atom. For non-experts, a yellow block sinking against a silver pool is recognised without reading (moony's goal: feel and intelligibility).
+   - **Why not now:**
+     - We hold no sourced appearance data, so a "gold yellow" today would be an invented colour.
+     - PubChem's CPK colours are a molecular-model convention, not appearance (iron orange, sodium violet).
+     - The stage already tells gold from mercury by form (block or pool), by the beam and in words.
+   - **Path (scheduled after the round-2 merges):**
+     - The main session curates a cited appearance for each element ("lustrous metallic yellow", "shiny silvery liquid") and maps it to muted mineral-paint finishes: one pewter glaze for the silvery metals; their own finish for gold, copper, caesium, sulfur, bromine, iodine and chlorine.
+     - It amends STYLE.md §3/§6: litre specimens wear their sourced appearance; atoms, tiles and badges keep the family pigment.
+     - Then the patterns session switches the litre stage.
+2. **P6, the source popover's pale "Accessed" and "Licence" lines: accepted and applied.**
+   - `legacy.css` set `.small` to the old dark theme's #a9b6d3 everywhere (about 1.9 : 1 on paper).
+   - The rule is now scoped to `body.legacy`, and the popover keeps `--ink-2` even on the remaining legacy stage.
+   - This also fixes the menu's credits and settings captions on paper.
+3. **P7, the stage in the link (`cs=atoms`): accepted, scheduled.** It needs a state key and a router line, and `state.js` stays untouched while the sample and atom branches are open.
+4. **Vietnamese drafts: accepted** for moony's review. Spot-checked for the naming rule: Vàng, Thuỷ ngân, Natri; Chlorine (IUPAC, not one of the 13); Than chì / Kim cương.
+
+**Noted:**
+- The side-by-side sheet now says "A litre of gold weighs 2.4 times as much as a litre of iron" (exact).
+- The card's pair hook (`strings-home.js`) still says "weighs 2.4× more". The number is right for our PubChem densities (19.282 / 7.874 = 2.449; the review's 2.5 used CRC's 19.30). The wording waits for moony's call.

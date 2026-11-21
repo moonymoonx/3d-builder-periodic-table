@@ -1,7 +1,7 @@
 // Review set for the "patterns" scope (PARALLEL.md): Patterns across the table and Side by side, in their key
 // states, at the sizes given (1440×900 and 390×844 for review). Loaded by tools/shots.mjs --set=patterns:
-//   node tools/shots.mjs --set=patterns --serve --desk=1440x900 --phone=390x844 --png --query=q=med --out=/workspace/out/redesign/patterns
-//   node tools/shots.mjs --set=patterns --serve --desk=1440x900 --phone=390x844 --fps=4 --out=/workspace/out/redesign/patterns/fps
+//   node tools/shots.mjs --set=patterns --serve --desk=1440x900 --phone=390x844 --png --query=q=med --out=/workspace/out/redesign/patterns-r2
+//   node tools/shots.mjs --set=patterns --serve --desk=1440x900 --phone=390x844 --fps=4 --out=/workspace/out/redesign/patterns-r2/fps
 const at = (page, sel) => page.evaluate(s => { const el = document.querySelector(s); if (!el) throw new Error('missing ' + s); const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, sel);
 const bead = (page, Z) => at(page, `.patterns-bead[data-z="${Z}"]`);
 const touch = (page, sel, type, x, y) => page.evaluate(([s, ty, px, py]) => {
@@ -50,8 +50,19 @@ export function cases({ SIZES }) {
     { name: 'c07-pick-any-two-desktop', vp: D, hash: 'v=compare&el=Fe&el2=Au', settle: 2000, act: async page => { await page.locator('.compare-pick').click(); await page.locator('.compare-find').fill('sod'); } },
     { name: 'c08-all-numbers-desktop', vp: D, hash: 'v=compare&el=Na&el2=Cs', settle: 2000, act: async page => { await page.locator('.compare-sheet .ui-disclosure__summary').click(); await page.locator('.compare-sheet .ui-sheet__body').evaluate(el => { el.scrollTop = 380; }); await page.mouse.move(300, 300); } },
     { name: 'c09-tap-value-source-desktop', vp: D, hash: 'v=compare&el=Au&el2=Hg', settle: 2000, act: async page => { await page.locator('.compare-row .compare-v').nth(3).click(); } },
+    { name: 'c03-helium-osmium-phone', vp: P, hash: 'v=compare&el=He&el2=Os', touch: true, settle: 2400 },
+    { name: 'c11-iron-gold-one-atom-desktop', vp: D, hash: 'v=compare&el=Fe&el2=Au', settle: 1800, act: async page => { await page.locator('.compare-stage button', { hasText: 'One atom of each' }).click(); } },
+    { name: 'c11-hydrogen-oganesson-one-atom-desktop', vp: D, hash: 'v=compare&el=H&el2=Og', settle: 1800, act: async page => { await page.locator('.compare-stage button', { hasText: 'One atom of each' }).click(); } },
+    { name: 'c12-tungsten-gold-level-desktop', vp: D, hash: 'v=compare&el=W&el2=Au', settle: 2400 },
+    { name: 'c13-bromine-mercury-desktop', vp: D, hash: 'v=compare&el=Br&el2=Hg', settle: 2400 },
+    { name: 'c14-gallium-mercury-phone', vp: P, hash: 'v=compare&el=Ga&el2=Hg', touch: true, settle: 2400 },
+    { name: 'c15-pick-from-tile-phone', vp: P, hash: 'v=compare&el=Fe&el2=Au', touch: true, settle: 2200, act: async page => { await page.locator('.compare-slot').nth(1).click(); await page.locator('.compare-find').fill('mer'); } },
+    { name: 'c16-sheet-scrolled-phone', vp: P, hash: 'v=compare&el=Au&el2=Hg', touch: true, settle: 2200, act: async page => { await page.locator('.compare-sheet .ui-sheet__body').evaluate(el => el.scrollBy(0, 240)); await page.waitForTimeout(400); } },
     { name: 'c10-vi-iron-copper-phone', vp: P, hash: 'v=compare&el=Fe&el2=Cu&lang=vi', touch: true, settle: 2200 },
     { name: 'c10-vi-gold-mercury-desktop', vp: D, hash: 'v=compare&el=Au&el2=Hg&lang=vi', settle: 2200 },
+    { name: 'p14-columns-phone', vp: P, hash: 'v=trends&el=K&p=ie1&line=group', touch: true, settle: 1400 },
+    { name: 'p15-boiling-desktop', vp: D, hash: 'v=trends&el=He&p=bp', settle: 1400 },
+    { name: 'p16-appetite-desktop', vp: D, hash: 'v=trends&el=Cl&p=ea', settle: 1400 },
     { name: 'p13-switch-pattern-mid-ripple-desktop', vp: D, hash: 'v=trends&el=Fe&p=rCov', settle: 1400, now: true, clockAt: 380, act: async page => { await page.locator('.patterns-chips .ui-chip', { hasText: 'Grip on electrons' }).click(); } },
   ];
 }

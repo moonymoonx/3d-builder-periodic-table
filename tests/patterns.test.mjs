@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { ALL, TOP, MORE, facts, points, fmtPoint, isGasAtRoom, AIR_G_PER_L } from '../src/app/places/patternSpecs.js';
+import { ALL, TOP, MORE, facts, points, fmtPoint, isGasAtRoom, AIR_G_PER_L, columnFacts, PERIODIC } from '../src/app/places/patternSpecs.js';
 import { PROPS } from '../src/app/data.js';
 import { STRINGS } from '../src/app/i18n.js';
 import { REFS, PATTERN_REFS } from '../src/app/content/patterns-refs.js';
@@ -27,7 +27,7 @@ test('patterns: one per numbers lens, in the lenses\' order', () => {
 test('patterns: melting point — tungsten melts hottest; carbon never melts but stands tallest', () => {
   const f = F('mp');
   assert.equal(f.params.top.e.sym, 'W');
-  assert.equal(fmtPoint('mp', f.params.top), '3,422 °C');
+  assert.equal(fmtPoint('mp', f.params.top), '3,422\u00a0°C');
   assert.equal(sym(callout('mp', 'sub').lead), 'C');
   assert.equal(points('mp', E).find(p => p.e.sym === 'C').kind, 'sub');
   assert.ok(!points('mp', E).some(p => p.e.sym === 'He'), 'helium never freezes: no dot');
@@ -44,8 +44,8 @@ test('patterns: boiling point — helium boils first, rhenium last', () => {
 test('patterns: heft — osmium is the densest measured element; gases weighed at 20 °C', () => {
   const f = F('density');
   assert.equal(f.params.top.e.sym, 'Os');
-  assert.equal(fmtPoint('density', f.params.au), '19.3 kg');
-  assert.equal(fmtPoint('density', f.params.he), '0.17 g');
+  assert.equal(fmtPoint('density', f.params.au), '19.3\u00a0kg');
+  assert.equal(fmtPoint('density', f.params.he), '0.17\u00a0g');
   assert.ok(f.params.he.kind === 'gas' && isGasAtRoom(E[1]));
   assert.ok(AIR_G_PER_L / (f.params.he.y * 1000) > 7, 'helium is about 7 times lighter than air');
   assert.ok(callout('density', 'gases').anchors.length >= 10);
@@ -68,7 +68,7 @@ test('patterns: grip — noble gases hold hardest, soft reactive metals let go, 
   assert.deepEqual(syms(dips.anchors), ['B', 'O']);
   assert.deepEqual([sym(dips.params.a), sym(dips.params.b)], ['Be', 'N']);
   assert.ok(f.params.neSecond, 'neon holds on harder than any atom except helium');
-  assert.equal(fmtPoint('ie1', f.params.na), '5.14 eV');
+  assert.equal(fmtPoint('ie1', f.params.na), '5.14\u00a0eV');
 });
 
 test('patterns: pull, appetite, felt pull', () => {
@@ -113,4 +113,57 @@ test('patterns: every hook names sources that exist', () => {
       else assert.match(r.url, /^https:\/\//, k);
     }
   }
+});
+
+test('patterns: the row claims name the rows they hold in', () => {
+  // the noble gas is the coldest of its row in rows 2–6 (helium never freezes; oganesson is a prediction)
+  const cold = callout('mp', 'cold');
+  assert.deepEqual(syms(cold.anchors), ['Ne', 'Ar', 'Kr', 'Xe', 'Rn']);
+  assert.equal(cold.params.rows, '2–6');
+  assert.equal(cold.rows, true);
+  assert.equal(callout('bp', 'cold').params.rows, '1–6'); // helium boils first in row 1 too
+  assert.equal(callout('ea', 'salt').params.rows, '2–6');
+  // row claims step aside down the columns; the facts about one element stay
+  assert.equal(callout('mp', 'top').rows, false);
+});
+
+test('patterns: down a column, its first and last measured members', () => {
+  const c = columnFacts('rCov', E, 11); // sodium's column
+  assert.equal(c.first.e.sym, 'H');
+  assert.equal(c.last.e.sym, 'Fr');
+  assert.ok(c.first.y < c.last.y); // atoms grow down the column
+  const g = columnFacts('ie1', E, 55);
+  assert.ok(g.first.y > g.last.y); // and let go more easily
+  assert.equal(columnFacts('rCov', E, 58), null); // the f-block has no column number
+});
+
+test('patterns: only the periodic properties claim the repeating wave; units never part from numbers', () => {
+  assert.ok(PERIODIC.includes('mp') && PERIODIC.includes('ie1'));
+  for (const id of ['year', 'abund', 'aw']) assert.ok(!PERIODIC.includes(id), id);
+  for (const id of ALL) for (const p of points(id, E).slice(0, 40)) assert.ok(!/\d [a-z°]/.test(fmtPoint(id, p)), `${id} ${fmtPoint(id, p)}`);
+  const au = points('abund', E).find(p => p.e.sym === 'Au');
+  assert.equal(fmtPoint('abund', au), '0.004\u00a0g per tonne');
+  // as precise as the source: chlorine melts at 171.6 K, so a tenth of a degree; iron at 1811 K, whole degrees
+  assert.equal(fmtPoint('mp', points('mp', E).find(p => p.e.sym === 'Cl')), '−101.5\u00a0°C');
+});
+
+test('patterns: down the columns, every claim the column words make holds in the data', () => {
+  const val = (id, s) => { const p = points(id, E).find(x => x.e.sym === s && !x.pred && x.kind === 'value'); assert.ok(p, `${id} ${s}`); return p.y; };
+  const falls = (id, list) => list.slice(1).every((s, i) => val(id, s) < val(id, list[i]));
+  const rises = (id, list) => list.slice(1).every((s, i) => val(id, s) > val(id, list[i]));
+  const alkali = ['Li', 'Na', 'K', 'Rb', 'Cs'], halogens = ['F', 'Cl', 'Br', 'I'], noble = ['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn'];
+  // melting: the soft, reactive metals melt lower at every step down, the salt-makers higher
+  assert.ok(falls('mp', alkali)); assert.ok(rises('mp', halogens));
+  // boiling: the noble gases boil higher at every step, the soft, reactive metals lower
+  assert.ok(rises('bp', noble)); assert.ok(falls('bp', alkali));
+  // pull: fluorine to iodine weakens; "most columns": top beats bottom in most columns
+  assert.ok(falls('en', halogens));
+  const byGroup = id => { const m = new Map(); for (const p of points(id, E)) { const g = p.e.f.group[0]; if (!g || p.pred || p.kind !== 'value') continue; if (!m.has(g)) m.set(g, []); m.get(g).push(p); } return [...m.values()].filter(l => l.length >= 2).map(l => l.sort((a, b) => a.Z - b.Z)); };
+  const enCols = byGroup('en'), weaker = enCols.filter(l => l[l.length - 1].y < l[0].y).length;
+  assert.ok(weaker > enCols.length / 2, `${weaker} of ${enCols.length}`);
+  // heft: every column ends heavier than it starts
+  for (const l of byGroup('density')) assert.ok(l[l.length - 1].y > l[0].y, `${l[0].e.sym}…${l[l.length - 1].e.sym}`);
+  // felt pull: grows down every column
+  for (const l of byGroup('zeff')) assert.ok(l[l.length - 1].y > l[0].y, `zeff ${l[0].e.sym}…${l[l.length - 1].e.sym}`);
+  assert.ok(rises('zeff', alkali));
 });
