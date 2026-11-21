@@ -67,6 +67,7 @@ const SOURCES = {
   'ciaaw-full': { name: 'IUPAC CIAAW — standard atomic weights (full table with intervals)', url: 'https://www.ciaaw.org/atomic-weights.htm', accessed: accessedOf('ciaaw/'), licence: 'numeric facts, cited' },
   'nist-ie': { name: `${NIST_CITE} — ground states and ionization energies`, url: 'https://physics.nist.gov/PhysRefData/ASD/ionEnergy.html', accessed: accessedOf('nist-asd/ie'), licence: '© U.S. Secretary of Commerce (SRD). Used only as individual cited values (moony, 2026-11-20); no NIST table is redistributed' },
   'nist-lines': { name: `${NIST_CITE} — the visible lines of the neutral atom that look brightest (air wavelengths). Brightness from NIST's transition probabilities (graded within 18 %) for a gas at 1 eV, as NIST's LIBS tool assumes, or else NIST's relative intensities; weighted by the eye's sensitivity (CIE 1931)`, url: 'https://physics.nist.gov/PhysRefData/ASD/lines_form.html', accessed: accessedOf('nist-asd/lines'), licence: `© U.S. Secretary of Commerce (SRD). Only ${NLINES} lines per element are shown, as cited values; the glow colour is computed from the element's lines and no table is redistributed` },
+  'iaea-radii': { name: 'I. Angeli, K. P. Marinova, "Table of experimental nuclear ground state charge radii: An update", Atomic Data and Nuclear Data Tables 99 (2013) 69–95 — via the IAEA LiveChart of Nuclides', url: 'https://doi.org/10.1016/j.adt.2011.12.006', accessed: accessedOf('iaea-radii/'), licence: 'measured values used as individual cited facts (IAEA Nuclear Data Section terms of use)' },
   wp: { name: 'Wikipedia element infoboxes (Template:Infobox <element>): numbers only, with the references cited there', url: 'https://en.wikipedia.org/wiki/Template:Infobox_element', accessed: accessedOf('wikipedia/infobox'), licence: 'CC BY-SA 4.0 page; only numeric facts are used (revision id per element in `wpRev`)' },
   wpa: { name: 'Wikipedia articles (numbers only): Curium, Berkelium, Californium, Einsteinium, Cerium, Helium', url: 'https://en.wikipedia.org/', accessed: accessedOf('wikipedia/articles-factcheck'), licence: 'CC BY-SA 4.0 page; only numeric facts are used' },
   'wp-syn': { name: 'Wikipedia: "Synthetic element" (which elements occur in nature)', url: 'https://en.wikipedia.org/wiki/Synthetic_element', accessed: accessedOf('wikipedia/article-synthetic'), licence: 'CC BY-SA 4.0 page; facts only' },
@@ -198,6 +199,21 @@ for (const line of readRaw('nubase/nubase_4.mas20.txt', 'latin1').split('\n')) {
   }
   if (!NUBASE.has(Z)) NUBASE.set(Z, []);
   NUBASE.get(Z).push(rec);
+}
+
+// 7b. Measured nuclear charge radii (rms, fm): Angeli & Marinova (2013), via the IAEA LiveChart of Nuclides
+// API (ground_states: radius, unc_r). Fetch with `node tools/fetch.mjs --only=iaea-radii` (kept local).
+const RADII = new Map(); // "Z-A" -> { r, u }
+{
+  const rel = 'iaea-radii/ground-states.csv';
+  if (!fs.existsSync(RAW(rel))) throw new Error(`missing data/raw/${rel}: run node tools/fetch.mjs --only=iaea-radii`);
+  const rows = parseCSV(readRaw(rel));
+  const head = rows[0].map(h => h.trim()), col = n => head.indexOf(n);
+  for (const r of rows.slice(1)) {
+    const rad = num(r[col('radius')]);
+    if (rad == null || !(Number(r[col('z')]) > 0)) continue;
+    RADII.set(`${Number(r[col('z')])}-${Number(r[col('z')]) + Number(r[col('n')])}`, { r: rad, u: num(r[col('unc_r')]) });
+  }
 }
 
 // 8. CODATA (individual constants only)
@@ -513,8 +529,10 @@ for (const Z of ZS) {
   }
   if (nucA) {
     f.nucA = V(nucA, 'nubase', { n: natural.length ? 'most abundant natural isotope' : onlyConfirmed ? 'longest-lived confirmed isotope' : 'longest-lived isotope' });
-    const r0 = FIX.nuclearR0_fm.value;
-    f.rNuc = V(round(r0 * Math.cbrt(nucA), 3), 'fc', { p: 1, n: `estimate: rms charge radius ≈ ${r0}·A^(1/3) fm (${FIX.nuclearR0_fm.cite})` });
+    const r0 = FIX.nuclearR0_fm.value, meas = RADII.get(`${Z}-${nucA}`);
+    f.rNuc = meas
+      ? V(meas.r, 'iaea-radii', { u: meas.u ?? undefined, n: `measured rms charge radius of ${sym}-${nucA}` })
+      : V(round(r0 * Math.cbrt(nucA), 3), 'fc', { p: 1, n: `estimate: rms charge radius ≈ ${r0}·A^(1/3) fm (${FIX.nuclearR0_fm.cite}); Angeli & Marinova (2013) list no measured value for ${sym}-${nucA}` });
   }
 
   // ---- electron configuration (NIST; PubChem for Z > 108)
