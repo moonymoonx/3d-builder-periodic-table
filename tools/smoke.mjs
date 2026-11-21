@@ -303,7 +303,8 @@ await step('sample: the nitrogen card ("cool it") dives into the sample place; k
   const early = await page.evaluate(() => document.querySelector('.sample-panel').classList.contains('is-arriving')); // steps aside during the dive
   await page.waitForFunction(() => !document.querySelector('.sample-panel').classList.contains('is-arriving'), null, { timeout: 6000 });
   const start = await holdCaption();
-  if (!early || !/N₂ molecules/.test(start) || !/km\/h/.test(start)) throw new Error(`arriving ${early}: ${start}`);
+  // plain words before the formula: "pairs of nitrogen atoms (N₂)"
+  if (!early || !/pairs of nitrogen atoms \(N₂\)/.test(start) || !/km\/h/.test(start)) throw new Error(`arriving ${early}: ${start}`);
   // the knob, the bulb and the "room temperature" mark: one scale (the round-1 thumb sat ~12 px off)
   const al = await page.evaluate(() => {
     const tr = document.querySelector('.sample-track').getBoundingClientRect();
@@ -316,7 +317,8 @@ await step('sample: the nitrogen card ("cool it") dives into the sample place; k
   if (!/−196\s°C/.test(liquid) || !/turns liquid/.test(liquid)) throw new Error('liquid: ' + liquid);
   await holdAt({ T: 55 });
   const frozen = await holdCaption();
-  if (!/−210\s°C/.test(frozen) || !/freezes/.test(frozen) || !/One molecule is shown/.test(frozen)) throw new Error('frozen: ' + frozen);
+  const frozenWord = await page.locator('.sample-word').textContent();
+  if (!/−210\s°C/.test(frozen) || !/freezes/.test(frozen) || !/One of them is shown/.test(frozen) || !/one molecule shown/.test(frozenWord)) throw new Error(`frozen: ${frozen} / ${frozenWord}`);
   // cold and frozen: the way up is the ink button, and below room temperature it reads "Warm it"
   const ink = await page.locator('.sample-actions .ui-btn--primary').textContent();
   const hot = await page.evaluate(() => document.querySelector('.sample-read').classList.contains('is-hot'));
@@ -337,11 +339,14 @@ await step('sample: mercury, a liquid at room temperature, freezes into its 6-ne
   if (!/−38\.8\s°C/.test(cap) || !/6 neighbours/.test(green) || kind !== 'solid') throw new Error(`${kind}: ${cap}`);
   await page.getByRole('button', { name: 'Room temperature' }).click(); await page.waitForTimeout(200);
   const roomGone = await page.getByRole('button', { name: 'Room temperature' }).count(); // nothing to return to at 20 °C
-  await page.getByRole('button', { name: /Cool it/ }).click(); await page.waitForTimeout(1200);
+  const cool = page.getByRole('button', { name: /Cool it/ }), at = await cool.boundingBox();
+  await cool.click(); await page.waitForTimeout(1200);
   const T = await page.evaluate(() => window.__pt.state.T), on = await holdCaption();
+  // the pressed button stays under the mouse as "Pause" (the row does not re-centre beneath it)
+  const under = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.closest('button')?.textContent || '', [at.x + at.width / 2, at.y + at.height / 2]);
   await page.getByRole('button', { name: /Pause/ }).click();
   // on the way, the caption says what comes next (never a stale "at room temperature")
-  if (!(T < 293) || roomGone || !/It freezes at −38\.8\s°C/.test(on)) throw new Error(`T=${T}, room button ${roomGone}: ${on}`);
+  if (!(T < 293) || roomGone || !/It freezes at −38\.8\s°C/.test(on) || !/Pause/.test(under)) throw new Error(`T=${T}, room button ${roomGone}, under the mouse "${under}": ${on}`);
   return `T fell to ${Math.round(T)} K: ${on}`;
 });
 await step('sample: helium never freezes: a whisker above absolute zero it is still liquid', async () => {
@@ -350,14 +355,14 @@ await step('sample: helium never freezes: a whisker above absolute zero it is st
   const word = await page.locator('.sample-word').textContent(), cap = await holdCaption();
   if (!/liquid/.test(word) || !/never freezes/.test(cap)) throw new Error(`${word} / ${cap}`);
 });
-await step('sample: sulfur\'s crystal is not drawn: one S₈ molecule turns in the vessel; past 115 °C it melts into S₈ rings', async () => {
+await step('sample: sulfur\'s crystal is not drawn: one ring of 8 atoms rests in its vessel; past 115 °C it melts into rings', async () => {
   await holdAt({ Z: 16, T: 293.15 }, 700);
   const start = await holdCaption(), word = await page.locator('.sample-word').textContent();
   const btns = await page.locator('.sample-actions .ui-btn').count();
-  if (!/S₈ molecules\. One molecule is shown/.test(start) || !/not drawn/.test(word) || btns !== 1) throw new Error(`${word} / ${start} / ${btns} buttons`);
+  if (!/rings of 8 sulfur atoms \(S₈\)\. One of them is shown/.test(start) || !/one molecule shown/.test(word) || btns !== 1) throw new Error(`${word} / ${start} / ${btns} buttons`);
   await holdAt({ T: 400 });
   const cap = await holdCaption(), kind = await page.evaluate(() => window.__pt.holdView.current().kind);
-  if (!/115\s°C/.test(cap) || !/S₈ molecules/.test(cap) || kind !== 'liquid') throw new Error(`${kind}: ${cap}`);
+  if (!/115\s°C/.test(cap) || !/rings of 8 sulfur atoms \(S₈\)/.test(cap) || kind !== 'liquid') throw new Error(`${kind}: ${cap}`);
 });
 await step('sample: manganese melts into a glowing liquid and the room dims like the forge', async () => {
   await holdAt({ Z: 25, T: 293.15 }, 600);

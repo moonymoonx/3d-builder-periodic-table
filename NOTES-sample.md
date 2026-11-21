@@ -1,8 +1,62 @@
-# NOTES — sample place (branches `view-sample`, merged f3d0ae7, and `view-sample-r2`, 21 Nov 2026)
+# NOTES — sample place (branches `view-sample` f3d0ae7, `view-sample-r2` 0484ba5, `view-sample-r3`; 21 Nov 2026)
 
 Decisions taken while building "Hold a sample · cool or heat it" (PARALLEL.md scope 2), for the main
 session to move into DECISIONS.md if accepted. Proposed by **Claude (sample session)** unless noted;
 the scope and the "look like the forge" rule are **moony's / the main session's** (PARALLEL.md).
+
+## Round 3: answers to `reviews/sample-s2.md` (branch `view-sample-r3`, from master 0484ba5)
+Beauty first, as asked. The shared-file items main is handling (hearth acne, the forge's controls,
+frozen mercury, the card) are written up in PROPOSALS-sample.md §0a, not changed here.
+
+**3D (PROPOSAL commits on `views/sample.js`)**
+- **Nothing pokes through the glass.** The liquid's push-apart ran after the wall clamp; walls now allow
+  for a particle's whole reach (a molecule's outermost atom) and the rounded glass edges, and clamp last.
+  Relative to its vessel, a neon bead is the same size as mercury's or helium's: every monatomic liquid
+  draws beads 0.57 × its spacing in a vessel 2.1 × ∛n spacings wide. The review likely read the beads
+  outside the glass as bloat.
+- **Molecules read as joined:** overlapping beads (0.62 of a bond; a ring's 0.54 keeps its hole open).
+  S₈ is drawn as its crown: S–S–S about 108° (107.8° in α-sulfur; Wikipedia, "Allotropes of sulfur";
+  the crown's D4d shape, "Octasulfur"). The bond itself stays about two covalent radii. That is the
+  review's point (E20): for N₂ it is 142 pm against a real 109.77 pm (NIST CCCBDB). So the notes no longer
+  claim the real bond length; they say "how far apart they sit is approximate".
+- **The building block rests in a vessel sized to it** (STYLE §6: "one molecule or one atom, slowly
+  turning, in a vessel sized to it"). *Rejected:* the review's alternative, a tiny specimen in the liquid's
+  big vessel, which leaves a cavernous empty case and breaks STYLE §6. A lying pair, P₄ on a face, S₈
+  on its rim, and one atom are each on a baked contact shadow, turning about the vertical. *Why the ring
+  stands:* lying flat, seen from the camera's 30° above the hearth, its far atoms hid its hole (tried and
+  rejected after screenshots); standing, it shows its hole face-on, then its crown edge-on.
+
+**Words**
+- **Plain phrase first:** "pairs of nitrogen atoms (N₂)", "rings of 8 sulfur atoms (S₈)", "little
+  pyramids of 4 phosphorus atoms (P₄)"; once named, captions say "molecules". The readout says what is
+  shown: "solid · one molecule shown" / "one atom shown".
+- **α-Hg is shown as the slanted cube it is:** sides 301.1 pm, corners 70.5°, 1 atom. All are computed
+  from the measured hexagonal cell (side √(a²/3 + c²/9), cos α = (2c² − 3a²)/(2c² + 6a²); method in the
+  source note). The measured cell (a = 347.64 pm, c = 673.2 pm, 3 atoms) keeps its own sourced row.
+  Picometres are glossed inline ("trillionths of a metre").
+- **Vietnamese half-life in plain words:** "thời gian để một nửa số nguyên tử … phân rã". The term follows
+  once, as a caption: "loại (đồng vị)".
+
+**Thermometer**
+- **Close events fan out:** neon's −249 °C and −246 °C each keep their own label on a short angled leader
+  that clears the knob. They sit apart in one row, or both on the open side (phones, the cold end). A
+  shared label is the last resort.
+- **The low-heat fill by day:** muted terracotta, the kit's orange, `--ember` by 500 °C (about where metals
+  start to glow), then the forge's glowing colours. The forge's charcoal start read muddy on the cream
+  panel. The kiln cross-fades to the forge's own gradient.
+- **"Room temperature" no longer slides under the mouse:** a play/pause pressed with a mouse holds the
+  row until the pointer leaves, so the pressed button stays under it as "Pause". The pill was the kit's
+  ordinary hover, on a button that had moved under a resting pointer. Touch is unaffected.
+- A landmark under the knob fades, so it never seems to mark the knob's own temperature (C12).
+- "◀" gets a thin space after it (its glyph has almost no right-hand room; "Làm" looked attached).
+
+**Smoothness:** the sweep's p95 frames come from the engine's adaptive resolution (each pixel-ratio step
+costs a 50–67 ms frame) and the software renderer under load, not from the place. The profile and a
+proposal are in PROPOSALS-sample.md §0a. FPS (`/workspace/out/redesign/sample-r3/fps.txt`) was measured on a
+machine shared with five sessions (load 7–16): 28 of 37 states at a 16.7 ms median. The dense pools ran at
+30 FPS, as the forge's dense states did in the same window (30 and 20). An interleaved A/B against the
+round-2 build shows no cost for mercury (37 against 37 FPS). Liquid nitrogen's joined, larger beads may
+cost a little (31 against 36 FPS, inside the noise). Worth re-measuring on a quiet machine.
 
 ## Round 2: answers to the cold review (`reviews/sample-s1.md`)
 Every claim checked against its source first; sources win on facts.
@@ -182,3 +236,7 @@ Every claim checked against its source first; sources win on facts.
   `/workspace/out/redesign/sample-r2/` (34 cases), reviewed against STYLE.md (fixes on the way: tick rows
   reaching into the phone readout, three buttons wrapping on phones, the condensing column, "(1 atm)"
   breaking).
+- 2026-11-21 (round 3, `view-sample-r3`): containment, joined molecules and the S₈ crown, resting
+  specimens in vessels sized to them, plain phrases before formulas, the slanted cube for α-Hg, fanned
+  close events, the daylight heat fill, the held button row; the sweep hitches traced to the engine.
+  Screens in `/workspace/out/redesign/sample-r3/`, reviewed against STYLE.md.
