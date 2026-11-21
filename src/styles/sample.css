@@ -1,2 +1,139 @@
 /* SAMPLE place (PARALLEL.md: owned by the "sample" session). Tokens and kit only (STYLE.md, locked);
-   class prefix "sample-" so nothing here can reach another place. */
+   class prefix "sample-" so nothing here can reach another place.
+   "Hold a sample · cool or heat it" (places/sample.js): the forge's look for liquids, gases and the honest
+   cards. Daylight for matter; the room dims to the kiln colour only for something that glows (molten
+   boron and manganese). The geometry of the thermometer follows the forge's (heat.css), so the two
+   places read as one; its fill is coloured by temperature, cold blue to the left, ember to the right. */
+
+/* only the back link and the panel: no other chrome (as in the forge) */
+body.place-hold .hero-top__right, body.place-hold .hero-word { display: none; }
+
+.sample-panel { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(860px, calc(100% - 32px)); display: flex; flex-direction: column; gap: var(--s2);
+  padding: var(--s4) var(--s5) var(--s3); border-radius: var(--r-card); background: var(--card); color: var(--ink); box-shadow: var(--elev-float); border: 1px solid transparent;
+  transition: background var(--d-kiln) var(--ease-in-out), color var(--d-kiln) var(--ease-in-out), border-color var(--d-kiln) var(--ease-in-out),
+    left var(--d-card-in) var(--ease), width var(--d-card-in) var(--ease); }
+/* "About this sample" open on desktop: the panel steps left of the card */
+.sample-panel.is-aside { left: calc((100% - 424px) / 2); width: min(820px, calc(100% - 456px)); }
+.sample-caption { margin: 0; min-height: calc(2 * var(--lh-lead-phone)); font: 400 var(--t-lead-phone)/var(--lh-lead-phone) var(--font-serif); text-wrap: pretty; }
+.sample-caption.is-new { animation: sample-say 420ms var(--ease) both; }
+@keyframes sample-say { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.sample-row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: var(--s5); }
+.sample-readbox { min-width: 7.6em; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.sample-read { font: 600 var(--t-display-phone)/1.05 var(--font-serif); color: var(--ember); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sample-word { margin-top: 2px; font: 500 var(--t-caption)/var(--lh-caption) var(--font-sans); color: var(--ink-2); white-space: nowrap; }
+/* "About this sample": a quiet text link under the readout (the tap area reaches 44 px) */
+.sample-about { position: relative; margin: 4px 0 0 -2px; padding: 0 2px; border: 0; background: transparent; color: var(--verdigris);
+  font: 600 var(--t-caption)/var(--lh-caption) var(--font-sans); text-align: left; white-space: nowrap; }
+.sample-about::before { content: ""; position: absolute; inset: -13px -8px; }
+.sample-about::after { content: " ›"; }
+.sample-about:hover { text-decoration: underline; text-underline-offset: 2px; }
+.sample-about[aria-expanded="true"]::after { content: " ‹"; }
+
+/* the thermometer: events above the rail, landmarks below (geometry as in the forge) */
+.sample-track { --rows: 0; position: relative; height: 92px; margin: calc(6px + var(--rows) * 17px) 0 0 18px; }
+.sample-rail { position: absolute; left: 0; right: 0; top: 40px; height: 12px; border-radius: 6px; background: var(--line); }
+/* a thermometer, not just a slider: the bulb at the cold end, in the colour of the coldest temperature */
+.sample-rail::before { content: ""; position: absolute; left: -16px; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%;
+  background: var(--bulb, #C9CFD8); box-shadow: inset 0 0 0 2px rgba(28, 26, 23, 0.12); }
+.sample-fill { position: absolute; inset: 0; border-radius: 6px; }
+.sample-range { -webkit-appearance: none; appearance: none; position: absolute; left: -15px; right: -15px; width: calc(100% + 30px); top: 22px; height: 48px; margin: 0;
+  background: transparent; cursor: pointer; }
+.sample-range::-webkit-slider-runnable-track { height: 48px; background: transparent; }
+.sample-range::-moz-range-track { height: 48px; background: transparent; }
+.sample-range::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: 9px; border-radius: 50%; background: var(--card); border: 2px solid var(--ink);
+  box-shadow: 0 2px 8px rgba(28, 26, 23, 0.25); transition: transform var(--d-tap) var(--ease); }
+.sample-range:active::-webkit-slider-thumb { transform: scale(1.12); }
+.sample-range::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--card); border: 2px solid var(--ink); }
+.sample-range:focus-visible { outline: none; }
+.sample-range:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--verdigris); outline-offset: 2px; }
+.sample-ticks { position: absolute; left: 0; right: 0; top: 0; height: 40px; pointer-events: none; }
+/* every event is labelled: one line each ("−196 °C turns liquid"), in up to three staggered rows */
+.sample-tick { position: absolute; bottom: 0; width: 0; height: 100%; }
+.sample-tick::after { content: ""; position: absolute; bottom: -6px; left: -1px; width: 2px; border-radius: 1px; background: currentColor; opacity: 0.5; height: calc(16px + var(--row, 0) * 17px); }
+/* labels sit a little higher than the forge's, clear of the thumb, which "Cool it" and "Heat it" leave
+   just past each event */
+.sample-tick > span { position: absolute; bottom: calc(11px + var(--row, 0) * 17px); left: 0; transform: translateX(calc(-50% + var(--dx, 0px))); white-space: nowrap; font: 600 var(--t-caption)/16px var(--font-sans); }
+.sample-tick small { font: 400 var(--t-caption)/16px var(--font-sans); color: var(--ink-2); margin-left: 4px; }
+.sample-tick small.sample-tick__sep { margin: 0 1px 0 2px; }
+.sample-tick.is-pred::after { opacity: 0.35; }
+.sample-flags { position: absolute; left: 0; right: 0; top: 60px; height: 24px; pointer-events: none; }
+.sample-flag { position: absolute; top: 4px; transform: translateX(calc(-50% + var(--dx, 0px))); white-space: nowrap; font: italic 400 var(--t-caption)/1.2 var(--font-serif); color: var(--ink-3); padding-top: 6px; }
+/* the mark stays on its temperature even when the label shifts inward at an end */
+.sample-flag::before { content: ""; position: absolute; top: 0; left: calc(50% - var(--dx, 0px)); width: 1px; height: 6px; background: currentColor; }
+/* room temperature: where every sample starts, and where "Room temperature" returns */
+.sample-flag.is-room { color: var(--ink-2); }
+.sample-flag.is-room::before { width: 2px; margin-left: -0.5px; height: 7px; }
+.sample-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--s2); }
+.sample-room:disabled { opacity: 0.45; cursor: default; }
+.sample-play { min-width: 128px; }
+
+/* never made in bulk: an honest card instead of a thermometer */
+.sample-never { display: flex; flex-direction: column; gap: var(--s1); }
+.sample-never__title { margin: 0; font: 600 var(--t-title)/var(--lh-title) var(--font-serif); text-wrap: balance; }
+.sample-never__body { margin: var(--s1) 0 0; font: 400 var(--t-body)/var(--lh-body) var(--font-sans); color: var(--ink-2); max-width: 62ch; }
+.sample-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: var(--s3) 0 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.sample-strip__cell { display: flex; flex-direction: column; gap: 2px; padding: 9px var(--s2) 10px; min-width: 0; }
+.sample-strip__cell + .sample-strip__cell { border-left: 1px solid var(--line); }
+.sample-strip__cell:first-child { padding-left: 0; }
+.sample-strip__label { font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
+.sample-strip .sample-v { font: 600 17px/1.3 var(--font-serif); align-self: flex-start; }
+.sample-hint { margin: var(--s1) 0 var(--s2); font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
+.sample-never .ui-door { margin-top: var(--s1); }
+
+/* a value that opens its source (as on the element card) */
+.sample-v { position: relative; border: 0; background: transparent; padding: 0; color: inherit; font: inherit; text-align: left; border-bottom: 1px dotted var(--ink-3); cursor: pointer; }
+.sample-v::before { content: ""; position: absolute; inset: -11px -4px; }
+.sample-v:hover { color: var(--verdigris); border-bottom-color: var(--verdigris); }
+.sample-v.is-est { font-style: italic; }
+.sample-v.is-none { border: 0; color: var(--ink-3); font-weight: 400; font-style: italic; cursor: default; }
+.sample-v.is-plain { border: 0; cursor: default; }
+.sample-v.is-plain::before, .sample-v.is-none::before { display: none; }
+
+/* "About this sample" (the kit's sheet) */
+.sample-d-head { padding-right: 44px; }
+.sample-d-title { margin: 0; font: 600 var(--t-title)/var(--lh-title) var(--font-serif); }
+.sample-d-meta { margin: 2px 0 0; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
+.sample-d-hook { margin: var(--s3) 0 var(--s1); font: 400 17px/1.45 var(--font-serif); color: var(--ink); }
+.sample-facts { margin: var(--s1) 0 var(--s2); display: grid; grid-template-columns: minmax(110px, 44%) 1fr; }
+.sample-facts dt, .sample-facts dd { margin: 0; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+.sample-facts dt { color: var(--ink-2); padding-right: 10px; }
+.sample-notes p { margin: 0 0 6px; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
+.sample-d-bar { display: flex; align-items: baseline; gap: 10px; min-width: 0; font: 400 14px/1 var(--font-sans); color: var(--ink-2); }
+.sample-d-bar b { font: 600 19px/1.1 var(--font-serif); color: var(--ink); white-space: nowrap; }
+
+/* the kiln (molten boron and manganese glow): the panel turns dark, as in the forge (STYLE.md §9:
+   ember text brightens to #F0874F, 7 : 1 on the dark panel; --ember would be 3.3 : 1 there) */
+body.kiln .sample-panel { background: color-mix(in srgb, var(--kiln) 90%, transparent); color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.1); box-shadow: none; }
+body.kiln .sample-read { color: #F0874F; }
+body.kiln .sample-word, body.kiln .sample-tick small, body.kiln .sample-flag, body.kiln .sample-flag.is-room { color: var(--kiln-text-2); }
+body.kiln .sample-about { color: #F0A070; }
+body.kiln .sample-rail { background: rgba(242, 232, 218, 0.14); }
+body.kiln .sample-range::-webkit-slider-thumb { border-color: #F0874F; background: #2A2019; }
+body.kiln .sample-play.ui-btn--primary { background: #F0874F; color: var(--kiln); }
+body.kiln .sample-play.ui-btn--secondary { background: transparent; color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.3); }
+body.kiln .sample-room { color: #F0A070; }
+body.kiln .sample-room:hover { background: rgba(242, 232, 218, 0.08); }
+
+@media (max-width: 760px) {
+  .sample-panel { width: calc(100% - 16px); bottom: calc(8px + env(safe-area-inset-bottom)); padding: var(--s3) 14px 10px; gap: 6px; }
+  .sample-panel.is-aside { display: none; } /* phones: "About this sample" covers the panel, one focus at a time */
+  .sample-caption { font-size: var(--t-body-phone); line-height: var(--lh-body-phone); min-height: calc(3 * var(--lh-body-phone)); }
+  .sample-row { grid-template-columns: 1fr; gap: 2px; }
+  /* the readout and its state on the left, "About this sample" on the right */
+  .sample-readbox { flex-direction: row; align-items: center; justify-content: space-between; gap: var(--s3); min-width: 0; }
+  .sample-read { font-size: var(--t-title); }
+  .sample-word { margin-top: 0; }
+  .sample-about { margin: 0; align-self: center; }
+  .sample-track { margin-left: 6px; margin-right: 6px; }
+  /* phones: cool, room temperature and heat on one row */
+  .sample-actions { flex-wrap: nowrap; gap: 6px; }
+  .sample-play { min-width: 0; padding: 0 13px; }
+  .sample-room { padding: 0 8px; }
+  .sample-never__title { font-size: var(--t-title-phone); line-height: var(--lh-title-phone); }
+  .sample-never__body { font-size: var(--t-body-phone); line-height: var(--lh-body-phone); }
+  .sample-strip .sample-v { font-size: 16px; }
+  /* phones: how long its atoms last gets a row of its own, the two predictions share the next */
+  .sample-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sample-strip__cell:first-child { grid-column: 1 / -1; padding-right: 0; border-bottom: 1px solid var(--line); }
+  .sample-strip__cell:nth-child(2) { padding-left: 0; border-left: 0; }
+}
