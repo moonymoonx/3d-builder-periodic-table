@@ -61,7 +61,7 @@ body.kiln .heat-range::-webkit-slider-thumb { border-color: #F0874F; background:
 .heat-tick small { font: 400 13px/16px var(--font-sans); color: var(--ink-2); margin-left: 4px; }
 body.kiln .heat-tick small { color: var(--kiln-text-2); }
 .heat-flags { position: absolute; left: 0; right: 0; top: 60px; height: 24px; pointer-events: none; }
-.heat-flag { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; font: italic 400 13px/1.2 var(--font-serif); color: var(--ink-3); padding-top: 6px; }
+.heat-flag { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; font: italic 400 13px/1.2 var(--font-serif); color: var(--ink-2); padding-top: 6px; }
 .heat-flag::before { content: ""; position: absolute; top: 0; left: 50%; width: 1px; height: 6px; background: currentColor; }
 /* phones: close re-stack ticks drop a short stem to one shared label below the rail */
 .heat-tick.is-below::after { bottom: auto; top: 52px; height: 9px; }

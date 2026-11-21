@@ -30,8 +30,10 @@ const fT = K => fmtTemp(K).replace(/ (?=°C|K\))/g, NB);
 // ---- the element in words ----------------------------------------------------------------------------
 // Vietnamese sentences use the 13 familiar GDPT-2018 names (thuỷ ngân, nitơ, lưu huỳnh), else the IUPAC name
 const gdpt = e => getLang() === 'vi' && e.names.viAlt && e.names.viAlt[1] === 'gdpt';
-const Name = e => (gdpt(e) ? cap(e.names.viAlt[0]) : name(e));
-const nameIn = e => (gdpt(e) ? e.names.viAlt[0] : name(e).toLowerCase());
+// the form drawn, where it has a name of its own (white phosphorus: our data's one form throughout)
+const formOf = e => (e.ph.form ? (getLang() === 'vi' ? e.ph.form[2]?.vi || e.ph.form[0] : e.ph.form[0]) : null);
+const Name = e => (formOf(e) ? cap(formOf(e)) : gdpt(e) ? cap(e.names.viAlt[0]) : name(e));
+const nameIn = e => formOf(e) || (gdpt(e) ? e.names.viAlt[0] : name(e).toLowerCase());
 const SUB = '₀₁₂₃₄₅₆₇₈₉';
 const formula = (e, n) => e.sym + String(n).split('').map(d => SUB[+d]).join('');
 /** Atoms per particle in the fluid (our data: N₂, P₄, S₈…; 1 for single atoms). */

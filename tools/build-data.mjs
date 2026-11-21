@@ -611,7 +611,7 @@ for (const Z of ZS) {
   const mpPC = num(pc.MeltingPoint), bpPC = num(pc.BoilingPoint), dPC = num(pc.Density);
   f.mp = mpPC != null ? V(mpPC, 'pc', estFlag(wmp, 'melting point K')) : wmp && wmp.v != null ? V(wmp.v, 'wp', wmp.predicted || stPred ? { p: 1 } : undefined) : NONE('no melting point in PubChem or the Wikipedia infobox');
   f.bp = bpPC != null ? V(bpPC, 'pc', estFlag(wbp, 'boiling point K')) : wbp && wbp.v != null ? V(wbp.v, 'wp', wbp.predicted || stPred ? { p: 1 } : undefined) : NONE('no boiling point in PubChem or the Wikipedia infobox');
-  if (wsub && wsub.v != null) f.sub = V(wsub.v, 'wp', { n: 'sublimation point at 1 atm' });
+  if (wsub && wsub.v != null) f.sub = V(wsub.v, 'wp', { n: sym === 'P' ? 'red phosphorus: sublimation point at 1 atm (white phosphorus melts at 44 °C instead)' : 'sublimation point at 1 atm' });
   let wdens = ['density', 'density gpcm3nrt'].map(k => wpNumber(F, k)).find(x => x && x.v != null);
   if (stateVal === 'gas') { const g = wpNumber(F, 'density gplstp'); wdens = g && g.v != null ? { ...g, v: g.v / 1000 } : null; }
   const densPred = isPredictedText(F['density gpcm3nrt comment']) || isPredictedText(F['density comment']) || stPred;
@@ -701,8 +701,12 @@ for (const Z of ZS) {
 
   // ---- 1-atm phase model for the sample view
   const ph = {};
+  // one form throughout: phosphorus's drawn crystal (cI232) and its P₄ molecules are white phosphorus, so its phases
+  // are PubChem's melting and boiling points (44.15 °C, 280.5 °C); the 416 °C sublimation point is red phosphorus's
+  const FORM = { P: { name: 'white phosphorus', vi: 'phosphorus trắng' } }[sym];
+  if (FORM) ph.form = V(FORM.name, 'pc', { n: 'the form whose melting and boiling points these are (PubChem); its crystal and its P₄ molecules are drawn', vi: FORM.vi });
   if (Z === 2) { ph.noSolid = V(true, 'wpa', { n: 'helium does not solidify at normal pressure (Wikipedia: Helium); CRC (mendeleev) lists no 1-atm melting point' }); ph.bp = f.bp; }
-  else if (f.sub) { ph.sub = f.sub; if (mdlMain && mdlMain.is_sublimation_point) ph.subCheck = V(round(mdlMain.boiling_point, 6), 'mdl-crc', { n: 'CRC sublimation point' }); }
+  else if (f.sub && !FORM) { ph.sub = f.sub; if (mdlMain && mdlMain.is_sublimation_point) ph.subCheck = V(round(mdlMain.boiling_point, 6), 'mdl-crc', { n: 'CRC sublimation point' }); }
   else { ph.mp = f.mp; ph.bp = f.bp; }
   if (lat.trans) ph.trans = lat.trans;
   const gasN = FIX.gas[sym];

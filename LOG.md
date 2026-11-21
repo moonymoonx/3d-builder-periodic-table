@@ -276,3 +276,10 @@
 - 2026-11-21 ~12:56 (Saigon) — **Final whole-build set** for the review: `/workspace/out/redesign/final/`.
   - **Contents:** 142 PNG (h- 19, s- 48, p- 20, c- 25, a- 30; EN plus Vietnamese), README.txt, and a fresh fps.txt (every measured state at a 60 FPS median, load 4–7).
   - **index.html:** rebuilt from master 7993c35. It differs from the committed build only in its data stamp (e179740 → 7993c35; code and data byte-identical), and is committed so the githack link matches the set.
+- 2026-11-21 ~13:28 (Saigon) — **Final review fixes** after `reviews/final-f1.md` (committed; Hold a sample was the one part under 4). Details in DECISIONS.md › Final review fixes.
+  - **Phosphorus:** one form (white P: 44.15 °C / 280.5 °C, PubChem), named in the captions; the 416 °C kept as red phosphorus's.
+  - **Thermometer:** landmarks readable (ink-2 / kiln-text-2), hidden only under the knob.
+  - **Frame rate:** low-tier bead budget 330 → 180; molten iron 33 → 16.7 ms median, neon and mercury averages 55–57.
+  - **Neon:** beads keep a gap from the glass.
+  - **Copy:** "all 651 visible lines"; no orphan full stop.
+  - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48; the final set reshot for the affected states, fps.txt rows added.

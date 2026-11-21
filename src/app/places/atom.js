@@ -35,7 +35,19 @@ const inName = e => (gdpt(e) ? e.names.viAlt[0] : name(e)).toLowerCase();
 /** The name as the card shows it: Vietnamese leads with the familiar GDPT-2018 name (Sắt), as the card does. */
 const shownName = e => (gdpt(e) ? cap(e.names.viAlt[0]) : name(e));
 /** A translated sentence whose {placeholders} may be DOM nodes (tappable values). */
-function tn(key, params) {
+function tn(key, params) { return glue(tn0(key, params)); }
+/** A punctuation mark right after a value goes inside it, so it wraps with the value's last word (a value is a
+ *  button, an atomic box: a "." after it could wrap alone, as uranium's sentence did). */
+function glue(parts) {
+  const out = [];
+  for (const p of parts) {
+    const prev = out[out.length - 1];
+    const m = typeof p === 'string' && prev instanceof Element ? /^([.,;:!?)]+)(.*)$/s.exec(p) : null;
+    if (m) { prev.append(m[1]); if (m[2]) out.push(m[2]); } else out.push(p);
+  }
+  return out;
+}
+function tn0(key, params) {
   const out = [];
   String(t(key)).split(/(\{\w+\})/).forEach(part => {
     const m = /^\{(\w+)\}$/.exec(part);
@@ -240,7 +252,7 @@ export function buildAtom(ui, hooks) {
     if (i < 0) strip.lines.forEach((m, j) => { if (i < 0 || m.b > strip.lines[i].b) i = j; });
     strip.pick(i);
     return [detail, h('p', { class: 'atom-light__how' }, t('atom.light.how')), h('p', { class: 'atom-light__title' }, tn('atom.light.lines', { k: fmtNum(ln.length, 0),
-      n: val(fmtNum(e.lines.n, 0), t('f.lines'), [e.lines.n, 'nist-lines', { n: `${e.lines.n} lines of the neutral atom listed by NIST between 380 and 750 nm; shown: the ${ln.length} that look brightest (${basisNote(e)}, times the eye's sensitivity, CIE 1931)` }], e) }))];
+      n: val(fmtNum(e.lines.used || e.lines.n, 0), t('f.lines'), [e.lines.used || e.lines.n, 'nist-lines', { n: `${e.lines.used || e.lines.n} visible lines of the neutral atom between 380 and 750 nm (of the ${e.lines.n} NIST lists there, those from levels it can hold); shown: the ${ln.length} that look brightest (${basisNote(e)}, times the eye's sensitivity, CIE 1931)` }], e) }))];
   }
   /** Hue (degrees) of a display colour. */
   const hueOf = ([r, g, b]) => { const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); if (!(d > 0)) return 0; const h0 = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return (h0 * 60 + 360) % 360; };

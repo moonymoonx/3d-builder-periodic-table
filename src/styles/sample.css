@@ -78,13 +78,13 @@ body.kiln .sample-fill__layer.is-kiln { opacity: 1; }
 .sample-leaders polyline.is-pred { opacity: 0.35; }
 .sample-tick.is-pred::after { opacity: 0.35; }
 .sample-flags { position: absolute; left: 0; right: 0; top: 60px; height: 24px; pointer-events: none; }
-.sample-flag { position: absolute; top: 4px; transform: translateX(calc(-50% + var(--dx, 0px))); white-space: nowrap; font: italic 400 13px/1.2 var(--font-serif); color: var(--ink-3); padding-top: 6px; }
+.sample-flag { position: absolute; top: 4px; transform: translateX(calc(-50% + var(--dx, 0px))); white-space: nowrap; font: italic 400 13px/1.2 var(--font-serif); color: var(--ink-2); padding-top: 6px; }
 /* the mark stays on its temperature even when the label shifts inward at an end */
 .sample-flag::before { content: ""; position: absolute; top: 0; left: calc(50% - var(--dx, 0px)); width: 1px; height: 6px; background: currentColor; }
 /* room temperature: where every sample starts, where the bulb sits and "Room temperature" returns */
 .sample-flag.is-room { color: var(--ink-2); }
 .sample-flag { transition: opacity var(--d-hover) var(--ease); }
-.sample-flag.is-near { opacity: 0.25; }
+.sample-flag.is-near { visibility: hidden; } /* only where the knob covers it: hidden cleanly, never faded to an unreadable grey (final review) */
 .sample-actions { display: flex; justify-content: center; gap: 10px; }
 .sample-actions .ui-btn { white-space: nowrap; }
 .sample-play { min-width: 128px; }

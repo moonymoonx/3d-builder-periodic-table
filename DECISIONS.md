@@ -724,3 +724,27 @@ The forge's heating path is untouched.
 - The neon "Cool it" sweep keeps an 83 ms p95. Its remaining long frames come with an idle main thread (the session's profile): the software renderer under load.
 
 **Checks:** unit tests 47/47, validator, smoke 48/48 twice; index.html 1,819 KB. Reshoot: `/workspace/out/redesign/sample-r3-merged/` (README and fps.txt).
+
+## Final review fixes, after `reviews/final-f1.md` (fresh, cold review of c7dd7d8), 21 Nov 2026
+Every part scored 4 or more except Hold a sample (clarity 3.5, smoothness 3.5). One short round on master, blockers only, in moony's order.
+1. **Phosphorus: one form throughout (a fact).**
+   - The sample drew white phosphorus (its cI232 crystal, P₄ molecules), but its phase model used the only Wikipedia sublimation point we hold, 416 °C, which is red phosphorus's.
+   - The build now gives phosphorus PubChem's melting and boiling points (44.15 °C, 280.5 °C: white phosphorus, as moony checked against PubChem and the RSC table; the patterns chart already plotted 44 °C).
+   - It names the form, "white phosphorus", in every caption of the sample place (`ph.form`). The 416 °C stays as a fact labelled "red phosphorus".
+   - Carbon (graphite sublimes), sulfur (rhombic S₈), tin (white, with its 13.2 °C grey transition), arsenic (grey sublimes) and selenium (grey) were checked: each is one form throughout.
+2. **Thermometer landmarks:**
+   - They are `--ink-2` by day (was `--ink-3`) and `--kiln-text-2` in the kiln.
+   - A landmark the knob covers is hidden cleanly, never faded to 25 %.
+   - The forge's landmarks take `--ink-2` too.
+3. **Frame rate on the low tier:**
+   - **Re-measured on the quiet machine beside the table-landing control:** neon condensing and liquid mercury held a 60 FPS median with averages near the control's. Molten iron on desktop was genuinely slow: a 33 ms median even at load 0.3.
+   - **In-page split:** the view's update 0.5 ms and the render call 0.2 ms per frame, the engine already at its 0.3 MP floor. The rasteriser's per-bead cost dominates (drawing half the beads: 25 → 19 ms; dropping the additive layers as well added little).
+   - **Fix:** the low tier's bead budget 330 → 180 (iron's crystal 4×4×4 cells there). Medium and high keep 800 and 1,500, so the review shots (`?q=med`) are unchanged.
+   - **After:** molten iron at a 16.7 ms median (desktop average 46–48, the control's own 44–51; phone 57), neon condensing 55–57, liquid mercury 55–57.
+   - The kiln also skips the beads' glaze and mirror terms (no measurable gain, kept as free).
+4. **Neon at the glass:** beads now keep a visible gap from the walls (2.5 % of the vessel, was 1.2 %). The two "escaped" atoms sat inside the silhouette, touching the glass.
+5. **Copy:**
+   - Iron's light reads "out of all 651 visible lines" in both sentences (the source note keeps NIST's 2,542 in context).
+   - A punctuation mark after a value is glued to it, so uranium's sentence no longer ends with a lone ".".
+
+**Checks:** unit tests 47/47, validator, smoke 48/48. The final set (`/workspace/out/redesign/final/`) is reshot for the affected states (sample place, forge 13–18, the atom's light and uranium) with new fps.txt rows.

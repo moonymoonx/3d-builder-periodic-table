@@ -190,10 +190,13 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
           vec3 wN = inverseTransformDirection(normal, viewMatrix), wV = inverseTransformDirection(geometryViewDir, viewMatrix);
           // quicksilver is a mirror of that studio, barely tinted by its family colour; the unit cell's
           // atoms keep the glaze, so the ink atom and its verdigris neighbours stay legible on it
+          // skipped entirely in the kiln (both are 0 there): a software renderer pays for every bead's every pixel
           float cellA = step(0.5, vHi);
-          reflectedLight.indirectSpecular += (uGlaze + 0.8 * uMirror * cellA) * glazeStudio(wN, wV, material.roughness);
-          float mF = 0.72 + 0.28 * pow(1.0 - clamp(dot(wN, wV), 0.0, 1.0), 5.0);
-          reflectedLight.indirectSpecular += uMirror * (1.0 - cellA) * mF * studioLight(reflect(-wV, wN), material.roughness) * mix(vec3(1.0), diffuseColor.rgb / max(uBody, 1e-3), 0.3);
+          if (uGlaze + uMirror > 0.0) reflectedLight.indirectSpecular += (uGlaze + 0.8 * uMirror * cellA) * glazeStudio(wN, wV, material.roughness);
+          if (uMirror > 0.0) {
+            float mF = 0.72 + 0.28 * pow(1.0 - clamp(dot(wN, wV), 0.0, 1.0), 5.0);
+            reflectedLight.indirectSpecular += uMirror * (1.0 - cellA) * mF * studioLight(reflect(-wV, wN), material.roughness) * mix(vec3(1.0), diffuseColor.rgb / max(uBody, 1e-3), 0.3);
+          }
         #endif`)
       .replace('#include <color_fragment>', `#include <color_fragment>
         #ifdef FORGE_GLOW
@@ -274,7 +277,9 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   const rand = rng32(7);
   const gauss = () => { let u = 0, v = 0; while (!u) u = rand(); v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
 
-  function budget() { return Math.round((tierConfig().points >= 1 ? 1500 : tierConfig().points >= 0.7 ? 800 : 330)); }
+  // the low tier (software renderers, weak devices) pays per bead in the rasteriser: half the beads gave the molten
+  // forge a 19 ms frame instead of 25 ms there (final review); medium and high keep their crystals
+  function budget() { return Math.round((tierConfig().points >= 1 ? 1500 : tierConfig().points >= 0.7 ? 800 : 180)); }
 
   /** Lattice block: positions of an n1 x n2 x n3 block centred on the origin. */
   function latticeBlock(cell, sites, nmax) {
@@ -600,7 +605,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     // the walls keep every bead inside the glass: a particle's reach is its own radius, or a molecule's
     // outermost atom (its centre tumbles freely); the forge's glass has rounded edges, so a little more
     // (the floor is flat: beads rest on it at their own reach)
-    const reach = FORGE && molN > 1 ? molSize / 2 : r, inset = FORGE ? reach + L[0] * 0.012 : r;
+    const reach = FORGE && molN > 1 ? molSize / 2 : r, inset = FORGE ? reach + L[0] * 0.025 : r; // a visible gap from the glass: a bead never seems to pass through it (final review)
     const hx = L[0] / 2 - inset, hy = L[1] / 2 - inset, hz = L[2] / 2 - inset, fy = L[1] / 2 - reach;
     if (kind === 'gas') {
       // ideal gas: straight lines, elastic walls; rescale speeds smoothly toward the current temperature
