@@ -280,9 +280,14 @@ await step('side by side (VI): sentences use the familiar Vietnamese names; size
   await page.evaluate(() => window.__pt.set({ Z: 26, Z2: 29, lang: 'vi' })); await settle();
   const lead = await page.locator('.compare-lead').textContent();
   await page.evaluate(() => window.__pt.set({ lang: 'en' })); await settle();
+  // "Draw the atoms" lives with the atom stage (on the litre stage it would change what is not on screen)
+  const hiddenOnLitre = await page.evaluate(() => { const m = document.querySelector('.compare-sheet .compare-mode'); return !m || m.hidden; });
+  await page.locator('.compare-stage button', { hasText: 'One atom of each' }).click(); await settle();
   await page.locator('.compare-sheet .ui-disclosure__summary').click();
   await page.getByRole('button', { name: 'when touching' }).click(); await settle();
   const r = await page.evaluate(() => window.__pt.state.cmpR);
+  await page.locator('.compare-stage button', { hasText: 'A litre of each' }).click(); await settle();
+  if (!hiddenOnLitre) throw new Error('"Draw the atoms" shown on the litre stage');
   await page.locator('[data-back=card]').click(); await settle();
   const back = await page.evaluate(() => ({ view: window.__pt.state.view, card: window.__pt.state.card, Z: window.__pt.state.Z }));
   if (!/Sắt/.test(lead) || !/đồng/.test(lead) || r !== 'vdw' || back.view !== 'table' || !back.card || back.Z !== 26) throw new Error(JSON.stringify({ lead, r, back }));
