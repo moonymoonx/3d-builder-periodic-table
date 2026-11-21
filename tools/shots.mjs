@@ -126,7 +126,7 @@ if (opt('set') === 'hero') { // the redesign's hero slice: landing, table, first
     { name: '15-forge-930C-restacked-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 930, 2800); } },
     { name: '16-forge-1600C-molten-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 1300); await heatTo(page, 1600, 3200); } },
     { name: '16-forge-1600C-molten-phone', vp: P, hash: 'el=Fe&card=1', touch: true, settle: 1500, act: async page => { await door(page); await heatTo(page, 1300); await heatTo(page, 1600, 3200); } },
-    { name: '17-forge-2950C-gas-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 1600); await heatTo(page, 2950, 2500); } },
+    { name: '17-forge-2950C-gas-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 1600); await heatTo(page, 2950, 5000); } },
     { name: '18-forge-heat-it-playing-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, now: true, act: async page => { await door(page); await page.locator('.heat-play').click(); await page.waitForTimeout(6500); } },
   ];
 }

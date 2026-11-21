@@ -12,7 +12,7 @@ import { cellVectors, fracToCart, lindemannRms, rmsSpeed } from '../../physics/l
 import { cmfAt, mul3, gammaEncode } from '../../physics/color.js';
 import { CATEGORY_COLORS, CATEGORY_COLORS_CB } from '../palette.js';
 import { pigment, pigmentCB, color as TOK, light as LIGHT } from '../../design/tokens.js';
-import { glassMaterial, glowSprites, moltenPool, spokes as makeSpokes } from './forgeArt.js';
+import { glassMaterial, glowSprites, moltenPool } from './forgeArt.js';
 import { roundedBox } from './tableArt.js';
 import { rng32 } from '../../physics/orbitals.js';
 
@@ -132,27 +132,48 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   const MAX = 3200;
   const atomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: FORGE ? 0.35 : 0.38, metalness: FORGE ? 0 : 0.15 });
   const uni = { uTime: { value: 0 }, uAmp: { value: 0 } };
-  const glowU = { uGlowCol: { value: new THREE.Color() }, uGlowK: { value: 0 }, uHot: { value: 0 } };
+  const glowU = { uGlowCol: { value: new THREE.Color() }, uGlowK: { value: 0 }, uHot: { value: 0 },
+    uCore: { value: new THREE.Vector3() }, uCoreR: { value: 1000 }, uRimCol: { value: new THREE.Color('#FFC98A') }, uCellCol: { value: new THREE.Color(TOK.verdigris) } };
   atomMat.onBeforeCompile = sh => {
     sh.uniforms.uTime = uni.uTime; sh.uniforms.uAmp = uni.uAmp;
     Object.assign(sh.uniforms, glowU);
     // forge: hot beads glow brightest where they face you and darker toward the rim, whitening at the
     // core as the temperature rises, so every atom still reads as a sphere while incandescent
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform vec3 uGlowCol; uniform float uGlowK; uniform float uHot;')
+      .replace('#include <common>', '#include <common>\nuniform vec3 uGlowCol; uniform float uGlowK; uniform float uHot; uniform vec3 uCore; uniform float uCoreR; uniform vec3 uRimCol; uniform vec3 uCellCol; varying float vHi; varying vec3 vWorldP;')
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        #ifdef FORGE_GLOW
+          // a glowing metal's own light outshines its glaze; by day the unit cell's atoms are verdigris
+          float lit = clamp(uGlowK * 2.0, 0.0, 1.0);
+          diffuseColor.rgb *= 1.0 - 0.7 * lit;
+          if (vHi > 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, uCellCol, 0.85 * (1.0 - lit));
+        #endif`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
         #ifdef FORGE_GLOW
           float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
           vec3 hot = mix(uGlowCol, vec3(1.0, 0.95, 0.86), uHot * pow(facing, 2.0));
           totalEmissiveRadiance = hot * uGlowK * (0.28 + 0.72 * pow(facing, 1.3));
+          // hotter inside, a little cooler at the outer edges of the lump or pool
+          totalEmissiveRadiance *= 1.0 - 0.32 * smoothstep(0.3, 1.05, length(vWorldP - uCore) / max(uCoreR, 1.0));
+          // the unit-cell atoms (one atom and the neighbours it touches) wear a glowing rim
+          totalEmissiveRadiance += uRimCol * pow(1.0 - facing, 2.2) * step(0.5, vHi) * (vHi > 1.5 ? 0.9 : 0.6) * clamp(uGlowK * 2.0, 0.0, 1.0);
         #endif`);
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute vec3 aSeed;\nuniform float uTime;\nuniform float uAmp;')
+      .replace('#include <common>', '#include <common>\nattribute vec3 aSeed;\nattribute float aHi;\nuniform float uTime;\nuniform float uAmp;\nvarying float vHi;\nvarying vec3 vWorldP;')
       .replace('#include <begin_vertex>', `#include <begin_vertex>
         vec3 w = vec3(7.1, 8.3, 9.7) + aSeed * 3.0;
-        transformed += uAmp * vec3(sin(uTime * w.x + aSeed.x * 40.0), sin(uTime * w.y + aSeed.y * 40.0), sin(uTime * w.z + aSeed.z * 40.0));`);
+        transformed += uAmp * vec3(sin(uTime * w.x + aSeed.x * 40.0), sin(uTime * w.y + aSeed.y * 40.0), sin(uTime * w.z + aSeed.z * 40.0));
+        vHi = aHi;
+        #ifdef USE_INSTANCING
+          vWorldP = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;
+        #else
+          vWorldP = (modelMatrix * vec4(transformed, 1.0)).xyz;
+        #endif`);
   };
   let geo = new THREE.SphereGeometry(1, 20, 14);
+  const hiAttr = new THREE.InstancedBufferAttribute(new Float32Array(MAX), 1); // 0 plain, 1 neighbour, 2 the chosen atom
+  hiAttr.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('aHi', hiAttr);
   const seeds = new THREE.InstancedBufferAttribute(new Float32Array(MAX * 3), 3);
   { const r = rng32(99); for (let i = 0; i < MAX * 3; i++) seeds.array[i] = r(); }
   geo.setAttribute('aSeed', seeds);
@@ -168,7 +189,10 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     pool = moltenPool(); world.add(pool.mesh);
     decal = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: haloTexture(), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0 }));
     decal.renderOrder = 2; world.add(decal);
-    spk = makeSpokes(); world.add(spk.mesh, spk.dots);
+    // the unit cell made visible: depth-tested rods from one atom to each neighbour it touches
+    const rodGeo = new THREE.CylinderGeometry(1, 1, 1, 10, 1, false); rodGeo.translate(0, 0.5, 0);
+    spk = { rods: new THREE.InstancedMesh(rodGeo, new THREE.MeshStandardMaterial({ color: TOK.ink, roughness: 0.4 }), 12) };
+    spk.rods.count = 0; spk.rods.frustumCulled = false; world.add(spk.rods);
     atomMat.defines = { FORGE_GLOW: '' };
   }
 
@@ -176,7 +200,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   let P = new Float32Array(MAX * 3), Vv = new Float32Array(MAX * 3), Q = new Float32Array(MAX * 3); // positions, velocities, morph targets
   let n = 0, mode = 'none', boxL = [1000, 1000, 1000], radius = 50, dNN = 200, phaseKey = '', element = 0, molN = 1, bond = 0;
   let morph = null, current = null, lastKind = null, puddleR = 0;
-  const m4 = new THREE.Matrix4(), v3 = new THREE.Vector3(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
+  const m4 = new THREE.Matrix4(), v3 = new THREE.Vector3(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), sv = new THREE.Vector3(), UPV = new THREE.Vector3(0, 1, 0);
   const rand = rng32(7);
   const gauss = () => { let u = 0, v = 0; while (!u) u = rand(); v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
 
@@ -217,24 +241,32 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     return pts.map(p => [p[0] - cx, p[1] - cy, p[2] - cz]);
   }
 
+  // one unit sphere per quality tier; the radius is applied as each instance's scale, so phase changes
+  // (912 °C, melting, boiling) never rebuild geometry mid-playback
+  let geoTier = '';
   function setAtomGeometry(r) {
-    if (Math.abs(r - radius) / radius < 1e-3 && atoms.geometry) { radius = r; return; }
     radius = r;
-    const g = new THREE.SphereGeometry(r, tierConfig().points >= 0.7 ? 20 : 12, tierConfig().points >= 0.7 ? 14 : 9);
+    const tierKey = tierConfig().points >= 0.7 ? 'hi' : 'lo';
+    if (tierKey === geoTier && atoms.geometry) return;
+    geoTier = tierKey;
+    const g = new THREE.SphereGeometry(1, tierKey === 'hi' ? 20 : 12, tierKey === 'hi' ? 14 : 9);
     g.setAttribute('aSeed', seeds);
+    g.setAttribute('aHi', hiAttr);
     atoms.geometry.dispose();
     atoms.geometry = g;
   }
 
   function writeMatrices() {
+    if (FORGE) updateCluster();
     for (let i = 0; i < n; i++) {
       v3.set(P[3 * i], P[3 * i + 1], P[3 * i + 2]);
-      m4.compose(v3, q, one);
+      const sc = occl[i] ? radius * 0.22 : radius;
+      m4.compose(v3, q, sv.set(sc, sc, sc));
       atoms.setMatrixAt(i, m4);
       if (molN === 2) {
         const o = 3 * i; // second atom of the molecule, along a tumbling axis stored in Q
         v3.set(P[o] + Q[o] * bond, P[o + 1] + Q[o + 1] * bond, P[o + 2] + Q[o + 2] * bond);
-        m4.compose(v3, q, one);
+        m4.compose(v3, q, sv.set(radius, radius, radius));
         atoms.setMatrixAt(n + i, m4);
       }
     }
@@ -243,7 +275,12 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     if (FORGE && current && current.kind === 'gas') atoms.count = Math.ceil(atoms.count * 0.4);
     atoms.instanceMatrix.needsUpdate = true;
     if (glow) glow.mesh.count = atoms.count;
-    updateSpokes();
+    if (FORGE) { // the glow's centre and reach follow the lump, pool or vapour
+      let cx = 0, cy = 0, cz = 0; for (let i = 0; i < n; i++) { cx += P[3 * i]; cy += P[3 * i + 1]; cz += P[3 * i + 2]; }
+      cx /= n || 1; cy /= n || 1; cz /= n || 1;
+      let rmax = 0; for (let i = 0; i < n; i += 3) rmax = Math.max(rmax, Math.hypot(P[3 * i] - cx, P[3 * i + 1] - cy, P[3 * i + 2] - cz));
+      glowU.uCore.value.set(cx, cy, cz); glowU.uCoreR.value = rmax + radius;
+    }
   }
 
   function setBox(L) {
@@ -257,35 +294,52 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       decal.scale.set(L[0] * 1.5, 1, L[2] * 1.5); decal.position.set(0, -L[1] / 2 + L[1] * 0.002, 0);
     } else { floor.scale.set(L[0] * 1.25, L[1] * 0.04, L[2] * 1.25); floor.position.set(0, -L[1] / 2 - L[1] * 0.02, 0); }
   }
-  /** Spokes from one atom inside the front corner to the neighbours it touches (8 in bcc, 12 in fcc). */
-  function updateSpokes() {
-    if (!spk) return;
-    const solid = current && current.kind === 'solid' && n > 0;
-    spk.mesh.visible = spk.dots.visible = solid;
-    if (!solid) return;
-    if (spokeC < 0 || spokeC >= n) { // the atom nearest a point a little inside the corner facing the camera
-      let mx = [0, 0, 0], cy = 0;
-      for (let i = 0; i < n; i++) { for (let k = 0; k < 3; k++) mx[k] = Math.max(mx[k], Math.abs(P[3 * i + k] - (k === 1 ? world.userData.lift || 0 : 0))); }
-      cy = world.userData.lift || 0;
-      const tx = mx[0] * 0.42, ty = cy + mx[1] * 0.42, tz = mx[2] * 0.42;
+  /**
+   * The unit cell made visible (solid, forge): one atom a little inside the front corner and the
+   * neighbours it touches (8 in bcc, 12 in fcc, counted from positions). They wear a glowing rim, rods
+   * join them, and the atoms in front of them shrink back like a cutaway, so you can count them.
+   */
+  const occl = new Uint8Array(MAX);
+  function updateCluster() {
+    occl.fill(0, 0, n); hiAttr.array.fill(0, 0, Math.max(n, 1));
+    const solid = !!spk && current && current.kind === 'solid' && n > 12;
+    if (spk) spk.rods.count = 0;
+    if (!solid) { hiAttr.needsUpdate = true; return; }
+    const lift0 = world.userData.lift || 0;
+    if (spokeC < 0 || spokeC >= n) {
+      const mx = [0, 0, 0];
+      for (let i = 0; i < n; i++) { mx[0] = Math.max(mx[0], Math.abs(P[3 * i])); mx[1] = Math.max(mx[1], Math.abs(P[3 * i + 1] - lift0)); mx[2] = Math.max(mx[2], Math.abs(P[3 * i + 2])); }
+      const tx = mx[0] * 0.45, ty = lift0 + mx[1] * 0.45, tz = mx[2] * 0.45;
       let best = 1e30;
       for (let i = 0; i < n; i++) { const d = (P[3 * i] - tx) ** 2 + (P[3 * i + 1] - ty) ** 2 + (P[3 * i + 2] - tz) ** 2; if (d < best) { best = d; spokeC = i; } }
     }
-    const c = 3 * spokeC, cx = P[c], cy2 = P[c + 1], cz = P[c + 2];
-    let dmin = 1e30;
-    const d2 = new Float32Array(n);
-    for (let i = 0; i < n; i++) { if (i === spokeC) { d2[i] = 1e30; continue; } d2[i] = (P[3 * i] - cx) ** 2 + (P[3 * i + 1] - cy2) ** 2 + (P[3 * i + 2] - cz) ** 2; if (d2[i] < dmin) dmin = d2[i]; }
-    const lim = dmin * 1.12 * 1.12, pos = spk.mesh.geometry.attributes.position.array, dots = spk.dots.geometry.attributes.position.array;
+    const c = 3 * spokeC, cx = P[c], cy = P[c + 1], cz = P[c + 2];
+    const d2 = new Float32Array(n); let dmin = 1e30;
+    for (let i = 0; i < n; i++) { if (i === spokeC) { d2[i] = 1e30; continue; } d2[i] = (P[3 * i] - cx) ** 2 + (P[3 * i + 1] - cy) ** 2 + (P[3 * i + 2] - cz) ** 2; if (d2[i] < dmin) dmin = d2[i]; }
+    const lim = dmin * 1.12 * 1.12;
+    // the default view's direction (frameGoal): atoms between it and the cell step back
+    const th = 0.6, ph = 1.04, vx = Math.sin(ph) * Math.sin(th), vy = Math.cos(ph), vz = Math.sin(ph) * Math.cos(th);
+    const rr = (1.8 * Math.sqrt(dmin)) ** 2;
     let m = 0;
-    dots[0] = cx; dots[1] = cy2; dots[2] = cz;
-    for (let i = 0; i < n && m < 13; i++) if (d2[i] <= lim) {
-      pos.set([cx, cy2, cz, P[3 * i], P[3 * i + 1], P[3 * i + 2]], 6 * m);
-      dots.set([P[3 * i], P[3 * i + 1], P[3 * i + 2]], 3 + 3 * m); m++;
+    hiAttr.array[spokeC] = 2;
+    for (let i = 0; i < n; i++) {
+      const dx = P[3 * i] - cx, dy = P[3 * i + 1] - cy, dz = P[3 * i + 2] - cz;
+      if (d2[i] <= lim && m < 12) {
+        hiAttr.array[i] = 1;
+        const len = Math.sqrt(d2[i]);
+        v3.set(dx / len, dy / len, dz / len); q.setFromUnitVectors(UPV, v3);
+        m4.compose(v3.set(cx, cy, cz), q, sv.set(radius * 0.16, len, radius * 0.16));
+        spk.rods.setMatrixAt(m++, m4);
+        q.identity();
+        continue;
+      }
+      if (i === spokeC) continue;
+      const along = dx * vx + dy * vy + dz * vz;
+      if (along > 0.3 * Math.sqrt(dmin) && dx * dx + dy * dy + dz * dz - along * along < rr) occl[i] = 1;
     }
-    spk.mesh.geometry.setDrawRange(0, 2 * m); spk.dots.geometry.setDrawRange(0, m + 1);
-    spk.mesh.geometry.attributes.position.needsUpdate = true; spk.dots.geometry.attributes.position.needsUpdate = true;
+    spk.rods.count = m; spk.rods.instanceMatrix.needsUpdate = true;
+    hiAttr.needsUpdate = true;
   }
-
   function drawCell(phase, block) {
     if (!phase || !block) { cellLines.visible = false; return; }
     const V = block.V;
@@ -376,7 +430,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     } else for (let i = 0; i < 3 * n; i++) Vv[i] *= 0.2;
     cellLines.visible = false;
     morph = null;
-    if (FORGE) setAtomGeometry(kind === 'gas' ? 0.26 * dNN : 0.5 * dNN);
+    if (FORGE) setAtomGeometry(kind === 'gas' ? 0.26 * dNN : 0.57 * dNN); // liquid: beads overlap a little and blend into one glowing mass
     // a puddle with the solid's volume: radius from n particles at spacing ~d_NN in a layer ~half as high as wide
     puddleR = FORGE ? boxL[0] * 0.44 : Math.cbrt((n * dNN ** 3) / Math.PI) * 0.9;
   }
@@ -411,6 +465,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         const rx = P[o] - cx, rz = P[o + 2] - cz, rr = Math.hypot(rx, rz);
         if (rr > Rp) { const pull = (rr - Rp) * 6 * dt / rr; Vv[o] -= rx * pull * 4; Vv[o + 2] -= rz * pull * 4; }
         if (FORGE && rr > Rp * 1.02) { const f = (Rp * 1.02) / rr; P[o] = cx + rx * f; P[o + 2] = cz + rz * f; Vv[o] *= 0.5; Vv[o + 2] *= 0.5; } // a round pool, never the crucible's corners
+        if (FORGE && rr > 1) { const sw = dNN * 2.2 * dt / rr; Vv[o] -= rz * sw; Vv[o + 2] += rx * sw; } // a slow swirl, as in a stirred melt
         const damp = Math.exp(-4 * dt);
         for (let k = 0; k < 3; k++) { Vv[o + k] *= damp; P[o + k] += Vv[o + k] * dt; }
         if (P[o] > hx || P[o] < -hx) { P[o] = Math.max(-hx, Math.min(hx, P[o])); Vv[o] *= -0.3; }
@@ -421,12 +476,13 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       // repulsion with a uniform grid
       grid.clear();
       const cs = dmin;
-      const keyOf = (x, y, z) => `${Math.floor(x / cs)},${Math.floor(y / cs)},${Math.floor(z / cs)}`;
+      const hk = (a, b, c) => (a * 73856093) ^ (b * 19349663) ^ (c * 83492791); // numeric grid keys: no string garbage per frame
+      const keyOf = (x, y, z) => hk(Math.floor(x / cs), Math.floor(y / cs), Math.floor(z / cs));
       for (let i = 0; i < n; i++) { const kk = keyOf(P[3 * i], P[3 * i + 1], P[3 * i + 2]); let a = grid.get(kk); if (!a) grid.set(kk, (a = [])); a.push(i); }
       for (let i = 0; i < n; i++) {
         const o = 3 * i, gx = Math.floor(P[o] / cs), gy = Math.floor(P[o + 1] / cs), gz = Math.floor(P[o + 2] / cs);
         for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
-          const list = grid.get(`${gx + a},${gy + b},${gz + c}`);
+          const list = grid.get(hk(gx + a, gy + b, gz + c));
           if (!list) continue;
           for (const j of list) {
             if (j <= i) continue;
@@ -484,13 +540,13 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       // per-atom glows are a fill cost software renderers cannot afford (low tier): there the beads'
       // own incandescence and a stronger aura carry the glow
       const sprites = tierConfig().points >= 0.7;
-      glow.mesh.visible = sprites && on > 0.02 && kind !== 'liquid'; // the molten pool glows as one surface
+      glow.mesh.visible = sprites && on > 0.02;
       if (!sprites) halo.material.opacity = Math.min(0.5, on * 0.55);
       // the glow pools on the hearth; the molten pool and the glass take its colour
       decal.material.color.copy(col); decal.material.opacity = Math.min(kind === 'gas' ? 0.55 : 0.85, on * 0.95);
       pool.uni.uCol.value.copy(col); pool.uni.uK.value = on * 1.5;
       glassMat.uniforms.uCol.value.copy(INK).lerp(KILN_TEXT, k); glassMat.uniforms.uK.value = 0.2 - 0.06 * k;
-      spk.mat.color.copy(INK).lerp(KILN_TEXT, k); spk.dots.material.color.copy(spk.mat.color);
+      // the unit cell: verdigris atoms by day; warm-gold rims once the metal glows
       boxMat.color.copy(INK).lerp(KILN_TEXT, k); cellMat.color.copy(boxMat.color);
     } else {
       atomMat.emissiveIntensity = glowing ? bb.glow * 2.2 : 0;
@@ -499,7 +555,8 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     const ratio = data().model.lindemann[0];
     const Tm = e.ph.mp?.[0] ?? e.ph.sub?.[0];
     const rms = kind === 'solid' && Tm ? lindemannRms(state.T, Tm, dNN, ratio) : 0;
-    uni.uAmp.value = state.reduced ? rms * 0.35 : rms / Math.sqrt(1.5); // per-axis amplitude so the 3D rms matches
+    // per-axis amplitude so the 3D rms matches; in units of the atom radius (instances are scaled by it)
+    uni.uAmp.value = (state.reduced ? rms * 0.35 : rms / Math.sqrt(1.5)) / Math.max(radius, 1e-6);
   }
 
   // ---- main entry: go to the current temperature/element --------------------------------------
@@ -589,30 +646,12 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         return true;
       }
       if (current && (current.kind === 'liquid' || current.kind === 'gas') && !state.reduced) {
-        // keep the fluid on wall-clock time when frames are slow (up to 4 steps of 1/30 s; one at 60 fps)
-        let rem = FORGE ? Math.min(dt, 4 / 30) : Math.min(dt, 1 / 30);
+        // keep the fluid near wall-clock time when frames are slow (up to 2 steps of 1/30 s; one at 60 fps)
+        let rem = FORGE ? Math.min(dt, 2 / 30) : Math.min(dt, 1 / 30); // at most two steps: slow frames must not get slower
         while (rem > 1e-4) { const hstep = Math.min(rem, 1 / 30); stepFluid(hstep, current.kind, e); rem -= hstep; }
         writeMatrices();
       }
-      if (pool) { // the molten pool: a low dome over the liquid atoms, fading in as they settle
-        const liquid = current && current.kind === 'liquid';
-        poolK = Math.max(0, Math.min(1, poolK + (liquid ? dt / 0.9 : -dt / 0.3)));
-        pool.mesh.visible = poolK > 0.01;
-        if (pool.mesh.visible) {
-          let cx = 0, cz = 0; for (let i = 0; i < n; i++) { cx += P[3 * i]; cz += P[3 * i + 2]; } cx /= n || 1; cz /= n || 1;
-          const ys = [], rs = [];
-          for (let i = 0; i < n; i += 2) { ys.push(P[3 * i + 1]); rs.push(Math.hypot(P[3 * i] - cx, P[3 * i + 2] - cz)); }
-          ys.sort((a, b) => a - b); rs.sort((a, b) => a - b);
-          const floorY = -boxL[1] / 2, top = (ys[Math.floor(ys.length * 0.95)] - floorY + radius) * 0.9, R = Math.min((rs[Math.floor(rs.length * 0.97)] + radius * 1.1) * 1.12, boxL[0] * 0.5);
-          pool.mesh.position.set(cx, floorY, cz);
-          pool.mesh.scale.set(R, Math.max(top, radius * 2), R);
-          pool.mat.opacity = 0.97 * poolK;
-          pool.uni.uTime.value = t;
-        }
-        // once the pool has formed it is the liquid (the atoms jostle on beneath its surface)
-        atoms.visible = !(liquid && poolK >= 0.999) && !!current && current.kind !== 'card';
-        if (pool.mesh.visible || liquid) return true;
-      }
+      if (pool) pool.mesh.visible = false; // the melt is drawn as its atoms (continuity from solid to gas)
       return atoms.visible && !state.reduced;
     },
     current: () => current,

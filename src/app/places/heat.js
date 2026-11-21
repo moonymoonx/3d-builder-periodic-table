@@ -58,24 +58,36 @@ export function buildHeat(ui, hooks) {
     el = byZ(state.Z);
     lo = ROOM; hi = topK(el);
     events = eventsOf(el).filter(x => x.T > lo && x.T < hi);
-    // every event is labelled, never an unexplained mark: one line each ("912 °C re-stacks"), placed in
-    // the lowest of three rows where it fits (most important first), shortened to the number if needed
+    // every event is labelled, never an unexplained mark: one line each ("912 °C re-stacks"). Each label
+    // extends away from its nearest neighbouring tick; rows are used bottom-up, and no label may cover
+    // another tick's leader line (a stem rises from the rail to its own row). Shortened to the number
+    // only if no row fits.
     const W = Math.max(240, track.clientWidth || (isPhone() ? 320 : 620));
-    const rows = [[], [], []];
-    const tryPlace = (x, w) => {
-      for (let r = 0; r < 3; r++) {
-        const dx = Math.max(-x + w / 2 - 6, Math.min(W - x - w / 2 + 6, 0)); // keep it inside the track
-        const a = x + dx - w / 2, b = x + dx + w / 2;
-        if (!rows[r].some(p => a < p.b + 8 && b > p.a - 8)) { rows[r].push({ a, b }); return { r, dx }; }
-      }
-      return null;
-    };
+    const pos = x => ((x.T - lo) / (hi - lo)) * W;
     const rank = { melt: 0, boil: 1, sub: 1, trans: 2 };
+    const placed = []; // {x, r, a, b}
+    const fitsAt = (x, r, a, b) => placed.every(p =>
+      (p.r !== r || b + 8 < p.a || a - 8 > p.b) && // same row: no overlap
+      (p.r <= r || x < p.a - 5 || x > p.b + 5) &&  // my stem passes below p's row: must not cross p's text
+      (p.r >= r || p.x < a - 5 || p.x > b + 5));   // p's stem passes below my row: my text must not cover it
     const spots = new Map();
-    for (const x of [...events].sort((a, b) => rank[a.key] - rank[b.key] || a.T - b.T)) {
-      const px = ((x.T - lo) / (hi - lo)) * W, word = t(`forge.tick.${x.key}`), num = C(x.T);
-      const full = tryPlace(px, (num.length + word.length + 1) * 7.3 + 6);
-      spots.set(x, full ? { ...full, word } : { ...(tryPlace(px, num.length * 7.6 + 6) || { r: 2, dx: 0 }), word: '' });
+    const sorted = [...events].sort((a, b) => rank[a.key] - rank[b.key] || a.T - b.T);
+    for (const x of sorted) {
+      const px = pos(x), others = events.filter(o => o !== x).map(pos);
+      const left = Math.min(...others.filter(o => o < px).map(o => px - o), 1e9), right = Math.min(...others.filter(o => o > px).map(o => o - px), 1e9);
+      const word = t(`forge.tick.${x.key}`), num = C(x.T);
+      let done = null;
+      for (const [text, w] of [[`${num} ${word}`, (num.length + word.length + 1) * 7.3 + 6], [num, num.length * 7.6 + 6]]) {
+        // preferred: extend away from the nearer neighbour; then centred; then the other way
+        const aligns = right < left ? ['right-edge', 'center', 'left-edge'] : ['left-edge', 'center', 'right-edge'];
+        for (let r = 0; r < 3 && !done; r++) for (const al of aligns) {
+          let a = al === 'center' ? px - w / 2 : al === 'left-edge' ? px - 6 : px - w + 6;
+          a = Math.max(-4, Math.min(W - w + 4, a));
+          if (fitsAt(px, r, a, a + w)) { done = { r, dx: a + w / 2 - px, word: text === num ? '' : word }; placed.push({ x: px, r, a, b: a + w }); break; }
+        }
+        if (done) break;
+      }
+      spots.set(x, done || { r: 2, dx: 0, word: '' });
     }
     replace(ticks, events.map(x => {
       const sp = spots.get(x);
@@ -84,11 +96,11 @@ export function buildHeat(ui, hooks) {
       return el2;
     }));
     track.style.marginTop = `${17 * Math.max(0, ...[...spots.values()].map(v => v.r))}px`; // room for the upper rows
-    const placed = [];
+    const flagsAt = []; // landmark flags below the rail: their own row, never overlapping
     const fits = (T, chars) => {
       const x = ((T - lo) / (hi - lo)) * W, half = (chars * 7.4 + 14) / 2;
-      if (x - half < -12 || x + half > W + 12 || placed.some(p => Math.abs(p.x - x) < p.half + half)) return false;
-      placed.push({ x, half }); return true;
+      if (x - half < -12 || x + half > W + 12 || flagsAt.some(p => Math.abs(p.x - x) < p.half + half)) return false;
+      flagsAt.push({ x, half }); return true;
     };
     const marks = LANDMARKS.map(s => bySym(s)).filter(x => x.Z !== el.Z).map(x => ({ x, T: propValue(x, 'mp')[0] }))
       .map(m => ({ ...m, text: t('forge.landmark', { name: name(m.x).toLowerCase(), T: C(m.T) }) }))
@@ -96,18 +108,26 @@ export function buildHeat(ui, hooks) {
     replace(flags, marks.map(m => h('span', { class: 'heat-flag', style: { left: pct(m.T) } }, m.text)));
     input.setAttribute('aria-label', t('forge.label'));
   }
+  let lastRead = '', lastWord = '', lastClip = '';
   function update() {
     if (!el) return;
-    replace(read, C(state.T));
+    const rd = C(state.T);
+    if (rd !== lastRead) { lastRead = rd; replace(read, rd); } // only what changed: no DOM churn while playing
     const ss = sampleStateAt(el, state.T, null);
-    replace(word, ss.kind === 'card' ? '' : ss.kind === 'solid' && ss.phase && ss.phase.cn ? t('forge.solidCn', { cn: ss.phase.cn }) : t('state.' + ss.kind));
+    const wd = ss.kind === 'card' ? '' : ss.kind === 'solid' && ss.phase && ss.phase.cn ? t('forge.solidCn', { cn: ss.phase.cn }) : t('state.' + ss.kind);
+    if (wd !== lastWord) { lastWord = wd; replace(word, wd); }
     // the thermometer fills up to the temperature, coloured like heated metal along the way
-    fill.style.clipPath = `inset(0 ${(100 - parseFloat(pct(state.T))).toFixed(2)}% 0 0 round 6px)`;
+    const clip = `inset(0 ${(100 - parseFloat(pct(state.T))).toFixed(1)}% 0 0 round 6px)`;
+    if (clip !== lastClip) { lastClip = clip; fill.style.clipPath = clip; }
     const v = String(toV(state.T));
     if (input.value !== v && document.activeElement !== input) input.value = v;
     if (state.T <= lo + 0.5 && !playing) say(startCaption());
   }
+  let lastBtn = '';
   function renderButtons() {
+    const key = `${playing ? 'p' : state.T >= hi - 1 ? 'a' : 'h'}|${state.T <= lo + 0.5}|${t('forge.room')}`;
+    if (key === lastBtn) return;
+    lastBtn = key;
     replace(play, playing ? t('forge.pause') : state.T >= hi - 1 ? t('forge.again') : t('forge.play'));
     replace(room, t('forge.room'));
     room.disabled = state.T <= lo + 0.5;

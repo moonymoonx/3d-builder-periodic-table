@@ -119,7 +119,8 @@ export function createTableView(hooks) {
         diffuseColor.rgb *= mix(1.0 - 0.2 * uFloorAO * (1.0 - smoothstep(0.0, 0.16, vWP.y)), 1.0, top);
         // tall columns: the walls darken gently toward the base, like a carved block
         diffuseColor.rgb *= mix(1.0, mix(0.78, 1.0, smoothstep(0.0, vH * 0.85, vWP.y)), (1.0 - top) * step(1.0, vH) * uFloorAO);
-        if (vFx.x > 0.5) { float s = step(0.5, fract((vWP.x - vWP.z) * uHatchF)); diffuseColor.rgb *= mix(1.0, uHatch, s * top); }
+        // predicted values: stripes on every face of the column, not only its small top
+        if (vFx.x > 0.5) { float s = step(0.5, fract((vWP.x - vWP.z + vWP.y * 0.7) * uHatchF)); diffuseColor.rgb *= mix(1.0, uHatch, s * mix(0.8, 1.0, top)); }
         // unknown values: the glaze fades toward the paper, the ink stays readable (ink-2, >= 4.5:1)
         diffuseColor.rgb = mix(diffuseColor.rgb, uPaper, vFx.y * 0.66);
         if (vTop > 0.97) {
@@ -214,7 +215,7 @@ export function createTableView(hooks) {
     else if (p.key === 'year') f = (x - lo) / Math.max(1e-9, hi - lo);
     else { const base = Math.min(0, lo); f = (x - base) / Math.max(1e-9, hi - base); }
     // phones see columns from lower down, so they stand taller there to read as heights
-    const hm = hooks.isPhone && hooks.isPhone() ? HMAX * 1.7 : HMAX;
+    const hm = hooks.isPhone && hooks.isPhone() ? HMAX * 1.3 : HMAX;
     return H0 + Math.max(0, Math.min(1, f)) * (hm - H0);
   }
   const ranges = new Map();
@@ -270,7 +271,8 @@ export function createTableView(hooks) {
       aInk.setXYZ(k, inkC.r, inkC.g, inkC.b);
       const v = propValue(e, state.prop);
       const hatch = (!state.flat && v && isPred(v)) || (st && st.p) ? 1 : 0;
-      const dim = matchesFilters(e) ? (tgt[i].ghost && !state.flat ? 0.55 : 0) : 1;
+      // predicted columns are a little ghosted too, so a guess never stands like a measured monolith
+      const dim = matchesFilters(e) ? (tgt[i].ghost && !state.flat ? 0.55 : !state.flat && v && isPred(v) ? 0.3 : 0) : 1;
       aFx.setXYZW(k, hatch, dim, hovered === e.Z ? 1 : 0, e.Z === selZ ? 1 : 0);
     }
     // stripes: stronger in the heat map; on phones (tiles ~20 px) wider and softer so symbols stay legible
@@ -362,7 +364,7 @@ export function createTableView(hooks) {
     const tall = !state.flat ? HMAX * 0.5 : 0;
     // flat tiles: a low, museum-like angle (phones: enough to see the tiles' glazed fronts);
     // columns: look more from above so the tall ones hide less of the rows behind them
-    const phi = portrait ? (state.flat ? 0.5 : 0.8) : s32 ? 0.62 : state.flat ? 0.78 : 0.33;
+    const phi = portrait ? (state.flat ? 0.5 : 0.5) : s32 ? 0.62 : state.flat ? 0.78 : 0.33;
     const rW = halfW / Math.tan(fov.h / 2);
     const rD = (halfD * Math.cos(phi) + (tall + 0.4) * Math.sin(phi)) / Math.tan(fov.v / 2) + halfD * Math.sin(phi);
     const r = Math.max(rW, rD) * 1.03;
@@ -504,6 +506,7 @@ export function createTableView(hooks) {
       checkAway();
     },
     onState(ch) {
+      if (E.active !== view && Object.keys(ch).every(k => k === 'T')) return; // the forge's thermometer: nothing to do here (enter() repaints)
       if ('layout' in ch) { morph(); frame(); writeColours(); }
       else if ('prop' in ch || 'log' in ch || 'flat' in ch) { morph(); writeColours(); if (!state.card) frame(); }
       if (['Z', 'color', 'T', 'filters', 'cb', 'lang', 'marks', 'hideSel'].some(x => x in ch)) { writeColours(); setLiftTargets(); placeSelection(); }

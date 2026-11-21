@@ -327,3 +327,29 @@ Gemini's cold round-3 review rated clarity, ease, beauty and smoothness 4.0 and 
 - **F1, the phone landing's empty bands: not changed again.** The table is width-bound; round 3 made the prompt a heading and added the colour key.
 - **D4, top scrim when zoomed: deferred** (minor; the "Whole table" pill is the exit).
 - **Smoothness:** real-device GPU numbers cannot be measured in this sandbox (headless software rendering only).
+
+## Hero round 5 (`reviews/hero-r4.md`), 21 Nov 2026
+Gemini's cold round-4 review: clarity 4.5, ease 4.5, beauty 4.0, smoothness 4.0, delight 4.0. The hero slice passes (all ≥ 4). moony asked to push beauty and delight to 4.5 on six named points. The calls are Claude's (design owner).
+
+- **Molten iron reads as an "orange Jell-O dome": accepted, using the review's option A (atomic continuity).**
+  - The dome is gone. The melt is drawn as its atoms from solid to liquid to gas: a dense, slowly swirling pool of incandescent beads. The beads are a little larger, so they blend, and each has its soft glow (medium/high tiers).
+  - The melt is hotter at the centre and a little cooler at its edges (it also gives the solid "hotter crevices").
+  - *Rejected:* option B (a refined opaque pool surface). *Why:* it keeps the scale break the review names (atoms → pudding → atoms).
+- **The neighbour spokes look like a "spider / starburst", illegible at 12: accepted.**
+  - The flat, always-on-top lines and dots are gone. One atom a little inside the front corner and the neighbours it touches are now:
+    - verdigris beads by day, with warm-gold rims once the metal glows;
+    - joined by depth-tested 3D rods;
+    - revealed by a cutaway, where the atoms in front of them shrink back.
+  - Counts come from positions (8 in bcc, 12 in fcc), and the cell follows the Bain re-stack.
+- **The thermometer's heat gradient runs backwards: accepted.** The fill now goes charcoal → ember → orange → yellow-white, so the cold end is dark and the hot end bright, like the metal.
+- **The 1,394 °C stem crosses "1,538 °C melts": accepted.**
+  - Each label extends away from its nearest neighbouring tick. Rows are used bottom-up, and no label may cover another tick's stem. Only if nothing fits is a label shortened to its number (1,394 °C on desktop now reads "1,394 °C").
+  - Every tick still has a label.
+- **Phone heft buries elements: accepted.**
+  - Phones see numbers lenses more from above again (φ 0.5) with a lower height cap (×1.3), so osmium, iridium, platinum, gold and the lanthanides stay visible behind row 7.
+  - Predicted columns are slightly ghosted and striped on every face, so a guessed density never stands like a measured monolith.
+- **Desktop "Heat it" playback hitch (50 ms p95): addressed, not proven.**
+  - Removed per-frame work: the thermometer rewrites only what changed; the hidden table skips its colour pass on temperature changes.
+  - Removed per-event work: atoms are one unit sphere scaled per instance, so phase changes no longer rebuild geometry.
+  - With four Claude sessions sharing the CPU (load 6–12), an alternating A/B against round 4 was inconclusive: round 4's own p95 swung between 33 and 150 ms from run to run.
+- **Not taken this round:** the gas's "frog eggs" look (§B8; the vapour now fills the vessel, as the shot waits for it to spread), the phone landing's empty bands (§F11) and the card's phone "across the table" asymmetry (§F12, by design in STYLE §5).

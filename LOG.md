@@ -173,3 +173,16 @@
     - Heat-map stripes only where the deciding boundary is predicted (needs a data review).
     - A sharper atlas for the dive close-up.
     - Top scrim when zoomed.
+- 2026-11-21 ~06:39 (Saigon) — **Shared surface locked for parallel views** (d1e17ae).
+  - `PARALLEL.md`: three scopes (atom; sample beyond the forge; patterns and side by side), owned and read-only files, strings and `WIRING-<scope>.md` rules, the review checklist and the merge order (atom, sample, patterns).
+  - `STYLE.md` marked locked. Empty per-scope strings and style files wired in.
+  - moony then started three sessions in worktrees `../pt-atom`, `../pt-sample`, `../pt-patterns` (branches `view-atom`, `view-sample`, `view-patterns`).
+- 2026-11-21 ~07:04 (Saigon) — **Hero round 5** after Gemini's cold round-4 review (`reviews/hero-r4.md`: clarity 4.5, ease 4.5, beauty 4.0, smoothness 4.0, delight 4.0; the slice passes). Details and reasons in DECISIONS.md › Hero round 5.
+  - **Molten iron:** drawn as its atoms (a swirling incandescent pool, hotter at the centre). The dome is removed.
+  - **Unit cell:** a 3D highlight (verdigris atoms by day, warm-gold rims in the kiln, depth-tested rods, a cutaway) replaces the 2D spokes.
+  - **Thermometer:** the fill runs dark to bright; labels never cross a stem.
+  - **Phone heft:** seen from above again with a lower cap; predicted columns ghosted and striped on every face.
+  - **Playback:** fewer DOM writes per frame, the hidden table skips its repaint per degree, atoms are one unit sphere scaled per instance (no geometry rebuild at phase changes).
+  - **Checks:** smoke 28/28 twice, unit tests 17/17, validator ALL PASS, no console errors, index.html 1,476 KB.
+  - **FPS:** measured while four Claude sessions shared the machine (load 6–12), so the numbers are noisy. An A/B of playback against round 4 was inconclusive (round 4 alone ranged 33–150 ms p95).
+  - **Review set:** `/workspace/out/redesign/hero-r5/` (30 PNG, fps.txt, README.txt).

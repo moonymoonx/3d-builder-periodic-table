@@ -36,7 +36,8 @@ body.kiln .heat-word { color: var(--kiln-text-2); }
 body.kiln .heat-rail::before { background: #F0874F; box-shadow: 0 0 14px rgba(240, 135, 79, 0.6); }
 body.kiln .heat-rail { background: rgba(242, 232, 218, 0.14); }
 .heat-fill { position: absolute; inset: 0; border-radius: 6px;
-  background: linear-gradient(90deg, #C9CFD8 0%, #C99A7E 16%, #B93E12 34%, #E5612B 52%, #F59A47 68%, #FFD796 84%, #FFF6E6 100%); }
+  /* cold end dark, hot end bright: charcoal, ember, orange, yellow-white, like the metal's own glow */
+  background: linear-gradient(90deg, #3B2B24 0%, #5A2414 14%, #8E2E12 28%, #B93E12 40%, #E5612B 56%, #F59A47 72%, #FFD796 88%, #FFF2C2 100%); }
 .heat-range { -webkit-appearance: none; appearance: none; position: absolute; left: -15px; right: -15px; width: calc(100% + 30px); top: 22px; height: 48px; margin: 0; background: transparent; cursor: pointer; }
 .heat-range::-webkit-slider-runnable-track { height: 48px; background: transparent; }
 .heat-range::-moz-range-track { height: 48px; background: transparent; }
