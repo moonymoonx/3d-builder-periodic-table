@@ -23,8 +23,10 @@ export const SLOWDOWN = 1e12 / SPEED_SCALE;
 /** { kind: 'solid'|'liquid'|'gas'|'card', phase, card, predicted, why } */
 export function sampleStateAt(e, T, allotrope) {
   const lat = e.lat;
-  if (lat.kind === 'predicted') return { kind: 'card', card: 'predicted' };
   const st = stateAt(e, T);
+  // a predicted crystal is not drawn; but radon's gas and liquid are measured (only its crystal is a
+  // prediction), so they are drawn like any other gas and liquid
+  if (lat.kind === 'predicted' && (st.s === 'unknown' || st.s === 'solid' || st.p)) return { kind: 'card', card: 'predicted' };
   const s = st.s === 'unknown' ? (e.ph.mp && e.ph.mp[0] != null && T >= e.ph.mp[0] ? 'liquid' : 'card') : st.s;
   if (s === 'card') return { kind: 'card', card: 'unknown' };
   if (s !== 'solid') return { kind: s, predicted: st.p };
