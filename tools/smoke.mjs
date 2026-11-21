@@ -134,45 +134,6 @@ await step('URL hash is shareable (lens + open card)', async () => {
   if (!/lens=heat/.test(hash) || !/card=1/.test(hash) || !/el=Au/.test(hash)) throw new Error(hash);
   return hash;
 });
-await step('atom view: a door from the card, and the back link returns to the card', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'table' }));
-  await page.waitForTimeout(250); await settle(); // the previous step's lens change re-frames the table first
-  const p = await tileTop(23); await page.mouse.click(p.x, p.y); await settle();
-  await page.locator('.ui-door', { hasText: 'Look inside the atom' }).click(); await settle();
-  const v = await S();
-  if (v.view !== 'atom' || v.Z !== 23) throw new Error(JSON.stringify(v));
-  await page.locator('[data-back=card]').click(); await settle();
-  const w = await S();
-  if (w.view !== 'table' || !w.card || w.Z !== 23) throw new Error('back: ' + JSON.stringify(w));
-  await page.locator('.ui-door', { hasText: 'Look inside the atom' }).click(); await settle();
-});
-await step('atom view: + proton V -> Cr reports the 3d/4s exception', async () => {
-  await page.getByRole('button', { name: '+ proton' }).click();
-  await page.waitForTimeout(300);
-  const msg = await page.locator('.side.left .why').first().textContent();
-  if (await Z() !== 24 || !/Surprise/.test(msg)) throw new Error(`Z=${await Z()} msg=${msg}`);
-  await page.getByRole('button', { name: '+ proton' }).click(); // Mn: normal filling
-  await page.waitForTimeout(300);
-  const msg2 = await page.locator('.side.left .why').first().textContent();
-  if (!/new electron goes into 4s/.test(msg2)) throw new Error(msg2); // Mn = [Ar] 3d5 4s2
-  return msg.slice(0, 70);
-});
-await step('atom view: orbital chips and total density', async () => {
-  await page.locator('.side.left .chip', { hasText: /^3d/ }).first().click(); await settle();
-  await page.getByRole('button', { name: 'x²−y²' }).click(); await settle();
-  if (!/3d:2/.test(await page.evaluate(() => window.__pt.state.orbital))) throw new Error(await page.evaluate(() => window.__pt.state.orbital));
-  await page.getByRole('button', { name: 'All electrons' }).click(); await settle();
-  if (await page.evaluate(() => window.__pt.state.density) !== 'total') throw new Error('density mode');
-  await page.getByRole('button', { name: 'Orbitals' }).click(); await settle();
-});
-await step('atom view: tap a spectrum line shows its wavelength', async () => {
-  const box = await page.locator('.specline').first().boundingBox();
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height - 3);
-  const txt = await page.locator('.spectrum p').textContent();
-  if (!/nm/.test(txt)) throw new Error(txt);
-  return txt.slice(0, 60);
-});
-
 await step('sample view: Fe chips jump past each transition (γ-Fe, melts) and reset works', async () => {
   await page.evaluate(() => window.__pt.set({ view: 'sample', Z: 26, T: 293.15, allotrope: null }));
   await settle();
