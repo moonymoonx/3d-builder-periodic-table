@@ -11,7 +11,7 @@ import { elements, byZ, name, source, fmtTemp } from '../data.js';
 import { chip, segmented, button } from '../ui/kit.js';
 import { showSource, closeSource } from '../ui/source.js';
 import { createChart } from '../ui/trends.js';
-import { TOP, MORE, ALL, has, spec, facts, fmtPoint, lineGroups, lineKey, ROW_STARTS, AIR_G_PER_L } from './patternSpecs.js';
+import { TOP, MORE, ALL, has, spec, facts, fmtPoint, lineGroups, lineKey, ROW_STARTS, AIR_G_PER_L, columnFacts, PERIODIC } from './patternSpecs.js';
 import { lensSettings } from './lenses.js';
 import { REFS, PATTERN_REFS } from '../content/patterns-refs.js';
 import { pigment, pigmentCB } from '../../design/tokens.js';
@@ -79,11 +79,17 @@ export function buildPatterns(ui, hooks = {}) {
     const v = pt => (pt ? fmtPoint(pid, pt) : '—');
     if (pid === 'mp') p.w = v(P.top);
     if (pid === 'bp') { p.he = v(P.low); p.k = P.low ? fmtNum(P.low.y + K0, 0) : '—'; p.re = v(P.top); }
-    if (pid === 'density') { p.au = v(P.au); p.he = v(P.he); p.air = `${fmtNum(AIR_G_PER_L, 2, { minDigits: 2 })} g`; }
+    if (pid === 'density') { p.au = v(P.au); p.he = v(P.he); p.air = `${fmtNum(AIR_G_PER_L, 2, { minDigits: 2 })}\u00a0g`; }
     if (pid === 'ie1') { p.na = v(P.na); p.ne = v(P.ne); }
     if (pid === 'en') p.f = v(P.top);
     if (pid === 'ea') p.cl = v(P.top);
-    if (pid === 'abund') { p.x = P.feGold ? big(Number(P.feGold.toPrecision(2))) : '—'; p.pct = P.pct ? `${fmtNum(P.pct, 0)} %` : '—'; }
+    if (pid === 'abund') { p.x = P.feGold ? big(Number(P.feGold.toPrecision(2))) : '—'; p.pct = P.pct ? `${fmtNum(P.pct, 0)}\u00a0%` : '—'; }
+    // down the columns: the first and last of a column the words name (tests/patterns.test.mjs checks each claim)
+    const at = sym => F.points.find(x => x.e.sym === sym && !x.pred);
+    if (pid === 'ie1' || pid === 'density' || pid === 'zeff') { p.cs = v(at('Cs')); p.li = v(at('Li')); }
+    if (pid === 'mp') { p.li = v(at('Li')); p.cs = v(at('Cs')); p.f = v(at('F')); p.i = v(at('I')); }
+    if (pid === 'bp') { p.rn = v(at('Rn')); p.li = v(at('Li')); p.cs = v(at('Cs')); }
+    if (pid === 'en') p.i = v(at('I'));
     if (pid === 'year') { p.n = String(P.ancient); p.p = P.first ? String(P.first.y) : '—'; p.last = P.last ? String(P.last.y) : '—'; }
     return p;
   }
@@ -93,7 +99,8 @@ export function buildPatterns(ui, hooks = {}) {
       if (k === 'name') q.name = atStart(byZ(x));
       else if (k === 'v') q.v = fmtPoint(pid, x);
       else if (k === 'a' || k === 'b') q[k] = c.key === 'back' && k === 'a' ? atStart(byZ(x)) : inSentence(byZ(x));
-      else if (k === 'pct') q.pct = `${fmtNum(x, 0)} %`;
+      else if (k === 'pct') q.pct = `${fmtNum(x, 0)}\u00a0%`;
+      else if (k === 'rows') q.rows = x;
     }
     return t(`patterns.${pid}.c.${c.key}`, q);
   }
@@ -109,7 +116,9 @@ export function buildPatterns(ui, hooks = {}) {
       const a = Math.floor(Math.log10(lo)), b = Math.ceil(Math.log10(hi));
       const step = phone ? 4 : 3, ticks = [];
       for (let k = Math.ceil(a / step) * step; k <= b; k += step) ticks.push({ v: k, label: pow10(k, phone) });
-      return { log: true, min: a - 0.3, max: b + 0.2, ticks };
+      const minor = []; // a faint line at every power of ten, so "each line up: ×10" is literally true
+      for (let k = a; k <= b; k++) if (!ticks.some(tk => tk.v === k)) minor.push(k);
+      return { log: true, min: a - 0.3, max: b + 0.2, ticks, minor };
     }
     if (sp.scale === 'year') {
       const min = Math.floor((lo - 12) / 50) * 50, max = hi + 12;
@@ -133,15 +142,28 @@ export function buildPatterns(ui, hooks = {}) {
     for (let i = 0; i < 7; i++) rows.push({ z0: ROW_STARTS[i], z1: ROW_STARTS[i + 1] - 1, label: t('patterns.row', { n: i + 1 }), short: String(i + 1), sel: lm === 'period' && sel.f.period[0] === i + 1 });
     const sp = spec(pid);
     const ref = sp.room ? [{ y: 20, label: t('patterns.room') }] : [];
+    // down each column: only the picked element's column is drawn (eighteen crossing lines read as a cobweb)
+    const all = sp.lines === false ? new Map() : lineGroups(lm, els), selKey = lineKey(lm, sel);
+    const groups = lm === 'group' ? new Map(all.has(selKey) ? [[selKey, all.get(selKey)]] : []) : all;
     return {
       label: t('patterns.chart', { axis: axisName(pid) }),
       points, y: yScale(pid, points), ref, rows,
-      groups: sp.lines === false ? new Map() : lineGroups(lm, els), lineMode: lm, selZ: state.Z, selKey: lineKey(lm, sel),
-      callouts: F.callouts.map(c => ({ ...c, text: calloutText(pid, c) })),
+      groups, lineMode: lm, selZ: state.Z, selKey,
+      callouts: notes(pid, lm),
       ancient: sp.scale === 'year' ? t('patterns.ancient') : null,
       xTicks: isPhone() ? [1, 11, 19, 37, 55, 87, 118] : [1, 3, 11, 19, 37, 55, 87, 118],
       xTitle: [t('patterns.x'), t('patterns.xCap')],
     };
+  }
+
+  /** The notes for this pattern; down the columns, the row claims step aside for the column's own note. */
+  function notes(pid, lm) {
+    const out = F.callouts.filter(c => lm !== 'group' || !c.rows).map(c => ({ ...c, text: calloutText(pid, c) }));
+    if (lm === 'group' && spec(pid).lines !== false) {
+      const cf = columnFacts(pid, elements(), state.Z);
+      if (cf) out.unshift({ key: 'column', anchors: cf.anchors, lead: cf.last.Z, text: t('patterns.c.column', { a: inSentence(cf.first.e), va: fmtPoint(pid, cf.first), b: inSentence(cf.last.e), vb: fmtPoint(pid, cf.last) }) });
+    }
+    return out;
   }
 
   // ---- labels: pinned value (desktop), hover tip, phone readout and loupe ----------------------------------
@@ -226,7 +248,8 @@ export function buildPatterns(ui, hooks = {}) {
   function toggleMore(anchor, list = MORE) {
     if (menu) { closeMenu(); return; }
     menu = h('div', { class: 'ui-menu patterns-menu', role: 'menu' }, h('h4', null, t('patterns.patterns')),
-      ...list.map(pid => h('button', { type: 'button', 'aria-pressed': String(state.prop === pid), onclick: () => pick(pid) }, t(`lens.${pid}`))));
+      ...list.map(pid => h('button', { type: 'button', class: 'patterns-menu__item', 'aria-pressed': String(state.prop === pid), onclick: () => pick(pid) },
+        h('span', null, t(`lens.${pid}`), h('small', null, t(`patterns.menuCap.${pid}`))))));
     ui.append(menu);
     const r = anchor.getBoundingClientRect();
     menu.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - menu.offsetWidth / 2, window.innerWidth - menu.offsetWidth - 8))}px`;
@@ -235,7 +258,8 @@ export function buildPatterns(ui, hooks = {}) {
   }
   function renderChips() {
     if (isPhone()) { // phones: one pill opens every pattern, so the chart keeps the height
-      replace(chips, chip({ label: `${t('patterns.patterns')} ▾`, attrs: { class: 'ui-chip patterns-more', 'aria-haspopup': 'menu' }, onClick: ev => toggleMore(ev.currentTarget, ALL) }));
+      replace(chips, chip({ label: `${t('patterns.patterns')} ▾`, attrs: { class: 'ui-chip patterns-more', 'aria-haspopup': 'menu' }, onClick: ev => toggleMore(ev.currentTarget, ALL) }),
+        chip({ label: `${t('patterns.onTableShort')} →`, attrs: { class: 'ui-chip patterns-totable-chip' }, onClick: () => seeOnTable() }));
       chips.setAttribute('aria-label', t('patterns.patterns'));
       return;
     }
@@ -254,8 +278,10 @@ export function buildPatterns(ui, hooks = {}) {
   function renderWords() {
     const pid = id();
     replace(eyebrow, t('patterns.eyebrow'));
-    replace(question, t(`patterns.${pid}.q`, params(pid)));
-    replace(answer, t(`patterns.${pid}.a`, params(pid)), ' ', srcPill(PATTERN_REFS[pid] || []));
+    const qCol = `patterns.${pid}.qCol`; // down the columns, a question about the columns where the row one would mislead
+    replace(question, t(mode() === 'group' && t(qCol) !== qCol ? qCol : `patterns.${pid}.q`, params(pid)));
+    const aCol = `patterns.${pid}.aCol`, col = mode() === 'group' && t(aCol) !== aCol;
+    replace(answer, t(col ? aCol : `patterns.${pid}.a`, params(pid)), ' ', srcPill(PATTERN_REFS[pid] || []));
     const unit = unitOf(pid);
     replace(axis, h('b', null, axisName(pid)), unit ? h('span', { class: 'patterns-axis__unit' }, unit) : null,
       h('small', null, t(`patterns.${pid}.cap`), spec(pid).scale === 'log' ? ` · ${t('patterns.logStep')}` : ''));
@@ -273,6 +299,7 @@ export function buildPatterns(ui, hooks = {}) {
     if (spec(pid).room) items.push(h('span', { class: 'patterns-key__ref' }, h('i', { class: 'patterns-key__gap is-ref' }), t('patterns.room')));
     items.push(h('span', { class: 'patterns-key__rows' }, h('i', { class: 'patterns-key__band' }), t('patterns.rowsCap')));
     replace(key, ...items, h('span', { class: 'patterns-key__hint' }, t('patterns.hint')));
+    wave.hidden = !PERIODIC.includes(pid); // weight, crust and discovery are not the periodic wave
     replace(wave, t('patterns.wave'), ' ', srcPill(PATTERN_REFS.wave));
     renderChips();
   }
@@ -303,6 +330,7 @@ export function buildPatterns(ui, hooks = {}) {
       if ('lang' in ch || 'cb' in ch) { render('none'); return; }
       if ('prop' in ch && id() !== shownId) { render('morph'); return; }
       if ('trendLine' in ch) { render('none'); return; }
+      if ('Z' in ch && F && mode() === 'group') { render('none'); return; }
       if ('Z' in ch && F) {
         const sel = byZ(state.Z), lm = mode();
         const rows = chart.model.rows.map((r, i) => ({ ...r, sel: lm === 'period' && sel.f.period[0] === i + 1 }));

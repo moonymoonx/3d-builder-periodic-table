@@ -3,7 +3,7 @@
 // words; places/patterns.js puts them together). A callout is only offered when the data bears it out,
 // so a claim can never outlive the numbers it rests on (tests/patterns.test.mjs checks them all).
 import { propValue, stateAt, isPred } from '../data.js';
-import { fmtNum, fmtSci } from '../i18n.js';
+import { fmtNum, fmtSci, t } from '../i18n.js';
 
 // the same plain names and order as the home lenses (places/lenses.js): numbers only, no families/heat map
 export const TOP = ['mp', 'density', 'rCov', 'ie1'];
@@ -70,17 +70,21 @@ export function points(id, els) {
 }
 
 /** The value as people read it: °C first, a litre's weight in kg (gases in g), grams per tonne, … */
+const NB = '\u00a0'; // a number and its unit never part at a line end
 export function fmtPoint(id, p) {
   const y = p.y;
-  const pre = p.pred ? '≈ ' : '';
+  const pre = p.pred ? `≈${NB}` : '';
   switch (id) {
-    case 'mp': case 'bp': { const c = y; return `${pre}${fmtNum(c, Math.abs(c) < 100 ? 1 : 0)} °C`.replace('-', '−'); }
-    case 'density': return p.kind === 'gas' ? `${pre}${fmtNum(y * 1000, y * 1000 < 1 ? 2 : 1)} g` : `${pre}${fmtNum(y, y < 10 ? 2 : 1)} kg`;
-    case 'rCov': case 'rVdw': return `${pre}${fmtNum(y, 0)} pm`;
-    case 'ie1': case 'ea': return `${pre}${fmtNum(y, 2, { minDigits: 2 })} eV`;
+    case 'mp': case 'bp': { // as precise as the source: a tenth of a degree only where the kelvin value has one
+      const K = p.v[0], d = p.pred || Math.abs(y) >= 1000 || Math.abs(K - Math.round(K)) <= 0.004 ? 0 : 1;
+      return `${pre}${fmtNum(y, d, { minDigits: d })}${NB}°C`.replace('-', '−');
+    }
+    case 'density': return p.kind === 'gas' ? `${pre}${fmtNum(y * 1000, y * 1000 < 1 ? 2 : 1)}${NB}g` : `${pre}${fmtNum(y, y < 1 ? 2 : y < 10 ? 2 : 1)}${NB}kg`;
+    case 'rCov': case 'rVdw': return `${pre}${fmtNum(y, 0)}${NB}pm`;
+    case 'ie1': case 'ea': return `${pre}${fmtNum(y, 2, { minDigits: 2 })}${NB}eV`;
     case 'en': case 'zeff': return `${pre}${fmtNum(y, 2, { minDigits: 2 })}`;
     case 'aw': return p.v[2] && p.v[2].mass ? `[${y}]` : `${pre}${fmtNum(y, y < 10 ? 3 : y < 100 ? 2 : 1)}`;
-    case 'abund': return y >= 0.01 ? `${fmtNum(y, y < 1 ? 3 : y < 100 ? 1 : 0)} g` : `${fmtSci(y, 2)} g`;
+    case 'abund': return `${y >= 0.01 ? fmtNum(y, y < 1 ? 3 : y < 100 ? 1 : 0) : fmtSci(y, 2)}${NB}${t('patterns.perTonne')}`;
     case 'year': return p.kind === 'ancient' ? null : String(y);
     default: return `${pre}${fmtNum(y, 2)}`;
   }
@@ -115,15 +119,17 @@ const at = (pts, sym) => pts.find(p => p.e.sym === sym) || null;
 export function facts(id, els) {
   const pts = points(id, els), m = measured(pts);
   const params = {}, callouts = [];
-  const note = (key, anchors, lead, p = {}) => { if (anchors.length) callouts.push({ key, anchors, lead: lead ?? anchors[0], params: p }); };
+  const note = (key, anchors, lead, p = {}, rows = false) => { if (anchors.length) callouts.push({ key, anchors, lead: lead ?? anchors[0], params: p, rows }); };
+  /** The rows a claim holds in, as people write them: "2–6", or "1, 3 and 5". */
+  const rowsOf = list => { const r = [...new Set(list.map(p => row(p.e)))].sort((a, b) => a - b); return r.length > 1 && r[r.length - 1] - r[0] === r.length - 1 ? `${r[0]}–${r[r.length - 1]}` : r.join(', '); };
   const top = m.length ? maxOf(m) : null, low = m.length ? minOf(m) : null;
   switch (id) {
     case 'rCov': case 'rVdw': {
       const big = rowExtremes(pts, { from: 2, to: 7, pick: 'max', cat: ['alkali'] });
-      if (big.length >= 4) note('start', Zs(big), (big.find(p => row(p.e) === 4) || big[0]).Z);
+      if (big.length >= 4) note('start', Zs(big), (big.find(p => row(p.e) === 4) || big[0]).Z, {}, true);
       if (id === 'rCov') {
         const small = rowExtremes(pts, { from: 2, to: 5, pick: 'min' });
-        if (small.length >= 3) note('shrink', Zs(small), (small.find(p => row(p.e) === 3) || small[0]).Z);
+        if (small.length >= 3) note('shrink', Zs(small), (small.find(p => row(p.e) === 3) || small[0]).Z, {}, true);
         if (low) note('smallest', [low.Z], low.Z, { name: low.Z, v: low });
       } else {
         if (top) note('biggest', [top.Z], top.Z, { name: top.Z, v: top });
@@ -135,12 +141,12 @@ export function facts(id, els) {
     case 'ie1': {
       const hold = rowExtremes(pts, { from: 1, to: 6, pick: 'max', cat: ['noble-gas'] });
       const loose = rowExtremes(pts, { from: 2, to: 7, pick: 'min', cat: ['alkali'] });
-      if (hold.length >= 4) note('hold', Zs(hold), hold[1] ? hold[1].Z : hold[0].Z);
-      if (loose.length >= 4) note('loose', Zs(loose), (loose.find(p => row(p.e) === 4) || loose[0]).Z);
+      if (hold.length >= 4) note('hold', Zs(hold), hold[1] ? hold[1].Z : hold[0].Z, {}, true);
+      if (loose.length >= 4) note('loose', Zs(loose), (loose.find(p => row(p.e) === 4) || loose[0]).Z, {}, true);
       // the little dips after beryllium and nitrogen (Wikipedia "Ionization energy"): read from the data
       const dip = (a, b) => { const pa = at(m, a), pb = at(m, b); return pa && pb && pb.y < pa.y ? [pa, pb] : null; };
       const d1 = dip('Be', 'B'), d2 = dip('N', 'O');
-      if (d1 && d2) note('dips', [d1[1].Z, d2[1].Z], d2[1].Z, { a: d1[0].Z, b: d2[0].Z });
+      if (d1 && d2) note('dips', [d1[1].Z, d2[1].Z], d2[1].Z, { a: d1[0].Z, b: d2[0].Z }, true);
       params.na = at(pts, 'Na'); params.ne = at(pts, 'Ne'); params.top = top;
       params.neSecond = !!(params.ne && m.filter(p => p.y > params.ne.y).length === 1);
       break;
@@ -148,7 +154,7 @@ export function facts(id, els) {
     case 'en': {
       if (top) note('top', [top.Z], top.Z, { name: top.Z, v: top });
       const weak = rowExtremes(pts, { from: 2, to: 7, pick: 'min', cat: ['alkali'] });
-      if (weak.length >= 4) note('weak', Zs(weak), (weak.find(p => row(p.e) === 5) || weak[0]).Z);
+      if (weak.length >= 4) note('weak', Zs(weak), (weak.find(p => row(p.e) === 5) || weak[0]).Z, {}, true);
       const o = at(m, 'O');
       if (o) note('oxygen', [o.Z], o.Z, { name: o.Z, v: o });
       params.top = top;
@@ -167,8 +173,9 @@ export function facts(id, els) {
         if (hot) note('top', [hot.Z], hot.Z, { name: hot.Z, v: hot });
         if (cold1) note('low', [cold1.Z], cold1.Z, { name: cold1.Z, v: cold1 });
       }
-      const cold = rowExtremes(melt, { from: 2, to: 6, pick: 'min', cat: ['noble-gas'] });
-      if (cold.length >= 4) note('cold', Zs(cold), (cold.find(p => row(p.e) === 5) || cold[0]).Z);
+      // only in the rows where it holds (measured): oganesson's predicted melting point breaks it in row 7
+      const cold = rowExtremes(melt, { from: 1, to: 7, pick: 'min', cat: ['noble-gas'] });
+      if (cold.length >= 4) note('cold', Zs(cold), (cold.find(p => row(p.e) === 5) || cold[0]).Z, { rows: rowsOf(cold) }, true);
       params.top = hot; params.low = cold1;
       break;
     }
@@ -184,7 +191,7 @@ export function facts(id, els) {
     case 'ea': {
       if (top) note('top', [top.Z], top.Z, { name: top.Z, v: top });
       const salt = rowExtremes(pts, { from: 2, to: 6, pick: 'max', cat: ['halogen'] });
-      if (salt.length >= 4) note('salt', Zs(salt), (salt.find(p => row(p.e) === 4) || salt[0]).Z);
+      if (salt.length >= 4) note('salt', Zs(salt), (salt.find(p => row(p.e) === 4) || salt[0]).Z, { rows: rowsOf(salt) }, true);
       params.top = top;
       break;
     }
@@ -219,15 +226,28 @@ export function facts(id, els) {
     }
     case 'zeff': {
       const climb = rowExtremes(pts, { from: 2, to: 4, pick: 'max', cat: ['noble-gas'] });
-      if (climb.length >= 3) note('climb', Zs(climb), climb[1].Z);
+      if (climb.length >= 3) note('climb', Zs(climb), climb[1].Z, {}, true);
       const drop = rowExtremes(pts, { from: 2, to: 6, pick: 'min', cat: ['alkali'] });
-      if (drop.length >= 4) note('drop', Zs(drop), (drop.find(p => row(p.e) === 4) || drop[0]).Z);
+      if (drop.length >= 4) note('drop', Zs(drop), (drop.find(p => row(p.e) === 4) || drop[0]).Z, {}, true);
       break;
     }
     default: break;
   }
   return { params, callouts, points: pts };
 }
+
+/**
+ * Down the picked element's column: its members with a measured value, and the first and the last of them
+ * (top and bottom of the column). Null for the rare-earth rows (no column number) or fewer than two values.
+ */
+export function columnFacts(id, els, Z) {
+  const e = els[Z - 1], g = e && e.f.group[0];
+  if (!g) return null;
+  const pts = measured(points(id, els)).filter(p => p.e.f.group[0] === g).sort((a, b) => a.Z - b.Z);
+  return pts.length >= 2 ? { anchors: Zs(pts), first: pts[0], last: pts[pts.length - 1] } : null;
+}
+/** Patterns that repeat row after row (the periodic wave); weight, crust and discovery do not. */
+export const PERIODIC = ['mp', 'bp', 'density', 'rCov', 'rVdw', 'ie1', 'en', 'ea', 'zeff'];
 
 /** Lines that join the dots: across each row (period), or down each column (group). */
 export function lineGroups(mode, els) {
