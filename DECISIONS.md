@@ -748,3 +748,6 @@ Every part scored 4 or more except Hold a sample (clarity 3.5, smoothness 3.5). 
    - A punctuation mark after a value is glued to it, so uranium's sentence no longer ends with a lone ".".
 
 **Checks:** unit tests 47/47, validator, smoke 48/48. The final set (`/workspace/out/redesign/final/`) is reshot for the affected states (sample place, forge 13–18, the atom's light and uranium) with new fps.txt rows.
+
+## Vietnamese accent style, 21 Nov 2026
+- 2026-11-21 (moony): **Vietnamese accent style** — moony chose the most common modern placement: "thủy, hóa" (tone mark on the first vowel of oa/oe/uy when there is no final consonant), not "thuỷ, hoá". Applied throughout the Vietnamese strings (Q18). Syllables with a final consonant, and qu+y (quý), are unchanged.

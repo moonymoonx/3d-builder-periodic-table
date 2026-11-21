@@ -272,6 +272,27 @@ const GDPT13 = (() => {
 })();
 const fold = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
 
+// Modern Vietnamese tone placement (moony, 21 Nov 2026): tone mark on the first
+// vowel of open oa/oe/uy syllables (hóa, thủy), not the second (hoá, thuỷ).
+// qu+y stays (quý). Syllables with a final consonant are unchanged (hoàng, loại).
+const VIET_TONE = { 'oá':'óa','oà':'òa','oả':'ỏa','oã':'õa','oạ':'ọa', 'oé':'óe','oè':'òe','oẻ':'ỏe','oẽ':'õe','oẹ':'ọe', 'uý':'úy','uỳ':'ùy','uỷ':'ủy','uỹ':'ũy','uỵ':'ụy' };
+function vietTone(s) {
+  return String(s || '').replace(/[A-Za-zÀ-ÖØ-öø-ÿĀ-ſḀ-ỿ]+/g, (tok) => {
+    const lower = tok.toLowerCase();
+    for (const [trad, modern] of Object.entries(VIET_TONE)) {
+      if (!lower.endsWith(trad)) continue;
+      const prefix = lower.slice(0, -trad.length);
+      if (trad[0] === 'u' && (prefix === 'q' || prefix.endsWith('q'))) return tok;
+      const neu = prefix + modern;
+      if (tok === tok.toUpperCase()) return neu.toUpperCase();
+      if (tok[0] === tok[0].toUpperCase()) return neu[0].toUpperCase() + neu.slice(1);
+      return neu;
+    }
+    return tok;
+  });
+}
+
+
 // 11. Natural vs synthetic (Wikipedia "Synthetic element")
 const NATURAL = (() => {
   const plain = cleanText(synText);
@@ -486,8 +507,8 @@ for (const Z of ZS) {
     en: V(iupac.charAt(0).toUpperCase() + iupac.slice(1), 'wd'),
     alias: V(pc.Name, 'pc'),
     vi: V(iupac, 'gdpt', { n: 'IUPAC name (GDPT-2018)' }),
-    viAlt: gd ? V(gd.toLowerCase(), 'gdpt', { n: 'one of the 13 familiar Vietnamese names kept by GDPT-2018' })
-      : (wd.vi && fold(wd.vi) !== fold(iupac) ? V(wd.vi, 'wd', { n: 'Vietnamese Wikipedia / Wikidata name' }) : null),
+    viAlt: gd ? V(vietTone(gd.toLowerCase()), 'gdpt', { n: 'one of the 13 familiar Vietnamese names kept by GDPT-2018' })
+      : (wd.vi && fold(wd.vi) !== fold(iupac) ? V(vietTone(wd.vi), 'wd', { n: 'Vietnamese Wikipedia / Wikidata name' }) : null),
   };
 
   // ---- layout + category

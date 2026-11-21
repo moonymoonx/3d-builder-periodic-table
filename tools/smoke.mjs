@@ -447,11 +447,11 @@ await step('sample: oganesson, never made in bulk: an honest card with sourced v
   const view = await page.evaluate(() => window.__pt.state.view);
   if (view !== 'atom') throw new Error('door: ' + view);
 });
-await step('sample (VI): the caption uses the familiar name (thuỷ ngân)', async () => {
+await step('sample (VI): the caption uses the familiar name (thủy ngân)', async () => {
   await holdAt({ view: 'hold', Z: 80, T: 293.15, lang: 'vi' }, 900);
   const cap = await holdCaption();
   await holdAt({ lang: 'en', view: 'table', card: false, T: 293.15 }, 500);
-  if (!/^Thuỷ ngân ở nhiệt độ phòng/.test(cap)) throw new Error(cap);
+  if (!/^Thủy ngân ở nhiệt độ phòng/.test(cap)) throw new Error(cap);
   return cap.slice(0, 60);
 });
 // ---- atom ----

@@ -287,3 +287,4 @@
   - **Wording:** "a crystal of little pyramids, each 4 phosphorus atoms (P₄)" (EN and VI). The particle wording names the element's atoms, never the form.
   - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48.
   - **Reshoot:** `final/s-19-phosphorus-room-desktop.png`.
+- 2026-11-21 15:23 (Saigon) — **Vietnamese accent style** set to the common modern placement ("thủy, hóa"), as moony chose. Open oa/oe/uy syllables in the Vietnamese strings now carry the tone mark on the first vowel (hoá→hóa, thuỷ→thủy, thuỳ→thùy, toả→tỏa, hoà→hòa; quý unchanged). build-data.mjs normalises familiar Vietnamese names the same way so a data rebuild keeps the style.

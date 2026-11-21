@@ -1,7 +1,7 @@
 // Wording for the sample place (PARALLEL.md: owned by the "sample" session). English first; Vietnamese
 // drafts for moony's review. Numbers are never written here: {placeholders} are filled from the data.
 // Keys use the prefix "sample." so they can never collide with another place's keys.
-// Vietnamese sentences use the 13 familiar GDPT-2018 names (thuỷ ngân, nitơ, lưu huỳnh…) and the IUPAC
+// Vietnamese sentences use the 13 familiar GDPT-2018 names (thủy ngân, nitơ, lưu huỳnh…) and the IUPAC
 // name otherwise (DECISIONS.md).
 import { STRINGS } from '../i18n.js';
 
@@ -152,7 +152,7 @@ const VI = {
   'sample.cap.phase': '{at}: chất rắn mà tinh thể ở nhiệt độ này quá phức tạp để vẽ từ các nguồn của chúng tôi.',
   'sample.invite.cool': 'Kéo nhiệt kế để làm lạnh.', 'sample.invite.both': 'Kéo nhiệt kế để làm lạnh hoặc nung nóng.',
   'sample.invite.heat': 'Kéo nhiệt kế để nung nóng.', 'sample.invite.melt': 'Nung lên để xem nó nóng chảy.', 'sample.invite.sub': 'Nung lên để xem nó thăng hoa thành khí.',
-  'sample.ev.condense': '{T}: nó hoá lỏng. Các {what} chậm lại đủ để bám vào nhau.',
+  'sample.ev.condense': '{T}: nó hóa lỏng. Các {what} chậm lại đủ để bám vào nhau.',
   'sample.ev.freezeCn': '{T}: nó đông đặc thành tinh thể. Mỗi nguyên tử giờ chạm {cn} nguyên tử bên cạnh.',
   'sample.ev.freezeCnDay': '{T}: nó đông đặc thành tinh thể. Mỗi nguyên tử giờ chạm [[{cn} nguyên tử bên cạnh]] (màu xanh, quanh nguyên tử sẫm màu).',
   'sample.ev.freezeMol': '{T}: nó đông đặc thành tinh thể gồm các {what}. Ở đây vẽ một trong số đó, đang chầm chậm xoay.',
@@ -172,14 +172,14 @@ const VI = {
   'sample.stretch.liquid.cool': 'Vẫn là chất lỏng, các {what} chậm dần khi nguội đi.', 'sample.stretch.liquid.warm': 'Vẫn là chất lỏng, các {what} chuyển động nhanh dần khi ấm lên.',
   'sample.stretch.solid.cool': 'Vẫn là chất rắn: mỗi nguyên tử rung yếu dần khi nguội đi.', 'sample.stretch.solid.warm': 'Vẫn là chất rắn: mỗi nguyên tử rung mạnh dần khi nóng lên.',
   'sample.stretch.card.cool': 'Vẫn là chất rắn khi nguội đi.', 'sample.stretch.card.warm': 'Vẫn là chất rắn khi nóng lên.',
-  'sample.next.freeze': 'Nó đông đặc ở {T}.', 'sample.next.condense': 'Nó hoá lỏng ở {T}.', 'sample.next.melt': 'Nó nóng chảy ở {T}.',
-  'sample.next.boil': 'Nó sôi ở {T}.', 'sample.next.sub': 'Nó thăng hoa ở {T}.', 'sample.next.deposit': 'Nó hoá rắn ở {T}.',
+  'sample.next.freeze': 'Nó đông đặc ở {T}.', 'sample.next.condense': 'Nó hóa lỏng ở {T}.', 'sample.next.melt': 'Nó nóng chảy ở {T}.',
+  'sample.next.boil': 'Nó sôi ở {T}.', 'sample.next.sub': 'Nó thăng hoa ở {T}.', 'sample.next.deposit': 'Nó hóa rắn ở {T}.',
   'sample.next.trans': 'Các nguyên tử của nó xếp lại ở {T}.', 'sample.next.never': 'Ở áp suất thường, nó không bao giờ đông đặc.',
   'sample.ev.glow': 'Đủ nóng để phát sáng: màu sắc đến từ chính nhiệt độ.',
   'sample.ev.neverFreezes': 'Chỉ còn cách độ không tuyệt đối một chút mà helium vẫn lỏng: ở áp suất thường, nó không bao giờ đông đặc.',
-  'sample.tick.freeze': 'đông đặc', 'sample.tick.condense': 'hoá lỏng', 'sample.tick.melt': 'nóng chảy', 'sample.tick.boil': 'sôi',
-  'sample.tick.sub': 'thăng hoa', 'sample.tick.deposit': 'hoá rắn', 'sample.tick.trans': 'xếp lại',
-  'sample.flag.room': 'nhiệt độ phòng', 'sample.flag.ln2': 'nitơ lỏng', 'sample.flag.hg': 'thuỷ ngân đông đặc', 'sample.flag.melts': '{name} nóng chảy',
+  'sample.tick.freeze': 'đông đặc', 'sample.tick.condense': 'hóa lỏng', 'sample.tick.melt': 'nóng chảy', 'sample.tick.boil': 'sôi',
+  'sample.tick.sub': 'thăng hoa', 'sample.tick.deposit': 'hóa rắn', 'sample.tick.trans': 'xếp lại',
+  'sample.flag.room': 'nhiệt độ phòng', 'sample.flag.ln2': 'nitơ lỏng', 'sample.flag.hg': 'thủy ngân đông đặc', 'sample.flag.melts': '{name} nóng chảy',
   'sample.flag.zero': 'độ không tuyệt đối',
   'sample.never.title': 'Chưa ai từng cầm một mẩu {name}.',
   'sample.never.body': 'Mỗi lần người ta chỉ tạo ra được rất ít, nên chưa ai thấy nó ở dạng rắn, lỏng hay khí. Phần lớn số liệu của nó là dự đoán (đánh dấu\u00a0≈).',
@@ -196,7 +196,7 @@ const VI = {
   'sample.unit1.d': '{v}\u00a0ngày', 'sample.unit1.y': '{v}\u00a0năm',
   'sample.notKnown': 'chưa có trong nguồn',
   'sample.door.cool': 'Cầm một mẫu · làm lạnh hay nung nóng', 'sample.door.coolOnly': 'Cầm một mẫu · làm lạnh', 'sample.door.heat': 'Cầm một mẩu · nung nóng',
-  'sample.door.gas': 'Làm lạnh đến khi hoá lỏng ở {T}', 'sample.door.he': 'Làm lạnh: hoá lỏng ở {T}, không bao giờ đông đặc',
+  'sample.door.gas': 'Làm lạnh đến khi hóa lỏng ở {T}', 'sample.door.he': 'Làm lạnh: hóa lỏng ở {T}, không bao giờ đông đặc',
   'sample.door.liquid': 'Đông đặc ở {mp}, sôi ở {bp}',
   'sample.door.card': 'Nóng chảy ở {T} (không vẽ tinh thể)', 'sample.door.cardSub': 'Thăng hoa ở {T} (không vẽ tinh thể)',
   'sample.door.never': 'Vì sao chưa ai cầm được một mẩu', 'sample.door.neverSub': 'Mỗi lần chỉ tạo ra được rất ít',
@@ -206,7 +206,7 @@ const VI = {
   'sample.d.hook.solid': 'Tinh thể là một ô nhỏ chứa các nguyên tử, lặp lại theo mọi hướng. Càng nóng, mỗi nguyên tử càng rung mạnh.',
   'sample.d.hook.card': 'Chúng tôi chỉ vẽ những gì các nguồn đã đo được. Khi tinh thể quá phức tạp, hoặc chưa từng được đo, chúng tôi mô tả thay vì đoán.',
   'sample.d.now': 'Ở nhiệt độ này', 'sample.d.nowV': '{s}, ở áp suất thường (1\u00a0atm)',
-  'sample.d.mp': 'Nóng chảy và đông đặc ở', 'sample.d.bp': 'Sôi và hoá lỏng ở', 'sample.d.sub': 'Thăng hoa thành khí ở',
+  'sample.d.mp': 'Nóng chảy và đông đặc ở', 'sample.d.bp': 'Sôi và hóa lỏng ở', 'sample.d.sub': 'Thăng hoa thành khí ở',
   'sample.d.noSolid': 'Đông đặc ở', 'sample.d.never': 'không bao giờ, ở áp suất thường',
   'sample.d.pattern': 'Kiểu sắp xếp · cấu trúc tinh thể', 'sample.d.cell': 'Ô lặp lại · ô mạng cơ sở', 'sample.d.perCell': 'Số nguyên tử mỗi ô',
   'sample.gloss.fcc': 'hình lập phương có nguyên tử ở mỗi đỉnh và ở tâm mỗi mặt', 'sample.gloss.bcc': 'hình lập phương có nguyên tử ở mỗi đỉnh và một ở tâm',

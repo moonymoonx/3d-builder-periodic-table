@@ -180,7 +180,7 @@ const VI = {
   'patterns.mp.aCol': 'Tungsten giữ vững đến {w}, nhiệt độ nóng chảy cao nhất trong mọi nguyên tố. Đi xuống một cột thì không có quy luật chung: kim loại mềm, dễ phản ứng nóng chảy thấp dần, từ {li} xuống {cs}, còn nhóm tạo muối lại cao dần, từ {f} lên {i}.',
   'patterns.bp.aCol': 'Helium sôi ở {he}, chỉ cao hơn độ không tuyệt đối {k} độ; rhenium trụ được đến {re}. Đi xuống một cột thì không có quy luật chung: khí hiếm sôi cao dần, từ {he} lên {rn}, còn kim loại mềm, dễ phản ứng sôi thấp dần, từ {li} xuống {cs}.',
   'patterns.density.aCol': 'Một lít helium nặng {he}, một lít không khí nặng {air} (ở 20 °C), nên helium nhẹ hơn bay lên trong không khí. Cuối mỗi cột luôn nặng hơn đầu cột: một lít lithium nặng {li}, một lít caesium nặng {cs}.',
-  'patterns.en.aCol': 'Đi xuống hầu hết các cột, lực kéo yếu dần vì electron dùng chung ở xa hạt nhân hơn: fluorine {f}, iodine {i}. Lực kéo mạnh của oxygen làm phân tử nước gấp khúc có một đầu dương và một đầu âm, nhờ vậy nước hoà tan được muối.',
+  'patterns.en.aCol': 'Đi xuống hầu hết các cột, lực kéo yếu dần vì electron dùng chung ở xa hạt nhân hơn: fluorine {f}, iodine {i}. Lực kéo mạnh của oxygen làm phân tử nước gấp khúc có một đầu dương và một đầu âm, nhờ vậy nước hòa tan được muối.',
   'patterns.zeff.qCol': 'Đi xuống một cột, hạt nhân có kéo mạnh hơn không?',
   'patterns.zeff.aCol': 'Có: lực hút cảm nhận được tăng dần khi đi xuống mỗi cột (lithium {li}, caesium {cs}). Nhưng mỗi bước xuống lại thêm một lớp electron ở xa hơn, nên electron ngoài cùng vẫn bị giữ lỏng hơn.',
   'patterns.c.column': 'Theo cột này: {a} {va} → {b} {vb}', 'patterns.perTonne': 'g mỗi tấn', 'patterns.onTableShort': 'Xem trên bảng',
@@ -189,7 +189,7 @@ const VI = {
   'patterns.ie1.aCol': 'Đi xuống mỗi cột, electron ngoài cùng ở xa hạt nhân hơn nên bị giữ lỏng hơn: caesium buông electron dễ hơn ({cs}) so với lithium ({li}).',
   'patterns.menuCap.en': 'độ âm điện', 'patterns.menuCap.year': 'năm phát hiện', 'patterns.menuCap.abund': 'độ phổ biến trong vỏ Trái Đất', 'patterns.menuCap.bp': 'ở áp suất thường',
   'patterns.menuCap.ea': 'ái lực electron', 'patterns.menuCap.aw': 'nguyên tử khối', 'patterns.menuCap.rVdw': 'bán kính van der Waals', 'patterns.menuCap.zeff': 'điện tích hạt nhân hiệu dụng',
-  'patterns.menuCap.mp': 'ở áp suất thường', 'patterns.menuCap.density': 'khối lượng riêng', 'patterns.menuCap.rCov': 'bán kính cộng hoá trị', 'patterns.menuCap.ie1': 'năng lượng ion hoá',
+  'patterns.menuCap.mp': 'ở áp suất thường', 'patterns.menuCap.density': 'khối lượng riêng', 'patterns.menuCap.rCov': 'bán kính cộng hóa trị', 'patterns.menuCap.ie1': 'năng lượng ion hóa',
   'patterns.patterns': 'Các quy luật khác',
   'patterns.million': '{n} triệu', 'patterns.billion': '{n} tỉ',
 
@@ -213,7 +213,7 @@ const VI = {
 
   'patterns.rCov.q': 'Vì sao nguyên tử nhỏ dần khi đi sang phải?',
   'patterns.rCov.a': 'Mỗi bước sang phải thêm một proton, lực hút mạnh hơn kéo các electron lại gần. Sang hàng mới có thêm một lớp electron, nên nguyên tử lại to ra.',
-  'patterns.rCov.axis': 'Kích thước nguyên tử', 'patterns.rCov.unit': 'pm', 'patterns.rCov.cap': 'bán kính cộng hoá trị (Cordero 2008); một picomet là một phần nghìn tỉ mét',
+  'patterns.rCov.axis': 'Kích thước nguyên tử', 'patterns.rCov.unit': 'pm', 'patterns.rCov.cap': 'bán kính cộng hóa trị (Cordero 2008); một picomet là một phần nghìn tỉ mét',
   'patterns.rCov.c.start': 'Mỗi hàng bắt đầu bằng nguyên tử lớn…', 'patterns.rCov.c.shrink': '…rồi nhỏ dần', 'patterns.rCov.c.smallest': '{name}, nhỏ nhất: {v}',
 
   'patterns.rVdw.q': 'Nguyên tử lớn cỡ nào khi chỉ chạm nhau?',
@@ -223,18 +223,18 @@ const VI = {
 
   'patterns.ie1.q': 'Vì sao natri nổ trong nước, còn neon hầu như không phản ứng?',
   'patterns.ie1.a': 'Tất cả nằm ở độ giữ: nguyên tử giữ electron ngoài cùng chặt đến mức nào. Natri dễ buông electron ({na}); neon ({ne}) giữ chặt nhất, chỉ sau helium ({he}).',
-  'patterns.ie1.axis': 'Độ giữ electron', 'patterns.ie1.unit': 'eV', 'patterns.ie1.cap': 'năng lượng ion hoá thứ nhất (NIST): năng lượng cần để tách một electron ra, đơn vị electronvolt',
+  'patterns.ie1.axis': 'Độ giữ electron', 'patterns.ie1.unit': 'eV', 'patterns.ie1.cap': 'năng lượng ion hóa thứ nhất (NIST): năng lượng cần để tách một electron ra, đơn vị electronvolt',
   'patterns.ie1.c.hold': 'Khí hiếm giữ chặt nhất', 'patterns.ie1.c.loose': 'Kim loại mềm, dễ phản ứng buông dễ nhất',
   'patterns.ie1.c.dips': 'Hơi tụt ngay sau {a} và {b}',
 
   'patterns.en.q': 'Nguyên tử nào kéo electron dùng chung về phía mình?',
-  'patterns.en.a': 'Lực kéo tăng dần trong mỗi hàng, đến fluorine là mạnh nhất ({f}). Lực kéo mạnh của oxygen làm phân tử nước gấp khúc có một đầu dương và một đầu âm, nhờ vậy nước hoà tan được muối.',
+  'patterns.en.a': 'Lực kéo tăng dần trong mỗi hàng, đến fluorine là mạnh nhất ({f}). Lực kéo mạnh của oxygen làm phân tử nước gấp khúc có một đầu dương và một đầu âm, nhờ vậy nước hòa tan được muối.',
   'patterns.en.axis': 'Lực kéo electron', 'patterns.en.cap': 'độ âm điện, thang Pauling (PubChem)',
   'patterns.en.c.top': '{name} kéo mạnh nhất: {v}', 'patterns.en.c.weak': 'Yếu nhất ở đầu mỗi hàng', 'patterns.en.c.oxygen': '{name}: {v}',
 
   'patterns.ea.q': 'Nguyên tử nào háo hức nhận thêm electron nhất?',
   'patterns.ea.a': 'Nhóm tạo muối: chỉ cần thêm một electron là lớp ngoài cùng đầy, nên chúng nhận rất dễ. Chlorine háo hức nhất ({cl}).',
-  'patterns.ea.axis': 'Sức nhận thêm electron', 'patterns.ea.unit': 'eV', 'patterns.ea.cap': 'ái lực electron (PubChem): năng lượng toả ra khi nguyên tử nhận thêm một electron, đơn vị electronvolt',
+  'patterns.ea.axis': 'Sức nhận thêm electron', 'patterns.ea.unit': 'eV', 'patterns.ea.cap': 'ái lực electron (PubChem): năng lượng tỏa ra khi nguyên tử nhận thêm một electron, đơn vị electronvolt',
   'patterns.ea.c.top': '{name}: {v}, háo hức nhất', 'patterns.ea.c.salt': 'Ở hàng {rows}, nhóm tạo muối dẫn đầu',
 
   'patterns.aw.q': 'Nguyên tố sau có luôn nặng hơn nguyên tố trước?',
@@ -265,7 +265,7 @@ const VI = {
   'compare.cnEach': 'mỗi nguyên tử {n} láng giềng', 'compare.form.graphite': 'Than chì', 'compare.form.diamond': 'Kim cương',
   'compare.row.pattern': 'Kiểu sắp xếp', 'compare.row.cn': 'Số láng giềng mỗi nguyên tử', 'compare.row.dnn': 'Khoảng cách tới láng giềng',
   'compare.cap.state': 'trạng thái', 'compare.cap.melt': 'nhiệt độ nóng chảy, áp suất thường', 'compare.cap.litre': 'khối lượng riêng', 'compare.cap.litreGas': 'khối lượng riêng; chất khí ở 20 °C',
-  'compare.cap.size': 'bán kính cộng hoá trị', 'compare.cap.touch': 'bán kính van der Waals', 'compare.cap.grip': 'năng lượng ion hoá thứ nhất',
+  'compare.cap.size': 'bán kính cộng hóa trị', 'compare.cap.touch': 'bán kính van der Waals', 'compare.cap.grip': 'năng lượng ion hóa thứ nhất',
   'compare.cap.pull': 'độ âm điện', 'compare.cap.appetite': 'ái lực electron', 'compare.cap.boil': 'ở áp suất thường',
   'compare.cap.weight': 'nguyên tử khối, so với một phần mười hai nguyên tử carbon-12', 'compare.cap.crust': 'gam trên mỗi tấn đất đá', 'compare.cap.year': 'năm phát hiện',
   'compare.cap.pattern': 'cấu trúc tinh thể', 'compare.cap.cn': 'số phối trí', 'compare.cap.dnn': 'khoảng cách lân cận gần nhất',
@@ -283,8 +283,8 @@ const VI = {
   'compare.stage.atomsCap': 'vẽ đúng tỉ lệ, khi liên kết', 'compare.stage.atomsCapVdw': 'vẽ đúng tỉ lệ, khi chạm nhau',
   'compare.state.solid': 'rắn', 'compare.state.liquid': 'lỏng', 'compare.state.gas': 'khí',
   'compare.stateUnknown': 'chưa rõ trạng thái', 'compare.weightUnknown': 'chưa rõ khối lượng', 'compare.perTonne': 'g mỗi tấn',
-  'compare.au-hg.lead': 'Chỉ thêm một proton, vàng rắn trở thành thuỷ ngân lỏng.',
-  'compare.au-hg.more': 'Electron thêm vào của thuỷ ngân hoàn tất một cặp ở lớp ngoài cùng, bị thuyết tương đối giữ chặt khác thường, nên các nguyên tử thuỷ ngân hầu như không bám vào nhau.',
+  'compare.au-hg.lead': 'Chỉ thêm một proton, vàng rắn trở thành thủy ngân lỏng.',
+  'compare.au-hg.more': 'Electron thêm vào của thủy ngân hoàn tất một cặp ở lớp ngoài cùng, bị thuyết tương đối giữ chặt khác thường, nên các nguyên tử thủy ngân hầu như không bám vào nhau.',
   'compare.he-os.lead': 'Một lít helium nặng {he}; một lít osmium sẽ nặng {os}, gấp khoảng {r} lần.',
   'compare.he-os.more': 'Helium nhẹ hơn không khí khoảng {air} lần, nên bóng bay bay lên; osmium là nguyên tố đặc nhất từng được đo.',
   'compare.na-cl.lead': 'Natri dễ buông electron ngoài cùng ({na}); chlorine nhận thêm một electron háo hức hơn mọi nguyên tố khác ({cl}).',

@@ -28,7 +28,7 @@ const C = K => `${fmtNum(K - K0, 0)}${NB}°C`.replace(/^-/, '−');
 const fT = K => fmtTemp(K).replace(/ (?=°C|K\))/g, NB);
 
 // ---- the element in words ----------------------------------------------------------------------------
-// Vietnamese sentences use the 13 familiar GDPT-2018 names (thuỷ ngân, nitơ, lưu huỳnh), else the IUPAC name
+// Vietnamese sentences use the 13 familiar GDPT-2018 names (thủy ngân, nitơ, lưu huỳnh), else the IUPAC name
 const gdpt = e => getLang() === 'vi' && e.names.viAlt && e.names.viAlt[1] === 'gdpt';
 // the form drawn, where it has a name of its own (white phosphorus: our data's one form throughout)
 const formOf = e => (e.ph.form ? (getLang() === 'vi' ? e.ph.form[2]?.vi || e.ph.form[0] : e.ph.form[0]) : null);
