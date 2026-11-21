@@ -199,6 +199,20 @@ export function runValidation({ report = false, quiet = false } = {}) {
     [...deep, nearUV].map(c => c.map(x => x.toFixed(2)).join(',')).join(' / '));
   const naGlow = glowColour(E('Na').lines.v, cmf, M).rgb;
   check('colour: sodium glow is yellow-orange (R ≥ G > B)', naGlow && naGlow[0] >= naGlow[1] && naGlow[1] > naGlow[2], naGlow && naGlow.map(x => x.toFixed(2)).join(','));
+  // The lines that look brightest (atom view round 2): neon's orange-red lines, not its near-infrared
+  // ones; sodium's D doublet with its 568.8 nm pair, not core-excited lines; hydrogen's Balmer series.
+  const shows = (s, ...want) => want.every(w => (E(s).lines.v || []).some(([l]) => Math.abs(l - w) < 0.06));
+  check('spectra: the brightest-looking lines (Ne 585.2/614.3/640.2, Na 589.0/589.6/568.8, H 656.3/486.1/434.0, Hg 435.8/546.1)',
+    shows('Ne', 585.25, 614.31, 640.22) && shows('Na', 589.0, 589.59, 568.82) && shows('H', 656.28, 486.13, 434.05) && shows('Hg', 435.83, 546.07),
+    ['Ne', 'Na', 'H', 'Hg'].map(s => `${s} ${(E(s).lines.v || []).map(x => x[0].toFixed(1)).join(' ')}`).join(' · '));
+  // Their glow (CIE 1931 x, y of all the element's lines) against the lamp colours in Wikipedia's
+  // "Gas-discharge lamp" table (https://en.wikipedia.org/w/index.php?title=Gas-discharge_lamp&oldid=1351286820).
+  const GLOW = { Ne: ['red-orange', (x, y) => x > 0.6 && y > 0.3 && y < 0.4], Na: ['orange-yellow (low-pressure sodium)', (x, y) => x > 0.5 && y > 0.4],
+    Ar: ['violet to pale lavender blue', (x, y) => x < 0.3 && y < 0.2], Hg: ['light blue', (x, y) => x < 0.3 && y < 0.3 && y > x],
+    He: ['white to orange', (x, y) => x > 0.38 && y > 0.3], H: ['pink to magenta', (x, y) => x > 0.3 && y < 0.25] };
+  const glowBad = Object.entries(GLOW).filter(([s, [, ok]]) => !(E(s).lines.glow && ok(...E(s).lines.glow)));
+  check('colour: glow of H, He, Ne, Ar, Na, Hg matches the gas-discharge lamp colours (Wikipedia table)', glowBad.length === 0,
+    Object.keys(GLOW).map(s => `${s} ${JSON.stringify(E(s).lines.glow)}`).join(' · ') + (glowBad.length ? ' — off: ' + glowBad.map(([s, [w]]) => `${s} (${w})`).join(', ') : ''));
 
   // ---- 10. second-source cross-check (SPEC: 20 random elements x 5 fields) --------------------
   const TOL = { mp: (a, b) => Math.abs(a - b) <= Math.max(2, 0.01 * a), bp: (a, b) => Math.abs(a - b) <= Math.max(2, 0.01 * a), density: (a, b) => Math.abs(a - b) <= 0.02 * a, ie1: (a, b) => Math.abs(a - b) <= 0.005 * a, aw: (a, b) => Math.abs(a - b) <= 0.001 * a + 0.001 };
