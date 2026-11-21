@@ -224,3 +224,12 @@
   - **Checks:** unit tests 39/39, validator ALL PASS, smoke 44/44 twice, no console errors, index.html 1,703 KB.
   - **FPS:** atom states hold a 60 FPS median on desktop and phone (two passes with a control, load 4–6).
   - **Reshoot:** `/workspace/out/redesign/atom-merged/` (23 states + 4 spot checks, README.txt, fps.txt).
+- 2026-11-21 ~09:48 (Saigon) — **Merged `view-patterns-r2`** (patterns and side by side, round 2: the answer to `reviews/merged-m1.md`, committed with it). Reviewed against STYLE.md and the PARALLEL.md checklist: passed. Details in DECISIONS.md › Merge review: view-patterns-r2.
+  - **Rebase:** onto 1b65eb0, clean. No new wiring.
+  - **Shared fix (P6):** the source popover's "Accessed" and "Licence" lines and the menu's captions were the legacy theme's pale blue on paper (about 1.9 : 1). `legacy.css` now scopes `.small` to the dark stage.
+  - **Decisions:**
+    - Real material colours: yes for the litre stage, gated on a sourced appearance per element (scheduled); the family pigment stays meanwhile.
+    - P7 (the stage in the link): scheduled.
+  - **Checks:** unit tests 45/45, validator ALL PASS, smoke 45/45 twice, no console errors, index.html 1,736 KB.
+  - **FPS:** 60 FPS median in every measured state at load 9–13 (another session's job running).
+  - **Reshoot:** `/workspace/out/redesign/patterns-r2-merged/` (44 states, README.txt, fps.txt).
