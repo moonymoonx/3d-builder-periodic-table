@@ -194,10 +194,13 @@ by side, after `reviews/patterns-p2.md`): `/workspace/out/redesign/patterns-r3/`
   8.96 is another compilation's); chlorine's 3.62 eV is PubChem's 3.617 (NIST's photodetachment value rounds to
   3.61; switching sources is a data decision, `data/**`). "Natri · Chlorine" follows GDPT-2018: the familiar name
   for the 13 elements that keep one (natri is one), the international name for the rest.
-- Frame rate (round 3): the capture in `patterns-r3/fps/` ran while other sessions held 12 headless browsers (load
-  average 6.8 → 23.7): every state kept a 60 FPS median except carbon's crystals on desktop (30), but p95 rose to
-  33–50 ms on most stages and the baseline table landing degraded too (p95 33 ms, avg 49 FPS), so those numbers are
-  load, not the change. A clean re-measure on a quiet machine is still to do.
+- Frame rate (round 3; `patterns-r3/fps/`, software renderer, automatic quality path). The first capture ran under
+  other sessions' load (average up to 23.7) and was discarded. The re-measure (load 6.0 → 13.1, bracketed by the
+  baseline table landing, whose desktop p95 was 50 ms before and 33 ms after): all 47 states hold a 60 FPS median
+  (16.7 ms); 24 of 27 side-by-side states keep p95 ≤ 16.8 ms, including the drifting gas and the glazed liquids, and
+  three desktop stages touched 33 ms p95, as the baseline did. Chart ripple (Patterns unchanged but one sentence;
+  load 11): median 16.7 ms on both, desktop p95 50 / max 83 ms, phone p95 33 / max 50 ms (round 2, at load 1–7:
+  desktop p95 33 / max 83, phone p95 17 / max 33).
 - Patterns: one sentence only. "neon holds on harder than any atom except helium (21.56 eV)" read as helium's value;
   now "neon (21.56 eV) holds on harder than any atom except helium (24.59 eV)", in both languages.
 
