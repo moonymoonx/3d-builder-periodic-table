@@ -599,7 +599,10 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       }
       if (pool) { // the molten pool: a low dome over the liquid atoms, fading in as they settle
         const liquid = current && current.kind === 'liquid';
-        poolK = Math.max(0, Math.min(1, poolK + (liquid ? dt / 0.9 : -dt / 0.3)));
+        // only a glowing melt becomes one surface; a cool liquid (mercury, bromine, liquid nitrogen) is
+        // drawn as its atoms, sliding past each other in daylight
+        const molten = liquid && pool.uni.uK.value > 0.03;
+        poolK = Math.max(0, Math.min(1, poolK + (molten ? dt / 0.9 : -dt / 0.3)));
         pool.mesh.visible = poolK > 0.01;
         if (pool.mesh.visible) {
           let cx = 0, cz = 0; for (let i = 0; i < n; i++) { cx += P[3 * i]; cz += P[3 * i + 2]; } cx /= n || 1; cz /= n || 1;
@@ -613,7 +616,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
           pool.uni.uTime.value = t;
         }
         // once the pool has formed it is the liquid (the atoms jostle on beneath its surface)
-        atoms.visible = !(liquid && poolK >= 0.999) && !!current && current.kind !== 'card';
+        atoms.visible = !(molten && poolK >= 0.999) && !!current && current.kind !== 'card';
         if (pool.mesh.visible || liquid) return true;
       }
       return atoms.visible && !state.reduced;
