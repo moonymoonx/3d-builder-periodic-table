@@ -104,7 +104,7 @@ if (opt('set') === 'hero') { // the redesign's hero slice: landing, table, first
     { name: '04-card-iron-phone', vp: P, hash: '', touch: true, settle: 1900, act: page => tapTouch(page, 26) },
     { name: '05-card-gold-desktop', vp: D, hash: '', settle: 1900, act: page => click(page, 79) },
     { name: '05-card-gold-phone', vp: P, hash: '', touch: true, settle: 1900, act: page => tapTouch(page, 79) },
-    { name: '06-card-gold-all-numbers-desktop', vp: D, hash: '', settle: 1600, act: async page => { await click(page, 79); await page.waitForTimeout(400); await page.locator('.ui-disclosure__summary').click(); await page.locator('.ui-sheet__body').evaluate(el => { el.scrollTop = 420; }); await page.mouse.move(700, 120); } }, // pointer off the card: no hover colour in the shot
+    { name: '06-card-gold-all-numbers-desktop', vp: D, hash: '', settle: 1600, act: async page => { await click(page, 79); await page.waitForTimeout(400); await page.locator('.ui-sheet:not([hidden]) .ui-disclosure__summary').first().click(); await page.locator('.ui-sheet:not([hidden]) .ui-sheet__body').first().evaluate(el => { el.scrollTop = 420; }); await page.mouse.move(700, 120); } }, // pointer off the card: no hover colour in the shot
     { name: '07-card-oxygen-gas-desktop', vp: D, hash: '', settle: 1900, act: page => click(page, 8) },
     { name: '08-lens-heat-1000C-desktop', vp: D, hash: '', settle: 1900, act: async page => { await chipBtn(page, 'Solid, liquid, gas'); await page.evaluate(() => window.__pt.set({ T: 1273.15 })); } },
     { name: '08-lens-heat-1000C-phone', vp: P, hash: '', touch: true, settle: 1900, act: async page => { await chipBtn(page, 'Solid, liquid, gas'); await page.evaluate(() => window.__pt.set({ T: 1273.15 })); } },
@@ -129,6 +129,14 @@ if (opt('set') === 'hero') { // the redesign's hero slice: landing, table, first
     { name: '17-forge-2950C-gas-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, act: async page => { await door(page); await heatTo(page, 1600); await heatTo(page, 2950, 5000); } },
     { name: '18-forge-heat-it-playing-desktop', vp: D, hash: 'el=Fe&card=1', settle: 1500, now: true, act: async page => { await door(page); await page.locator('.heat-play').click(); await page.waitForTimeout(6500); } },
   ];
+}
+
+// any other set lives in its own file, tools/shots-<set>.mjs, exporting cases({ SIZES }) (PARALLEL.md: each
+// view session keeps its review set there, so the sessions never edit the same lines)
+if (opt('set') && !['views', 'hero'].includes(opt('set'))) {
+  const f = path.join(ROOT, 'tools', `shots-${opt('set')}.mjs`);
+  if (!fs.existsSync(f)) throw new Error(`no such set: ${f}`);
+  cases = (await import(`file://${f}`)).cases({ SIZES });
 }
 
 // --serve: a tiny static server for index.html only, bound to this machine

@@ -23,6 +23,8 @@
 .card-v.is-none { border: 0; color: var(--ink-3); font-weight: 400; font-style: italic; cursor: default; }
 .card-across { border: 0; background: transparent; padding: 4px 2px; color: var(--verdigris); font: 600 13px/1.2 var(--font-sans); margin-left: auto; white-space: nowrap; }
 .card-across:hover { text-decoration: underline; text-underline-offset: 2px; }
+.card-across--row { position: relative; margin-left: 8px; padding: 0 4px; font-size: 14px; }
+.card-across--row::before { content: ""; position: absolute; inset: -12px -10px; } /* a 44 px tap area */
 .card-doors { display: grid; gap: 8px; margin: 12px 0 10px; }
 .card-facts { margin: 4px 0 8px; display: grid; grid-template-columns: minmax(110px, 42%) 1fr; }
 .card-facts dt, .card-facts dd { margin: 0; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
