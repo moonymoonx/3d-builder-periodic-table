@@ -22,6 +22,7 @@ import { buildSheet } from './ui/sheet.js';
 import { buildHome } from './places/home.js';
 import { buildElementCard } from './places/elementCard.js';
 import { buildHeat, forgeable } from './places/heat.js';
+import { buildSample, sampleDoor } from './places/sample.js';
 // strings of the places built in parallel (PARALLEL.md); each session edits only its own file
 import { ATOM_KEYS } from './content/strings-atom.js';
 import { SAMPLE_KEYS } from './content/strings-sample.js';
@@ -81,6 +82,11 @@ function boot() {
     onEvent: (a, b, e) => { if (state.view === 'heat') heat.onEvent(a, b, e); },
     onKiln: on => { document.body.classList.toggle('kiln', on && state.view === 'heat'); if (on) heat.onKiln(on); },
   }, { look: 'forge' });
+  // the sample place (Hold a sample · cool or heat it): the forge's look for liquids, gases and the
+  // honest cards (places/sample.js), on its own instance of the forge view
+  const holdView = createSampleView({
+    onKiln: on => { document.body.classList.toggle('kiln', on && state.view === 'hold'); if (on) holdPlace.onKiln(on); },
+  }, { look: 'forge' });
 
   // ---- home: the table, its chrome and the element card ----------------------------------------------
   let interacted = false, hintTimer = 0, breathTimer = 0;
@@ -109,17 +115,20 @@ function boot() {
     onClose: () => closeCard(),
     onStep: d => { const Z = state.Z + d; openCard(Z < 1 ? 118 : Z > 118 ? 1 : Z, true); },
     onDoor: (v, Z2) => {
-      if (v === 'sample' && forgeable(byZ(state.Z))) { diveIntoHeat(); return; } // the wow path
+      if (v === 'sample') { diveIntoHeat(forgeable(byZ(state.Z)) ? 'heat' : 'hold'); return; } // the wow path; the sample place for the rest
       set({ view: v, ...(v === 'compare' ? { Z2 } : {}), ...(v === 'sample' ? { T: 293.15, allotrope: null } : {}) });
     },
     onPattern: prop => set({ view: 'trends', prop }),
     defaultPartner,
+    sampleDoor: e => (forgeable(e) ? null : sampleDoor(e)), // the sample place words its own door
   });
   registerView('table', table);
   registerView('atom', atom);
   registerView('sample', sample);
   registerView('heat', forge);
+  registerView('hold', holdView);
   const heat = buildHeat(ui, { onInteract: () => {} });
+  const holdPlace = buildSample(ui, { onDoor: v => set({ view: v, ...(savedT != null ? { T: savedT } : {}) }), onLayout: () => updateSafe() });
   registerView('compare', createCompareView());
   registerView('trends', stubView());
 
@@ -141,7 +150,7 @@ function boot() {
     if (E.active === table) table.frame();
   }
   function goBack() {
-    if (state.view === 'heat') { leaveHeat(); return; }
+    if (state.view === 'heat' || state.view === 'hold') { leaveHeat(); return; }
     if (state.view !== 'table') { set({ view: 'table', card: true, hideSel: false, ...lensPatch(state.lens) }); return; }
     closeCard();
   }
@@ -149,7 +158,7 @@ function boot() {
   // ---- the scale dive: from the tapped tile into its crystal (STYLE.md §7: 1.4 s, crossfade at 70 %) ----
   const wait = ms => new Promise(r => setTimeout(r, ms));
   let savedT = null, diving = false;
-  async function diveIntoHeat() {
+  async function diveIntoHeat(to = 'heat') {
     if (diving) return;
     diving = true;
     const e = byZ(state.Z), reduced = state.reduced;
@@ -160,15 +169,15 @@ function boot() {
     if (!reduced) { table.dive(e.Z, 1.0); await wait(700); }
     diveEl.classList.add('on'); // the tile's glaze fills the screen...
     await wait(reduced ? 120 : 320);
-    set({ view: 'heat', T: 293.15, allotrope: null });
-    forge.diveIn(reduced ? 0 : 1.2); // ...and opens into the crystal
+    set({ view: to, T: 293.15, allotrope: null });
+    E.views[to].diveIn(reduced ? 0 : 1.2); // ...and opens into the crystal
     await wait(60);
     document.body.classList.remove('diving');
     diveEl.classList.remove('on');
     diving = false;
   }
   async function leaveHeat() {
-    heat.stop();
+    heat.stop(); holdPlace.stop();
     document.body.classList.remove('kiln');
     diveEl.style.background = 'var(--paper)';
     diveEl.classList.add('on');
@@ -191,17 +200,19 @@ function boot() {
       if (!p.panel.parentNode) shell.left.append(p.panel);
       p.render(v === 'atom' ? atom.info() : undefined);
     }
-    if (v !== 'table' && v !== 'heat' && v !== 'trends' && v !== 'compare') sheet.render();
+    if (v !== 'table' && v !== 'heat' && v !== 'hold' && v !== 'trends' && v !== 'compare') sheet.render();
   }
   function applyPlace() {
-    const homeNow = state.view === 'table', heatNow = state.view === 'heat', ownNow = state.view === 'trends' || state.view === 'compare';
-    document.body.classList.toggle('legacy', !homeNow && !heatNow && !ownNow);
+    const homeNow = state.view === 'table', heatNow = state.view === 'heat', holdNow = state.view === 'hold', ownNow = state.view === 'trends' || state.view === 'compare';
+    document.body.classList.toggle('legacy', !homeNow && !heatNow && !holdNow && !ownNow);
     document.body.classList.toggle('place-home', homeNow);
     document.body.classList.toggle('place-heat', heatNow);
-    if (!heatNow) document.body.classList.remove('kiln');
-    shell.left.hidden = homeNow || heatNow || ownNow; shell.right.hidden = homeNow || heatNow || ownNow;
-    document.querySelector('.mobile-bar').hidden = homeNow || heatNow || ownNow;
+    document.body.classList.toggle('place-hold', holdNow);
+    if (!heatNow && !holdNow) document.body.classList.remove('kiln');
+    shell.left.hidden = homeNow || heatNow || holdNow || ownNow; shell.right.hidden = homeNow || heatNow || holdNow || ownNow;
+    document.querySelector('.mobile-bar').hidden = homeNow || heatNow || holdNow || ownNow;
     heat.show(heatNow);
+    holdPlace.show(holdNow);
     patterns.show(state.view === 'trends');
     sideBySide.show(state.view === 'compare');
     if (homeNow && state.card) { if (!card.isOpen()) card.open(); else card.render(); }
@@ -218,11 +229,12 @@ function boot() {
     for (const v of Object.values(E.views)) if (v.ready && v.onState) v.onState(ch);
     home.onState(ch);
     heat.onState(ch);
+    holdPlace.onState(ch);
     patterns.onState(ch);
     sideBySide.onState(ch);
     if ('lang' in ch || 'view' in ch) renderAll();
     else {
-      const legacyNow = state.view !== 'table' && state.view !== 'heat' && state.view !== 'trends' && state.view !== 'compare';
+      const legacyNow = state.view !== 'table' && state.view !== 'heat' && state.view !== 'hold' && state.view !== 'trends' && state.view !== 'compare';
       if (legacyNow && ['prop', 'log', 'layout', 'cb', 'T', 'Z', 'Z2', 'density', 'orbital', 'surf', 'tier', 'allotrope', 'trendLine', 'cmpR'].some(k => k in ch)) renderLegacy();
       if (legacyNow && ['Z', 'more', 'cb', 'T'].some(k => k in ch)) sheet.render();
       if (state.view === 'table' && state.card && ['Z', 'cb'].some(k => k in ch)) card.render();
@@ -240,6 +252,7 @@ function boot() {
     if (k === 'Escape') {
       if (shell.modalOpen()) { shell.closeModal(); return; }
       if (home.menuOpen()) { home.closeMenu(); return; }
+      if (state.view === 'hold' && holdPlace.aboutOpen()) { holdPlace.closeAbout(); return; }
       if (state.view !== 'table' || state.card) { goBack(); return; }
       shell.closePanels(); return;
     }
@@ -286,20 +299,26 @@ function boot() {
     }
     if (state.view === 'trends') { setSafe(patterns.safeArea()); return; }
     if (state.view === 'compare') { setSafe(sideBySide.safeArea()); return; }
+    if (state.view === 'hold') { // the sample sits between the top bar and the panel, beside "About this sample"
+      const pr = holdPlace.panel.getBoundingClientRect(), ab = holdPlace.aboutOpen() ? restingRect(holdPlace.about.el) : null;
+      if (isPhone()) setSafe({ left: 0, right: 0, top: tb.bottom + 8, bottom: H - (ab ? ab.top : pr.top) + 12 });
+      else setSafe({ left: 0, right: ab ? W - ab.left + 12 : 0, top: tb.bottom + 8, bottom: H - pr.top + 12 });
+      return;
+    }
     if (isPhone()) { setSafe({ left: 0, right: 0, top: tb.bottom + 4, bottom: 64 }); return; }
     const L = shell.left.getBoundingClientRect(), R = shell.right.getBoundingClientRect();
     const show = el => !el.hidden && getComputedStyle(el).display !== 'none' && el.children.length;
     setSafe({ left: show(shell.left) ? L.right + 8 : 0, right: show(shell.right) ? W - R.left + 8 : 0, top: tb.bottom + 6, bottom: 0 });
   }
   const ro = new ResizeObserver(() => updateSafe());
-  for (const el of [shell.left, shell.right, home.top, home.bottom, home.head, card.el, heat.panel]) ro.observe(el);
+  for (const el of [shell.left, shell.right, home.top, home.bottom, home.head, card.el, heat.panel, holdPlace.panel, holdPlace.about.el]) ro.observe(el);
   window.addEventListener('resize', () => { home.render(); updateSafe(); });
 
   renderAll();
   updateSafe();
   switchView(state.view);
   if (state.view === 'table' && state.card) table.focus(state.Z, 0);
-  if (!isPhone() && state.view !== 'table' && state.view !== 'heat') shell.openPanel('right');
+  if (!isPhone() && state.view !== 'table' && state.view !== 'heat' && state.view !== 'hold') shell.openPanel('right');
 
   // first five seconds: a light sweep, iron breathes, a "Try iron" tag after 4 s without a touch
   const loading = document.getElementById('loading');
@@ -313,7 +332,7 @@ function boot() {
     }
   }));
   for (const evName of ['pointerdown', 'wheel']) E.canvas.addEventListener(evName, firstTouch, { passive: true });
-  window.__pt = { state, set, E, table, home, card, heat, forge, diveIntoHeat, strings: { atom: ATOM_KEYS, sample: SAMPLE_KEYS, patterns: PATTERNS_KEYS } }; // debugging / scripted screenshots
+  window.__pt = { state, set, E, table, home, card, heat, forge, diveIntoHeat, hold: holdPlace, holdView, strings: { atom: ATOM_KEYS, sample: SAMPLE_KEYS, patterns: PATTERNS_KEYS } }; // debugging / scripted screenshots
 }
 
 boot();

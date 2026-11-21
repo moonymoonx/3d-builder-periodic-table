@@ -410,3 +410,43 @@ Gemini's cold round-6 review: clarity 4.5, ease 4.0, beauty 4.0, smoothness 4.0,
 - **Also, from the review:**
   - The vapour's per-atom glows and hearth glow are softer, so the vessel floor no longer blows out.
   - STYLE.md now matches round 6, with no unit cell in the kiln (the review noted the mismatch).
+
+## Merge review: `view-sample` (Hold a sample: liquids, gases and honest cards), 21 Nov 2026
+Reviewed by the main session against STYLE.md and the PARALLEL.md checklist. The session's own decisions are in `NOTES-sample.md` and its router lines in `WIRING-sample.md` (both kept as the record).
+
+**Checklist: passed.**
+- **Look and language:**
+  - The same look and chrome as the forge: hearth, glass, thermometer panel, captions, kiln dimming.
+  - Plain words: "a gas of N₂ molecules flying at about 1,840 km/h", computed from the data.
+  - Honest cards for molecular crystals ("we do not draw molecular crystals yet") and for never-made elements ("Nobody has ever held a piece of oganesson", predictions marked).
+  - Every value is sourced; Vietnamese uses the familiar names.
+- **Speed:** frozen mercury and liquid nitrogen, re-measured at load 6–7, hold a 60 FPS median on desktop and phone (averages 42–57). The session's 20–30 were taken under heavier load.
+- **Tests:** unit 33/33, validator passes, smoke 40/40 (31 + 9 sample steps); the build is 1,644 KB.
+- **Consistency with the hero:** once rebased, the place inherits the round 5–7 forge look (rounded Fresnel glass, unit cell by day, atoms from melt to vapour). Nothing sent back.
+
+**Proposals** (`PROPOSALS-sample.md`):
+- **§1, `views/sample.js`:**
+  - **Accepted and merged:**
+    - "draw radon's measured gas and liquid";
+    - "keep whole molecules in the sparse forge gas" (combined at the rebase with the forge's per-instance radius and cutaway);
+    - "glide to the vessel when it changes size";
+    - "a condensing gas becomes a liquid of touching beads".
+  - **Dropped as superseded:** "a cool liquid is drawn as its atoms". Round 5 already draws every melt as atoms; the pool is never shown.
+- **§2, the card's second door worded by the sample place: accepted** (merged; the router passes `sampleDoor`). Mercury now reads "Hold a sample · cool or heat it".
+- **§3, a shared thermometer in the kit: accepted, scheduled** after the atom merge, together with the patterns loupe (P4). The kit version will adopt this session's placement improvements:
+  - three placement orders;
+  - one stem for ticks closer than 14 px;
+  - flags that shift inward;
+  - measured text widths.
+
+  The "swapped stem test" it reports was in the d1e17ae `heat.js`; `master` has carried the correct form since round 6 (87f474f).
+- **§4, tokens:** the panel radius is done now (the forge panel uses `--r-card`). Kiln-panel tokens (ember on kiln `#F0874F`, its link `#F0A070`, the panel ground) and one temperature-ramp token: accepted, scheduled with §3.
+- **§5, retire the legacy sample view: accepted, blocked** on carbon's graphite ↔ diamond switch in the forge ("About this crystal ▾"). Then the `hold` view takes the name `sample`.
+- **§6, smaller things:**
+  - The Vietnamese back link: done at the patterns merge (P3).
+  - **Mercury's card bug: fixed by the main session.** For mercury the note now reads "The lowest melting point of any metal". The ladder's coldest rung was mercury itself, so the card had printed gallium's 29.8 °C under mercury's name.
+  - **Never-made elements on phones: fixed.** Predicted temperatures are whole degrees ("≈ 52 °C"), and the phone fact strip says "not known".
+  - **Scheduled:**
+    - No-break spaces between numbers and units in the shared formatters (together with the tests that match them).
+    - A phone check of the hearth framing.
+    - A guard in `heat.js` for a non-forgeable element opened by URL (the router already sends those to the sample place).

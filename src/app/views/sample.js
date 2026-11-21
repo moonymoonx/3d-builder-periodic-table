@@ -23,8 +23,10 @@ export const SLOWDOWN = 1e12 / SPEED_SCALE;
 /** { kind: 'solid'|'liquid'|'gas'|'card', phase, card, predicted, why } */
 export function sampleStateAt(e, T, allotrope) {
   const lat = e.lat;
-  if (lat.kind === 'predicted') return { kind: 'card', card: 'predicted' };
   const st = stateAt(e, T);
+  // a predicted crystal is not drawn; but radon's gas and liquid are measured (only its crystal is a
+  // prediction), so they are drawn like any other gas and liquid
+  if (lat.kind === 'predicted' && (st.s === 'unknown' || st.s === 'solid' || st.p)) return { kind: 'card', card: 'predicted' };
   const s = st.s === 'unknown' ? (e.ph.mp && e.ph.mp[0] != null && T >= e.ph.mp[0] ? 'liquid' : 'card') : st.s;
   if (s === 'card') return { kind: 'card', card: 'unknown' };
   if (s !== 'solid') return { kind: s, predicted: st.p };
@@ -274,17 +276,18 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       v3.set(P[3 * i], P[3 * i + 1], P[3 * i + 2]);
       const sc = occl[i] ? 0 : radius;
       m4.compose(v3, q, sv.set(sc, sc, sc));
-      atoms.setMatrixAt(i, m4);
+      atoms.setMatrixAt(molN === 2 ? 2 * i : i, m4); // a molecule's two atoms sit side by side in the list
       if (molN === 2) {
         const o = 3 * i; // second atom of the molecule, along a tumbling axis stored in Q
         v3.set(P[o] + Q[o] * bond, P[o + 1] + Q[o + 1] * bond, P[o + 2] + Q[o + 2] * bond);
         m4.compose(v3, q, sv.set(radius, radius, radius));
-        atoms.setMatrixAt(n + i, m4);
+        atoms.setMatrixAt(2 * i + 1, m4);
       }
     }
     atoms.count = molN === 2 ? 2 * n : n;
     // forge: a hot gas is sparse; draw a share of the particles so it reads as atoms flying apart
-    if (FORGE && current && current.kind === 'gas') atoms.count = Math.ceil(atoms.count * 0.4);
+    // (whole molecules: a share of the pairs, never first atoms without their partners)
+    if (FORGE && current && current.kind === 'gas') atoms.count = molN * Math.ceil((atoms.count / molN) * 0.4);
     atoms.instanceMatrix.needsUpdate = true;
     if (glow) glow.mesh.count = atoms.count;
     if (FORGE) { // the glow's centre and reach follow the lump, pool or vapour
@@ -582,13 +585,14 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     const elementChanged = element !== e.Z;
     if (elementChanged) { n = 0; bain = null; current = null; morph = null; }
     if (force || key2 !== phaseKey) {
-      const prevKind = lastKind;
+      const prevKind = lastKind, box0 = boxL[0];
       if (ss.kind === 'solid') {
         buildSolid(e, ss.phase, !elementChanged && prevKind === 'solid');
         atoms.visible = true;
       } else if (ss.kind === 'liquid' || ss.kind === 'gas') {
         if (prevKind !== 'liquid' && prevKind !== 'gas') prepareFluid(e, ss.kind);
         else if (ss.kind === 'gas' && prevKind === 'liquid') prepareFluid(e, 'gas');
+        else if (FORGE && ss.kind === 'liquid' && prevKind === 'gas') setAtomGeometry(0.5 * dNN); // condensing: the beads touch again, as in any liquid
         atoms.visible = true;
       } else {
         atoms.visible = false; cellLines.visible = false;
@@ -599,6 +603,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       phaseKey = key2; lastKind = ss.kind; element = e.Z;
       current = { Z: e.Z, ...ss };
       if (elementChanged || force) frame();
+      else if (Math.abs(boxL[0] - box0) > 0.2 * box0) frame(); // the vessel changed size (a card melts into a liquid): glide to it
     }
     applyLook(e, ss.kind);
     writeMatrices();

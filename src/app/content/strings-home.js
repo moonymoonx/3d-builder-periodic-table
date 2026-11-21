@@ -97,6 +97,7 @@ const EN = {
   'key.pred': 'striped: predicted', 'key.none': 'pale, flat: not known',
   'card.tapSource': 'Tap a value to see where it comes from.',
   'card.more': 'More about {name}',
+  'card.lowestMetal': 'The lowest melting point of any metal.', 'card.notKnownShort': 'not known',
 
   'menu.shapes': 'Other shapes of the table', 'menu.s18': '18 columns (standard)', 'menu.s32': '32 columns (wide)', 'menu.helix': 'Helix — de Chancourtois, 1862',
   'menu.more': 'More', 'menu.sources': 'Sources & credits', 'menu.settings': 'Settings', 'menu.keys': 'Keyboard shortcuts', 'menu.share': 'Share this view',
@@ -197,6 +198,7 @@ const VI = {
   'key.pred': 'kẻ sọc: dự đoán', 'key.none': 'nhạt, phẳng: chưa có số liệu',
   'card.tapSource': 'Chạm vào một số liệu để xem nguồn.',
   'card.more': 'Thêm về {name}',
+  'card.lowestMetal': 'Nhiệt độ nóng chảy thấp nhất trong mọi kim loại.', 'card.notKnownShort': 'chưa rõ',
 
   'menu.shapes': 'Các hình dạng khác của bảng', 'menu.s18': '18 cột (chuẩn)', 'menu.s32': '32 cột (dàn rộng)', 'menu.helix': 'Hình xoắn — de Chancourtois, 1862',
   'menu.more': 'Thêm', 'menu.sources': 'Nguồn & ghi công', 'menu.settings': 'Cài đặt', 'menu.keys': 'Phím tắt', 'menu.share': 'Chia sẻ góc nhìn này',
