@@ -446,7 +446,7 @@ await step('sample (VI): the caption uses the familiar name (thuỷ ngân)', asy
 // ---- atom ----
 // "Look inside the atom" (PARALLEL.md scope 1): the porcelain place that replaces the old atom panels
 const A = () => page.evaluate(() => ({ view: window.__pt.state.view, Z: window.__pt.state.Z, orbital: window.__pt.state.orbital, card: window.__pt.state.card,
-  kiln: document.body.classList.contains('kiln'), title: document.querySelector('.atom-title')?.textContent || '', cap: document.querySelector('.atom-caption')?.textContent || '' }));
+  kiln: document.body.classList.contains('kiln'), title: document.querySelector('.atom-title')?.textContent || '', cap: document.querySelector('.atom-modebody')?.textContent || '' })); // round 3: one cloud's first sentence stands above its picker
 await step('atom place: the card door dives into the atom; its own card, no legacy panels', async () => {
   await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15, lang: 'en' }); p.openCard(26); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
   await page.waitForTimeout(700);
@@ -456,7 +456,7 @@ await step('atom place: the card door dives into the atom; its own card, no lega
   const a = await A();
   const chrome = await page.evaluate(() => ({ legacy: document.body.classList.contains('legacy'), place: document.body.classList.contains('place-atom'),
     side: !document.querySelector('.side.left') || document.querySelector('.side.left').hidden, sheet: !!document.querySelector('.atom-sheet:not([hidden])'), dots: window.__pt.E.active.info()?.mode }));
-  if (a.title !== 'Inside iron' || !/26 electrons sit in 4 shells \(2, 8, 14, 2\)/.test(a.cap) || !/newest went into a 3d cloud/.test(a.cap)) throw new Error(JSON.stringify(a));
+  if (a.title !== 'Inside iron' || !/26 electrons sit in 4 shells \(2, 8, 14, 2\)/.test(a.cap) || !/newest electron went into shell 3’s clover clouds \(3d\)/.test(a.cap)) throw new Error(JSON.stringify(a));
   if (chrome.legacy || !chrome.place || !chrome.side || !chrome.sheet || chrome.dots !== 'atom') throw new Error(JSON.stringify(chrome));
   return a.cap.slice(0, 70);
 });
@@ -467,10 +467,10 @@ await step('atom place: + proton makes cobalt; vanadium to chromium explains the
   await page.evaluate(() => window.__pt.set({ Z: 23 })); await page.waitForTimeout(300);
   await page.locator('.atom-step [data-step="1"]').click(); await page.waitForTimeout(400);
   const cr = await A();
-  if (cr.Z !== 24 || !/one more moved there from 4s/.test(cr.cap)) throw new Error(JSON.stringify(cr));
+  if (cr.Z !== 24 || !/A surprise: .*one more moved in from shell 4’s round cloud \(4s\)/.test(cr.cap)) throw new Error(JSON.stringify(cr));
   await page.locator('.atom-step [data-step="1"]').click(); await page.waitForTimeout(400);
   const mn = await A();
-  if (mn.Z !== 25 || !/newest went into a 4s cloud/.test(mn.cap)) throw new Error(JSON.stringify(mn));
+  if (mn.Z !== 25 || !/newest electron went into shell 4’s round cloud \(4s\)/.test(mn.cap)) throw new Error(JSON.stringify(mn));
   return cr.cap.slice(cr.cap.indexOf('The newest'), cr.cap.indexOf('The newest') + 70);
 });
 await step('atom place: one cloud picks a subshell and a turn; the link keeps it; whole atom returns', async () => {
@@ -484,7 +484,7 @@ await step('atom place: one cloud picks a subshell and a turn; the link keeps it
   const c = await A(); const hash = await page.evaluate(() => location.hash);
   await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(300);
   const d = await A();
-  if (a !== '3d:1' || b !== '3p:1' || c.orbital !== '3p:all' || !/orb=3p%3Aall|orb=3p:all/.test(hash) || d.orbital !== null || !/All 3 3p clouds/.test(c.cap)) throw new Error(JSON.stringify({ a, b, c, hash, d }));
+  if (a !== '3d:1' || b !== '3p:1' || c.orbital !== '3p:all' || !/orb=3p%3Aall|orb=3p:all/.test(hash) || d.orbital !== null || !/All 3 of shell 3’s dumbbell clouds \(3p\)/.test(c.cap)) throw new Error(JSON.stringify({ a, b, c, hash, d }));
   return `${a} → ${b} → ${c.orbital}`;
 });
 await step('atom place: every shell count shows (on its globe or in the legend), a scale bar, a round nucleus factor', async () => {
@@ -496,7 +496,7 @@ await step('atom place: every shell count shows (on its globe or in the legend),
   if (!all || !/^\d[\d,]* pm$/.test(w.ruler) || !(f > 0) || !/^[125]0*$/.test(String(f))) throw new Error(JSON.stringify(w));
   return `${w.ruler}; ${w.nuc.replace('nucleus', '')}; ${w.legend || w.rings.join(' ')}`;
 });
-await step('atom place: one cloud of carbon: turns x, y, z; a paper sheet where the 2p cloud is never found; uranium in plain words', async () => {
+await step('atom place: one cloud of carbon: turns 1–3, named in words; a paper sheet where the 2p cloud is never found; uranium in plain words', async () => {
   await page.evaluate(() => window.__pt.set({ Z: 6 })); await page.waitForTimeout(400);
   await page.locator('.atom-modes [data-mode="cloud"]').click(); await page.waitForTimeout(500);
   const c = await page.evaluate(() => ({ turns: [...document.querySelectorAll('.atom-pick__turns [data-m]')].map(b => b.textContent), cap: document.querySelector('.atom-caption').textContent,
@@ -505,8 +505,8 @@ await step('atom place: one cloud of carbon: turns x, y, z; a paper sheet where 
   await page.evaluate(() => window.__pt.set({ Z: 92 })); await page.waitForTimeout(500);
   const u = await A();
   await page.evaluate(() => window.__pt.set({ Z: 26 })); await page.waitForTimeout(400);
-  if (c.turns.join(' ') !== 'x y z all 3' || c.sheets !== 1 || !/paper sheet between them/.test(c.cap) || !/one electron sits in 6d instead of 5f/.test(u.cap) || /→/.test(u.cap)) throw new Error(JSON.stringify({ c, u: u.cap }));
-  return u.cap.slice(u.cap.indexOf('Uranium breaks'), u.cap.indexOf('Uranium breaks') + 80);
+  if (c.turns.join(' ') !== '1 2 3 all 3' || c.sheets !== 1 || !/paper sheet between them/.test(c.cap) || !/one electron sits in shell 6’s clover clouds \(6d\) instead of shell 5’s many-lobed clouds \(5f\)/.test(u.cap) || /→/.test(u.cap)) throw new Error(JSON.stringify({ c, u: u.cap }));
+  return u.cap.slice(u.cap.indexOf('Uranium breaks'), u.cap.indexOf('Uranium breaks') + 120);
 });
 await step('atom place: its light dims the room; the brightest line is described with its source; daylight returns', async () => {
   await page.locator('.atom-modes [data-mode="light"]').click(); await page.waitForTimeout(800);
@@ -520,7 +520,7 @@ await step('atom place: its light dims the room; the brightest line is described
   if (!/NIST/.test(pop)) throw new Error('source: ' + pop.slice(0, 80));
   await page.locator('.atom-band .atom-spec__strip').focus(); await page.keyboard.press('End'); await page.waitForTimeout(150);
   const last = await page.locator('.atom-light__detail').textContent();
-  if (!/561\.6 nm: green light/.test(last) || !/as bright to the eye as its brightest line/.test(last)) throw new Error('arrow keys: ' + last);
+  if (!/561\.6 nm: yellow-green light/.test(last) || !/as bright to the eye as its brightest line/.test(last)) throw new Error('arrow keys: ' + last);
   await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(700);
   const off = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), band: !document.querySelector('.atom-band') || document.querySelector('.atom-band').hidden }));
   if (off.kiln || !off.band) throw new Error(JSON.stringify(off));
@@ -529,7 +529,7 @@ await step('atom place: its light dims the room; the brightest line is described
 await step('atom place: "About this atom" shows the arrangement and the nucleus, each value with its source', async () => {
   await page.locator('.atom-about .ui-disclosure__summary').click(); await page.waitForTimeout(200);
   const txt = await page.locator('.atom-facts').textContent();
-  if (!/\[Ar\] 3d⁶ 4s²/.test(txt) || !/26 protons, 30 neutrons/.test(txt) || !/iron-56/.test(txt) || !/about 5\.4 of 26 protons \(4s\)/.test(txt) || !/3\.74 fm \(measured\)/.test(txt)) throw new Error(txt.slice(0, 240));
+  if (!/\[Ar\] 3d⁶ 4s²/.test(txt) || !/26 protons, 30 neutrons/.test(txt) || !/iron-56/.test(txt) || !/about 5\.4 of 26 protons, in shell 4’s round cloud \(4s\)/.test(txt) || !/3\.74 fm \(measured\)/.test(txt)) throw new Error(txt.slice(0, 240));
   await page.locator('.atom-facts .atom-v').first().click();
   const pop = await page.locator('.popover').textContent();
   await page.keyboard.press('Escape');
