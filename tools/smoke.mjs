@@ -272,6 +272,108 @@ await step('forge: the iron card door dives into the crystal; 930 °C re-stacks 
   return cap;
 });
 
+// ---- sample ----
+// The sample place (places/sample.js, view 'hold'): liquids, gases and the honest cards in the forge's
+// look. Needs the router lines in WIRING-sample.md.
+const holdCaption = () => page.locator('.sample-caption').textContent();
+const holdAt = async (patch, ms = 500) => { await page.evaluate(p => window.__pt.set(p), patch); await page.waitForTimeout(ms); };
+await step('sample: the nitrogen card dives into the sample place; cooled it turns liquid at −196 °C and freezes at −210 °C; back returns to the card', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 7, card: true, hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }));
+  await page.waitForTimeout(700);
+  await page.locator('.ui-door', { hasText: 'Hold a sample' }).click();
+  await page.waitForFunction(() => window.__pt.state.view === 'hold', null, { timeout: 8000 });
+  await page.waitForTimeout(1400);
+  const start = await holdCaption();
+  if (!/N₂ molecules/.test(start) || !/km\/h/.test(start)) throw new Error('start: ' + start);
+  await holdAt({ T: 73 });
+  const liquid = await holdCaption();
+  if (!/−196\s°C/.test(liquid) || !/turns liquid/.test(liquid)) throw new Error('liquid: ' + liquid);
+  await holdAt({ T: 55 });
+  const frozen = await holdCaption();
+  if (!/−210\s°C/.test(frozen) || !/freezes/.test(frozen) || !/vessel stands empty/.test(frozen)) throw new Error('frozen: ' + frozen);
+  await page.locator('[data-back=card]').click(); await page.waitForTimeout(900);
+  const v = await page.evaluate(() => ({ view: window.__pt.state.view, card: window.__pt.state.card, Z: window.__pt.state.Z }));
+  if (v.view !== 'table' || !v.card || v.Z !== 7) throw new Error(JSON.stringify(v));
+  return frozen.slice(0, 70);
+});
+await step('sample: mercury, a liquid at room temperature, freezes into its 6-neighbour crystal at −38.8 °C; "◀ Cool it" sweeps down', async () => {
+  await holdAt({ view: 'hold', Z: 80, T: 293.15 }, 900);
+  const word = await page.locator('.sample-word').textContent();
+  if (!/liquid/.test(word)) throw new Error('word: ' + word);
+  await holdAt({ T: 230 });
+  const cap = await holdCaption();
+  const kind = await page.evaluate(() => window.__pt.holdView.current().kind);
+  if (!/−38\.8\s°C/.test(cap) || !/6 neighbours/.test(cap) || kind !== 'solid') throw new Error(`${kind}: ${cap}`);
+  await page.getByRole('button', { name: 'Room temperature' }).click(); await page.waitForTimeout(200);
+  await page.getByRole('button', { name: /Cool it/ }).click(); await page.waitForTimeout(1200);
+  const T = await page.evaluate(() => window.__pt.state.T);
+  await page.getByRole('button', { name: /Pause/ }).click();
+  if (!(T < 293)) throw new Error('T=' + T);
+  return `T fell to ${Math.round(T)} K`;
+});
+await step('sample: helium never freezes: a whisker above absolute zero it is still liquid', async () => {
+  await holdAt({ Z: 2, T: 3 }, 600);
+  await holdAt({ T: 1.5 }, 600);
+  const word = await page.locator('.sample-word').textContent(), cap = await holdCaption();
+  if (!/liquid/.test(word) || !/never freezes/.test(cap)) throw new Error(`${word} / ${cap}`);
+});
+await step('sample: sulfur\'s crystal is an honest card (empty vessel); past 115 °C it melts into drawable S₈ molecules', async () => {
+  await holdAt({ Z: 16, T: 293.15 }, 700);
+  const start = await holdCaption(), word = await page.locator('.sample-word').textContent();
+  if (!/do not draw molecular crystals/.test(start) || !/not drawn/.test(word)) throw new Error(`${word} / ${start}`);
+  await holdAt({ T: 400 });
+  const cap = await holdCaption(), kind = await page.evaluate(() => window.__pt.holdView.current().kind);
+  if (!/115\s°C/.test(cap) || !/S₈ molecules/.test(cap) || kind !== 'liquid') throw new Error(`${kind}: ${cap}`);
+});
+await step('sample: manganese melts into a glowing liquid and the room dims like the forge', async () => {
+  await holdAt({ Z: 25, T: 293.15 }, 600);
+  await holdAt({ T: 1700 }, 900);
+  const s = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), kind: window.__pt.holdView.current().kind }));
+  const cap = await holdCaption();
+  await holdAt({ T: 293.15 }, 700);
+  const after = await page.evaluate(() => document.body.classList.contains('kiln'));
+  if (!s.kiln || s.kind !== 'liquid' || !/glowing/.test(cap) || after) throw new Error(JSON.stringify({ ...s, cap, after }));
+});
+await step('sample: "About this sample" shows the gas speed with its method; Escape closes the source, then the card', async () => {
+  await holdAt({ Z: 7, T: 293.15 }, 600);
+  await page.locator('.sample-about').click(); await page.waitForTimeout(400);
+  const v = page.locator('.sample-sheet .sample-v', { hasText: 'm/s' });
+  const txt = await v.textContent();
+  await v.click();
+  const pop = await page.locator('.popover').textContent();
+  await page.keyboard.press('Escape'); await page.waitForTimeout(150);
+  const still = await page.evaluate(() => window.__pt.hold.aboutOpen());
+  await page.keyboard.press('Escape'); await page.waitForTimeout(150);
+  const s = await page.evaluate(() => ({ open: window.__pt.hold.aboutOpen(), view: window.__pt.state.view }));
+  if (!/511 m\/s/.test(txt) || !/3RT\/M/.test(pop) || !still || s.open || s.view !== 'hold') throw new Error(JSON.stringify({ txt, pop: pop.slice(0, 60), still, ...s }));
+  return txt;
+});
+await step('sample: radon is drawn as a gas (only its crystal is a prediction)', async () => {
+  await holdAt({ Z: 86, T: 293.15 }, 700);
+  const kind = await page.evaluate(() => window.__pt.holdView.current().kind);
+  if (kind !== 'gas') throw new Error(kind);
+});
+await step('sample: oganesson, never made in bulk: an honest card with sourced values and a door to its atom', async () => {
+  await holdAt({ Z: 118, T: 293.15 }, 700);
+  const title = await page.locator('.sample-never__title').textContent();
+  const thermo = await page.locator('.sample-track').isVisible();
+  if (!/Nobody has ever held a piece of oganesson/.test(title) || thermo) throw new Error(`${title} / thermometer ${thermo}`);
+  await page.locator('.sample-never .sample-v').first().click();
+  const pop = await page.locator('.popover').textContent();
+  await page.keyboard.press('Escape');
+  if (!/NUBASE/.test(pop)) throw new Error('source: ' + pop.slice(0, 80));
+  await page.locator('.sample-never .ui-door').click(); await page.waitForTimeout(500);
+  const view = await page.evaluate(() => window.__pt.state.view);
+  if (view !== 'atom') throw new Error('door: ' + view);
+});
+await step('sample (VI): the caption uses the familiar name (thuỷ ngân)', async () => {
+  await holdAt({ view: 'hold', Z: 80, T: 293.15, lang: 'vi' }, 900);
+  const cap = await holdCaption();
+  await holdAt({ lang: 'en', view: 'table', card: false, T: 293.15 }, 500);
+  if (!/^Thuỷ ngân ở nhiệt độ phòng/.test(cap)) throw new Error(cap);
+  return cap.slice(0, 60);
+});
+
 for (const [ok, name, info] of results) console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`);
 console.log(errors.length ? `console errors:\n  ${errors.join('\n  ')}` : 'no console errors');
 await browser.close();

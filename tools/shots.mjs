@@ -131,6 +131,8 @@ if (opt('set') === 'hero') { // the redesign's hero slice: landing, table, first
   ];
 }
 
+if (opt('set') === 'sample') cases = (await import('./shots-sample.mjs')).sampleCases(SIZES); // the sample place (PARALLEL.md)
+
 // --serve: a tiny static server for index.html only, bound to this machine
 let BASE = `file://${ROOT}`, server = null;
 if (args.includes('--serve')) {
