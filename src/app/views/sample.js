@@ -381,14 +381,14 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     // its reach: across the floor (it turns about the vertical, so a circle) and from bottom to top
     sp.foot = Math.max(...sp.T.map(p => Math.hypot(p[0], p[2]))) * sp.bond + sp.r;
     sp.lo = Math.min(...sp.T.map(p => p[1])) * sp.bond - sp.r; sp.hi = Math.max(...sp.T.map(p => p[1])) * sp.bond + sp.r;
-    sp.yaw = 0.6; // as the camera's bearing: a ring starts face-on, a pair across the view
+    sp.yaw = 0; // the sway's phase; it faces the camera's bearing (0.6): a ring face-on, a pair across the view
     return sp;
   }
   function writeSpecimen() {
     specimen.visible = !!spec;
     if (specShadow) specShadow.visible = !!spec;
     if (!spec) { specimen.count = 0; return; }
-    specQ.setFromAxisAngle(UP, spec.yaw);
+    specQ.setFromAxisAngle(UP, 0.6 + 0.65 * Math.sin(spec.yaw)); // a gentle sway about facing the visitor
     for (let k = 0; k < spec.n; k++) {
       v3.set(spec.T[k][0] * spec.bond, spec.T[k][1] * spec.bond, spec.T[k][2] * spec.bond).applyQuaternion(specQ);
       v3.y += spec.y;
@@ -846,7 +846,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         writeMatrices();
       }
       if (pool) pool.mesh.visible = false; // the melt is drawn as its atoms (continuity from solid to gas)
-      if (spec && !state.reduced) { spec.yaw += dt * 0.35; writeSpecimen(); return true; }
+      if (spec && !state.reduced) { spec.yaw += dt * 0.45; writeSpecimen(); return true; }
       return atoms.visible && !state.reduced;
     },
     current: () => current,
