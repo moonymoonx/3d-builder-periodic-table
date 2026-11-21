@@ -503,13 +503,20 @@ export function buildSample(ui, hooks = {}) {
     const num = u != null ? `${n}${NB}±${NB}${vi ? u.replace('.', ',') : u}` : n;
     return pre + t(`sample.${+m[1] === 1 && u == null ? 'unit1' : 'unit'}.${m[2]}`, { v: num });
   }
-  /** Which atoms that half-life belongs to: "oganesson-295, its longest-lived kind on record". */
-  const lifeSub = v => (v?.[2]?.A ? h('span', { class: 'sample-strip__sub' }, t('sample.never.lifeSub', { name: nameIn(el), A: v[2].A })) : null);
+  /** Which atoms that half-life belongs to: "radon-222, its longest-lived kind on record", or, when a
+   *  longer-lived kind is listed but not yet confirmed, "oganesson-294, the only confirmed kind". */
+  const lifeKey = v => (v?.[2]?.conf ? 'Conf' : '');
+  const lifeSub = v => (v?.[2]?.A ? h('span', { class: 'sample-strip__sub' }, t('sample.never.lifeSub' + lifeKey(v), { name: nameIn(el), A: v[2].A })) : null);
+  /** A longer-lived kind that is listed (NUBASE2020) but not yet confirmed: oganesson-295, as a note with its own source. */
+  const tentNote = e => {
+    const v = e.f.halfLifeTent, A = v?.[2]?.A || '';
+    return v ? h('p', { class: 'sample-never__note' }, t('sample.never.tentPre', { name: nameIn(e), A }), valBtn(lifeText(v), t('sample.never.tentSrc', { name: nameIn(e), A }), v), t('sample.never.tentPost')) : null;
+  };
   function renderNever() {
     const e = el, life = e.f.halfLife, st = stateAt(e, ROOM), mp = e.ph.mp;
     const stV = e.f.state && isPred(e.f.state) ? e.f.state : [st.s, 'calc', { n: getLang() === 'vi' ? 'suy ra từ nhiệt độ nóng chảy / sôi ở 1 atm' : 'from the 1-atm melting and boiling points', p: st.p ? 1 : undefined }];
     const cells = [
-      [t('sample.never.life'), life ? valBtn(lifeText(life), t('sample.never.lifeSrc', { name: nameIn(e), A: life[2]?.A || '' }), life) : valBtn(null), lifeSub(life)],
+      [t('sample.never.life'), life ? valBtn(lifeText(life), t('sample.never.lifeSrc' + lifeKey(life), { name: nameIn(e), A: life[2]?.A || '' }), life) : valBtn(null), lifeSub(life)],
       [t('sample.never.state'), st.s === 'unknown' ? valBtn(null) : valBtn(t('state.' + st.s), t('f.state'), stV)],
       [t('sample.never.melts'), mp && mp[0] != null ? valBtn(isPred(mp) ? `≈ ${C(mp[0])}` : degC(mp[0]), t('f.mp'), mp) : valBtn(null)], // a prediction: whole degrees
     ];
@@ -518,6 +525,7 @@ export function buildSample(ui, hooks = {}) {
       h('h2', { class: 'sample-never__title' }, t('sample.never.title', { name: nameIn(e) })),
       h('p', { class: 'sample-never__body' }, t('sample.never.body')),
       h('div', { class: 'sample-strip' }, cells.map(([l, v, sub]) => h('div', { class: 'sample-strip__cell' }, h('span', { class: 'sample-strip__label' }, l), v, sub || null))),
+      tentNote(e),
       h('p', { class: 'sample-hint' }, t('sample.d.tap')),
       hooks.onDoor ? door({ title: t('sample.never.atom'), sub: t('sample.never.atomSub', { n: nE, s: shells }), onClick: () => hooks.onDoor('atom') }) : null);
   }
@@ -594,8 +602,10 @@ export function buildSample(ui, hooks = {}) {
         [gap, 'calc', { n: t('sample.d.gapN', { T: fT(T), r: fmtNum(rv, 0) }) }]));
       row(t('sample.d.slow'), valBtn(t('sample.d.slowV', { w: bigWords(SLOWDOWN), x: fmtSci(SLOWDOWN, 2) }), t('sample.d.slow'), [SLOWDOWN, 'model', { n: t('sample.d.slowN') }]));
     }
-    if (e.f.halfLife) row(t('sample.d.life'), valBtn(lifeText(e.f.halfLife), t('sample.never.lifeSrc', { name: nameIn(e), A: e.f.halfLife[2]?.A || '' }), e.f.halfLife),
-      e.f.halfLife[2]?.A ? t('sample.never.lifeSub', { name: nameIn(e), A: e.f.halfLife[2].A }) : null);
+    if (e.f.halfLife) row(t('sample.d.life'), valBtn(lifeText(e.f.halfLife), t('sample.never.lifeSrc' + lifeKey(e.f.halfLife), { name: nameIn(e), A: e.f.halfLife[2]?.A || '' }), e.f.halfLife),
+      e.f.halfLife[2]?.A ? t('sample.never.lifeSub' + lifeKey(e.f.halfLife), { name: nameIn(e), A: e.f.halfLife[2].A }) : null);
+    const tent = e.f.halfLifeTent; // a longer-lived kind listed but not yet confirmed (oganesson-295)
+    if (tent) row(t('sample.d.life'), valBtn(lifeText(tent), t('sample.never.tentSrc', { name: nameIn(e), A: tent[2]?.A || '' }), tent), t('sample.never.tentSub', { name: nameIn(e), A: tent[2]?.A || '' }));
     // notes: what the drawing simplifies
     const notes = [];
     if (ss.kind === 'gas') notes.push(t('sample.d.n.notScale'));

@@ -393,13 +393,18 @@ await step('sample: oganesson, never made in bulk: an honest card with sourced v
   const title = await page.locator('.sample-never__title').textContent();
   const thermo = await page.locator('.sample-track').isVisible();
   if (!/Nobody has ever held a piece of oganesson/.test(title) || thermo) throw new Error(`${title} / thermometer ${thermo}`);
-  // NUBASE2020's longest-lived oganesson: 295, 680 ± 540 ms (not a unit slip for 294's 0.7 ms)
+  // NUBASE2020: oganesson-294 (0.7 ± 0.3 ms) is the only confirmed kind; oganesson-295 (680 ± 540 ms) is listed
+  // but not yet confirmed (data/curated/tentative-isotopes.json): the confirmed kind first, the other as a note
   const life = await page.locator('.sample-strip__cell').first().textContent();
-  if (!/680\s±\s540\smilliseconds/.test(life) || !/oganesson-295/.test(life)) throw new Error('half-life: ' + life);
-  await page.locator('.sample-never .sample-v').first().click();
-  const pop = await page.locator('.popover').textContent();
-  await page.keyboard.press('Escape');
-  if (!/NUBASE/.test(pop)) throw new Error('source: ' + pop.slice(0, 80));
+  const note = await page.locator('.sample-never__note').textContent();
+  if (!/0\.7\s±\s0\.3\smilliseconds/.test(life) || !/oganesson-294, the only confirmed kind/.test(life)) throw new Error('half-life: ' + life);
+  if (!/oganesson-295/.test(note) || !/680\s±\s540\smilliseconds/.test(note) || !/not yet confirmed/.test(note)) throw new Error('note: ' + note);
+  for (const sel of ['.sample-strip__cell .sample-v', '.sample-never__note .sample-v']) {
+    await page.locator(sel).first().click();
+    const pop = await page.locator('.popover').textContent();
+    await page.keyboard.press('Escape');
+    if (!/NUBASE/.test(pop)) throw new Error('source: ' + pop.slice(0, 80));
+  }
   await page.locator('.sample-never .ui-door').click(); await page.waitForTimeout(500);
   const view = await page.evaluate(() => window.__pt.state.view);
   if (view !== 'atom') throw new Error('door: ' + view);

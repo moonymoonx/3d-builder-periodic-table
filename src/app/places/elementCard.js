@@ -212,7 +212,7 @@ export function buildElementCard(ui, hooks) {
       sh.setFoot(nav); // previous / next always in reach, and a clean edge under the doors
     } else {
       const list = h('div', { class: 'card-factlist' }, F.map(f => fact({ label: f.label, value: valueOf(f, false), note: f.note || null, link: f.across ? across(f.across) : null })));
-      replace(sh.body, head, lead, list, doorBox, all);
+      replace(sh.body, head, lead, list, h('p', { class: 'card-hint card-hint--list' }, t('card.tapSource')), doorBox, all); // as on phones (review S1, C15)
       sh.setFoot(nav); // previous / next stay visible however long the card is
     }
     sh.setBar(h('span', { class: 'card-bar' }, h('span', { class: 'card-bar__tile', style: { background: swatch } }, e.sym), h('b', null, title), h('span', null, `${e.Z}`)));

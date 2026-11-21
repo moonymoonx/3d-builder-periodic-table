@@ -89,6 +89,7 @@ body.kiln .sample-cell-word { color: inherit; font-weight: inherit; }
 .sample-strip__cell:first-child { padding-left: 0; }
 .sample-strip__label { font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
 .sample-strip__sub { font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
+.sample-never__note { margin: var(--s2) 0 0; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); } /* a tentative kind (oganesson-295) */
 .sample-strip .sample-v { font: 600 17px/1.3 var(--font-serif); align-self: flex-start; }
 .sample-hint { margin: var(--s1) 0 var(--s2); font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
 .sample-never .ui-door { margin-top: var(--s1); }
