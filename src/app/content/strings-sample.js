@@ -127,7 +127,7 @@ const EN = {
   'sample.d.n.ring': 'Each ring ({f}) is drawn as {n} joined atoms in a crown, the real ring’s shape; the distances are approximate.',
   'sample.d.n.slow': 'The particles move about {w} times slower than in real life, so you can follow them.',
   'sample.d.n.colour': 'The beads wear the table’s colour for “{fam}”, not the real colour of {name}.',
-  'sample.d.n.mirror': 'A liquid metal is drawn as a mirror, as real {name} looks; its faint tint is the table’s colour for “{fam}”.',
+  'sample.d.n.mirror': '{Name} is drawn as a mirror, as the real metal looks; its faint tint is the table’s colour for “{fam}”.',
 };
 
 const VI = {
@@ -239,7 +239,7 @@ const VI = {
   'sample.d.n.ring': 'Mỗi vòng ({f}) được vẽ bằng {n} nguyên tử dính liền nhau, xếp hình vương miện như vòng thật; các khoảng cách là gần đúng.',
   'sample.d.n.slow': 'Các hạt chuyển động chậm hơn thực tế khoảng {w} lần để bạn kịp theo dõi.',
   'sample.d.n.colour': 'Màu các hạt là màu của «{fam}» trên bảng tuần hoàn, không phải màu thật của {name}.',
-  'sample.d.n.mirror': 'Kim loại lỏng được vẽ như một tấm gương, giống {name} thật; sắc màu nhạt là màu của «{fam}» trên bảng tuần hoàn.',
+  'sample.d.n.mirror': '{Name} được vẽ như một tấm gương, giống kim loại thật; sắc màu nhạt là màu của «{fam}» trên bảng tuần hoàn.',
 };
 
 Object.assign(STRINGS.en, EN);

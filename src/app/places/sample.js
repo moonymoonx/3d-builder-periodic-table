@@ -689,10 +689,10 @@ export function buildSample(ui, hooks = {}) {
     if (ss.kind === 'solid') notes.push(t('sample.d.n.expansion'));
     if (ss.kind === 'solid') notes.push(t('sample.d.n.pm'));
     if (ss.kind === 'gas' || ss.kind === 'liquid') notes.push(t('sample.d.n.slow', { w: bigWords(SLOWDOWN) }));
-    // the colours: the table's family colours, so the sample is recognisably the tile it came from; a
-    // liquid metal by day is a mirror, as real mercury is
-    const mirror = ss.kind === 'liquid' && METAL.includes(e.f.cat[0]) && cellShown(T);
-    notes.push(t(mirror ? 'sample.d.n.mirror' : 'sample.d.n.colour', { fam: famName(e), name: nameIn(e) }));
+    // the colours: the table's family colours, so the sample is recognisably the tile it came from; by day
+    // quicksilver (a metal liquid at room temperature: mercury) is a mirror, frozen, liquid or boiling
+    const mirror = METAL.includes(e.f.cat[0]) && stateAt(e, ROOM).s === 'liquid' && cellShown(T);
+    notes.push(t(mirror ? 'sample.d.n.mirror' : 'sample.d.n.colour', { fam: famName(e), name: nameIn(e), Name: Name(e) }));
     replace(about.body,
       h('div', { class: 'sample-d-head' }, h('h2', { class: 'sample-d-title' }, t('sample.d.title')), h('p', { class: 'sample-d-meta' }, `${Name(e)} · ${C(T)}`)),
       h('p', { class: 'sample-d-hook' }, t(`sample.d.hook.${hookKey}`)),
