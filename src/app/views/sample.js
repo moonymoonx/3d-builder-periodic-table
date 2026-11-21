@@ -212,9 +212,12 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
 
   // simulation state
   let P = new Float32Array(MAX * 3), Vv = new Float32Array(MAX * 3), Q = new Float32Array(MAX * 3); // positions, velocities, morph targets
-  let n = 0, mode = 'none', boxL = [1000, 1000, 1000], radius = 50, dNN = 200, phaseKey = '', element = 0, molN = 1, bond = 0;
+  // molecules (N₂, P₄, S₈…): each particle is a molecule's centre, with an orientation and a steady spin
+  const Qr = new Float32Array(MAX * 4), Wr = new Float32Array(MAX * 4); // quaternion; spin axis (xyz) and rate (w)
+  let n = 0, mode = 'none', boxL = [1000, 1000, 1000], radius = 50, dNN = 200, phaseKey = '', element = 0, molN = 1, bond = 0, molT = null, molSize = 0;
   let morph = null, current = null, lastKind = null, puddleR = 0;
   const m4 = new THREE.Matrix4(), v3 = new THREE.Vector3(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), sv = new THREE.Vector3(), UPV = new THREE.Vector3(0, 1, 0);
+  const q4 = new THREE.Quaternion(), dq = new THREE.Quaternion(), ax = new THREE.Vector3(), c3 = new THREE.Vector3();
   const rand = rng32(7);
   const gauss = () => { let u = 0, v = 0; while (!u) u = rand(); v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
 
@@ -273,21 +276,24 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   function writeMatrices() {
     if (FORGE) updateCluster();
     for (let i = 0; i < n; i++) {
+      if (molN > 1) { // a molecule's atoms sit side by side in the list, around its centre, as it tumbles
+        c3.set(P[3 * i], P[3 * i + 1], P[3 * i + 2]); q4.fromArray(Qr, 4 * i);
+        for (let k = 0; k < molN; k++) {
+          v3.set(molT[k][0] * bond, molT[k][1] * bond, molT[k][2] * bond).applyQuaternion(q4).add(c3);
+          m4.compose(v3, q, sv.set(radius, radius, radius));
+          atoms.setMatrixAt(molN * i + k, m4);
+        }
+        continue;
+      }
       v3.set(P[3 * i], P[3 * i + 1], P[3 * i + 2]);
       const sc = occl[i] ? 0 : radius;
       m4.compose(v3, q, sv.set(sc, sc, sc));
-      atoms.setMatrixAt(molN === 2 ? 2 * i : i, m4); // a molecule's two atoms sit side by side in the list
-      if (molN === 2) {
-        const o = 3 * i; // second atom of the molecule, along a tumbling axis stored in Q
-        v3.set(P[o] + Q[o] * bond, P[o + 1] + Q[o + 1] * bond, P[o + 2] + Q[o + 2] * bond);
-        m4.compose(v3, q, sv.set(radius, radius, radius));
-        atoms.setMatrixAt(2 * i + 1, m4);
-      }
+      atoms.setMatrixAt(i, m4);
     }
-    atoms.count = molN === 2 ? 2 * n : n;
+    atoms.count = molN * n;
     // forge: a hot gas is sparse; draw a share of the particles so it reads as atoms flying apart
-    // (whole molecules: a share of the pairs, never first atoms without their partners)
-    if (FORGE && current && current.kind === 'gas') atoms.count = molN * Math.ceil((atoms.count / molN) * 0.4);
+    // (whole molecules, never some of a molecule's atoms without the others)
+    if (FORGE && current && current.kind === 'gas') atoms.count = molN * Math.ceil(n * 0.4);
     atoms.instanceMatrix.needsUpdate = true;
     if (glow) glow.mesh.count = atoms.count;
     if (FORGE) { // the glow's centre and reach follow the lump, pool or vapour
@@ -422,24 +428,48 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   }
 
   // ---- liquid and gas -------------------------------------------------------------------------
+  /**
+   * A molecule's atoms around its centre, in bond lengths (our data names the molecule: N₂, P₄, S₈):
+   * a pair; a regular tetrahedron (P₄); or a ring with neighbours one bond apart (S₈), drawn flat, since
+   * the ring's real crown shape needs bond angles our data does not hold.
+   */
+  function molTemplate(nAt) {
+    if (nAt === 2) return [[-0.5, 0, 0], [0.5, 0, 0]];
+    if (nAt === 4) { const s = 1 / (2 * Math.SQRT2); return [[s, s, s], [s, -s, -s], [-s, s, -s], [-s, -s, s]]; }
+    const R = 0.5 / Math.sin(Math.PI / nAt);
+    return Array.from({ length: nAt }, (_, k) => [R * Math.cos((2 * Math.PI * k) / nAt), 0, R * Math.sin((2 * Math.PI * k) / nAt)]);
+  }
   function prepareFluid(e, kind) {
     const gasN = e.ph.gas ? e.ph.gas[0] : 1;
     const rc = e.f.rCov?.[0] || e.f.rVdw?.[0] * 0.6 || 120;
     if (n === 0) { // no solid shown before (molecular, card, or starting hot): make particles
-      const cnt = Math.min(MAX / 2, Math.round(budget() * 0.45));
+      // fewer, larger particles for big molecules (an S₈ ring is as wide as four atoms)
+      const cnt = Math.min(Math.floor(MAX / Math.max(1, gasN)), MAX / 2, Math.round((budget() * 0.45) / (gasN > 2 ? Math.sqrt(gasN) : 1)));
       // spacing from this element's own radii (van der Waals for noble gases and molecules, else covalent)
       const rv = e.f.rVdw?.[0] || 2 * rc;
       dNN = gasN > 1 || e.f.cat[0] === 'noble-gas' ? 1.6 * rv : 2.2 * rc;
+      if (gasN > 1) { // a molecule is the particle: space them by its width (two touching atoms per bond)
+        const t0 = molTemplate(gasN), reach = Math.max(...t0.map(p => Math.hypot(p[0], p[1], p[2])));
+        dNN = Math.max(dNN, 2 * reach * 2 * rc + 2 * rc * 0.95);
+      }
       n = cnt;
       const side = Math.cbrt(n) * dNN * 2.1;
       setBox([side, side, side]);
       const spread = kind === 'gas' ? 0.9 : 0.6, h0 = kind === 'gas' ? 0.9 : 0.35;
       for (let i = 0; i < n; i++) { P[3 * i] = (rand() - 0.5) * boxL[0] * spread; P[3 * i + 1] = -boxL[1] / 2 + rand() * boxL[1] * h0 + dNN * 0.5; P[3 * i + 2] = (rand() - 0.5) * boxL[2] * spread; }
-      setAtomGeometry(gasN === 2 ? Math.min(rc * 0.95, dNN * 0.3) : 0.46 * dNN);
+      setAtomGeometry(gasN > 1 ? rc * 0.95 : 0.46 * dNN);
     }
-    molN = gasN === 2 ? 2 : 1;
-    bond = molN === 2 ? 2 * rc : 0; // bond length ~ two covalent radii (approximation)
-    if (molN === 2) for (let i = 0; i < n; i++) { const a = rand() * 2 * Math.PI, z = 2 * rand() - 1, s = Math.sqrt(1 - z * z); Q[3 * i] = s * Math.cos(a); Q[3 * i + 1] = z; Q[3 * i + 2] = s * Math.sin(a); }
+    molN = gasN > 1 ? gasN : 1;
+    bond = molN > 1 ? 2 * rc : 0; // bond length ~ two covalent radii (approximation)
+    molT = molN > 1 ? molTemplate(molN) : null;
+    if (molN > 1) {
+      molSize = 2 * Math.max(...molT.map(p => Math.hypot(p[0], p[1], p[2]))) * bond + 2 * rc * 0.95; // the molecule's width
+      for (let i = 0; i < n; i++) { // a random orientation and a steady spin about a random axis
+        q4.set(gauss(), gauss(), gauss(), gauss()).normalize().toArray(Qr, 4 * i);
+        ax.set(gauss(), gauss(), gauss()).normalize();
+        Wr[4 * i] = ax.x; Wr[4 * i + 1] = ax.y; Wr[4 * i + 2] = ax.z; Wr[4 * i + 3] = 0.6 + rand() * 1.2;
+      }
+    }
     if (kind === 'gas') {
       const M = (e.f.aw?.[0] || e.f.massNumber?.[0] || 2 * e.Z) * gasN;
       const vr = rmsSpeed(state.T, M, data().constants.R[0]) * SPEED_SCALE;
@@ -449,14 +479,14 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     morph = null;
     // forge: atoms from liquid to gas, never a change of scale (STYLE §6): the liquid's beads overlap a
     // little and blend into one glowing mass, and the vapour keeps them; molecules keep their touching atoms
-    if (FORGE) setAtomGeometry(molN === 2 ? Math.min(rc * 0.95, dNN * 0.3) : 0.57 * dNN);
+    if (FORGE) setAtomGeometry(molN > 1 ? rc * 0.95 : 0.57 * dNN);
     // a puddle with the solid's volume: radius from n particles at spacing ~d_NN in a layer ~half as high as wide
     puddleR = FORGE ? boxL[0] * 0.44 : Math.cbrt((n * dNN ** 3) / Math.PI) * 0.9;
   }
 
   const grid = new Map();
   function stepFluid(dt, kind, e) {
-    const L = boxL, r = radius, dmin = molN === 2 ? (bond + 2 * r) * 0.75 : dNN * 0.98;
+    const L = boxL, r = radius, dmin = molN > 2 ? molSize * 0.95 : molN > 1 ? molSize * 0.75 : dNN * 0.98; // rings and tetrahedra touch, not interpenetrate
     const gasN = e.ph.gas ? e.ph.gas[0] : 1;
     const M = (e.f.aw?.[0] || e.f.massNumber?.[0] || 2 * e.Z) * gasN;
     const vrms = rmsSpeed(state.T, M, data().constants.R[0]) * SPEED_SCALE;
@@ -516,11 +546,10 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         }
       }
     }
-    if (molN === 2) for (let i = 0; i < n; i++) { // tumbling molecules
-      const o = 3 * i, w = dt * (kind === 'gas' ? 4 : 1.5);
-      const x = Q[o], y = Q[o + 1], z = Q[o + 2];
-      Q[o] = x + w * (y - z * 0.5); Q[o + 1] = y + w * (z - x); Q[o + 2] = z + w * (x * 0.5 - y);
-      const l = Math.hypot(Q[o], Q[o + 1], Q[o + 2]) || 1; Q[o] /= l; Q[o + 1] /= l; Q[o + 2] /= l;
+    if (molN > 1) for (let i = 0; i < n; i++) { // tumbling molecules: each spins about its own axis
+      ax.set(Wr[4 * i], Wr[4 * i + 1], Wr[4 * i + 2]);
+      dq.setFromAxisAngle(ax, Wr[4 * i + 3] * dt * (kind === 'gas' ? 3 : 1));
+      q4.fromArray(Qr, 4 * i).multiply(dq).toArray(Qr, 4 * i);
     }
   }
 
