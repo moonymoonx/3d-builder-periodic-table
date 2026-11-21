@@ -16,7 +16,8 @@ const EN = {
   'patterns.hint': 'Tap a dot to pick an element, then tap its value to see where it comes from.',
   'patterns.hintPhone': 'Touch and slide along the chart; lift to pick.',
   'patterns.none': 'not in our sources',
-  'patterns.key.sub': 'ring: never melts, turns to gas', 'patterns.key.gap': 'no dot: not measured',
+  'patterns.key.sub': 'ring: never melts, turns to gas', 'patterns.key.gap': 'no dot: no value in our sources', 'patterns.key.gapNever': 'no dot: {names} never freezes at normal pressure',
+  'patterns.key.gapUnbound': 'no dot: adding an electron releases no energy (electron affinity ≤ 0)',
   'patterns.room': 'room temperature, 20 °C', 'patterns.zero': 'absolute zero',
   'patterns.ancient': 'known in ancient times', 'patterns.logStep': 'each line up: ×10',
   'patterns.source': 'Source', 'patterns.refs': 'Where this comes from',
@@ -25,6 +26,7 @@ const EN = {
   'patterns.chart': '{axis} against the number of protons',
   // down the columns: the words a row-minded answer would get wrong (each claim is checked in the tests)
   'patterns.rCov.qCol': 'Why do atoms get bigger as you go down?',
+  'patterns.ie1.qCol': 'Why do atoms lower down a column let go of an electron more easily?',
   'patterns.mp.aCol': 'Tungsten holds together until {w}, the highest melting point of any element. Down a column there is no single rule: the soft, reactive metals melt lower at every step, from {li} to {cs}, while the salt-makers melt higher, from {f} to {i}.',
   'patterns.bp.aCol': 'Helium boils at {he}, only {k} degrees above absolute zero; rhenium holds out until {re}. Down a column there is no single rule: the noble gases boil higher at every step, from {he} to {rn}, while the soft, reactive metals boil lower, from {li} to {cs}.',
   'patterns.density.aCol': 'A litre of helium weighs {he} and a litre of air {air} (at 20 °C), so the lighter helium rises through the air. Every column ends heavier than it starts: a litre of lithium weighs {li}, a litre of caesium {cs}.',
@@ -108,7 +110,7 @@ const EN = {
   // ---- Side by side (places/compare.js) ----
   'compare.label': 'Side by side', 'compare.eyebrow': 'Side by side',
   'compare.swap': 'Swap the two', 'compare.change': 'Change {name}', 'compare.changeShort': 'change',
-  'compare.pick': 'Pick any two', 'compare.pairs': 'Surprising pairs', 'compare.instead': 'Instead of {name}', 'compare.near': 'Next to {name} on the table',
+  'compare.pick': 'Pick any two', 'compare.pickFirst': 'Pick the first of two', 'compare.pickSecond': 'And the second, beside {name}', 'compare.pairs': 'Surprising pairs', 'compare.instead': 'Instead of {name}', 'compare.near': 'Next to {name} on the table',
   'compare.neverFreezes': 'never freezes', 'compare.neverMelts': 'never melts', 'compare.unknownSize': 'size not known',
   'compare.cnEach': '{n} neighbours each', 'compare.form.graphite': 'Graphite', 'compare.form.diamond': 'Diamond',
   'compare.row.pattern': 'Pattern', 'compare.row.cn': 'Neighbours per atom', 'compare.row.dnn': 'Distance to a neighbour',
@@ -151,7 +153,7 @@ const EN = {
   'compare.s.hotter': '{Hot} melts {d} hotter than {cold}.',
   'compare.s.next': '{A} and {b} are next-door neighbours: one proton apart.',
   'compare.s.family': '{A} and {b} belong to the same family.',
-  'compare.s.size': '{Big} atoms are {r} times as wide as {small} atoms.',
+  'compare.s.size': '{Big} atoms are {r} times as wide as {small} atoms.', 'compare.s.sizeUnknown': 'Nobody knows how big an atom of {Name} is: it is drawn as an outline with a question mark, not to scale.',
   'compare.s.none': '{A} and {b}, side by side.',
 };
 
@@ -165,7 +167,8 @@ const VI = {
   'patterns.hint': 'Chạm vào một điểm để chọn nguyên tố, rồi chạm vào số liệu để xem nguồn.',
   'patterns.hintPhone': 'Chạm rồi trượt dọc biểu đồ; nhấc ngón tay để chọn.',
   'patterns.none': 'chưa có trong nguồn',
-  'patterns.key.sub': 'vòng tròn: không nóng chảy, thăng hoa thành khí', 'patterns.key.gap': 'không có điểm: chưa đo được',
+  'patterns.key.sub': 'vòng tròn: không nóng chảy, thăng hoa thành khí', 'patterns.key.gap': 'không có điểm: nguồn của chúng tôi chưa có số liệu', 'patterns.key.gapNever': 'không có điểm: {names} không đông đặc ở áp suất thường',
+  'patterns.key.gapUnbound': 'không có điểm: thêm một electron không giải phóng năng lượng (ái lực electron ≤ 0)',
   'patterns.room': 'nhiệt độ phòng, 20 °C', 'patterns.zero': 'độ không tuyệt đối',
   'patterns.ancient': 'đã biết từ thời cổ đại', 'patterns.logStep': 'mỗi vạch lên: ×10',
   'patterns.source': 'Nguồn', 'patterns.refs': 'Thông tin này lấy từ đâu',
@@ -173,6 +176,7 @@ const VI = {
   'patterns.wave': 'Một làn sóng lặp lại qua 118 nguyên tố: chính quy luật này giúp Mendeleev dự đoán gallium trước khi có ai nhìn thấy nó.',
   'patterns.chart': '{axis} theo số proton',
   'patterns.rCov.qCol': 'Vì sao nguyên tử to dần khi đi xuống?',
+  'patterns.ie1.qCol': 'Vì sao nguyên tử càng ở dưới trong một cột càng dễ buông electron?',
   'patterns.mp.aCol': 'Tungsten giữ vững đến {w}, nhiệt độ nóng chảy cao nhất trong mọi nguyên tố. Đi xuống một cột thì không có quy luật chung: kim loại mềm, dễ phản ứng nóng chảy thấp dần, từ {li} xuống {cs}, còn nhóm tạo muối lại cao dần, từ {f} lên {i}.',
   'patterns.bp.aCol': 'Helium sôi ở {he}, chỉ cao hơn độ không tuyệt đối {k} độ; rhenium trụ được đến {re}. Đi xuống một cột thì không có quy luật chung: khí hiếm sôi cao dần, từ {he} lên {rn}, còn kim loại mềm, dễ phản ứng sôi thấp dần, từ {li} xuống {cs}.',
   'patterns.density.aCol': 'Một lít helium nặng {he}, một lít không khí nặng {air} (ở 20 °C), nên helium nhẹ hơn bay lên trong không khí. Cuối mỗi cột luôn nặng hơn đầu cột: một lít lithium nặng {li}, một lít caesium nặng {cs}.',
@@ -256,7 +260,7 @@ const VI = {
   // ---- So sánh (places/compare.js) ----
   'compare.label': 'So sánh', 'compare.eyebrow': 'So sánh',
   'compare.swap': 'Đổi chỗ hai nguyên tố', 'compare.change': 'Đổi {name}', 'compare.changeShort': 'đổi',
-  'compare.pick': 'Chọn hai bất kì', 'compare.pairs': 'Những cặp bất ngờ', 'compare.instead': 'Thay cho {name}', 'compare.near': 'Cạnh {name} trên bảng',
+  'compare.pick': 'Chọn hai bất kì', 'compare.pickFirst': 'Chọn nguyên tố thứ nhất', 'compare.pickSecond': 'Và nguyên tố thứ hai, cạnh {name}', 'compare.pairs': 'Những cặp bất ngờ', 'compare.instead': 'Thay cho {name}', 'compare.near': 'Cạnh {name} trên bảng',
   'compare.neverFreezes': 'không đông đặc', 'compare.neverMelts': 'không nóng chảy', 'compare.unknownSize': 'chưa rõ kích thước',
   'compare.cnEach': 'mỗi nguyên tử {n} láng giềng', 'compare.form.graphite': 'Than chì', 'compare.form.diamond': 'Kim cương',
   'compare.row.pattern': 'Kiểu sắp xếp', 'compare.row.cn': 'Số láng giềng mỗi nguyên tử', 'compare.row.dnn': 'Khoảng cách tới láng giềng',
@@ -298,7 +302,7 @@ const VI = {
   'compare.s.hotter': '{Hot} nóng chảy ở nhiệt độ cao hơn {cold} {d}.',
   'compare.s.next': '{A} và {b} đứng cạnh nhau trên bảng: chỉ hơn kém một proton.',
   'compare.s.family': '{A} và {b} cùng một họ.',
-  'compare.s.size': 'Nguyên tử {big} rộng gấp {r} lần nguyên tử {small}.',
+  'compare.s.size': 'Nguyên tử {big} rộng gấp {r} lần nguyên tử {small}.', 'compare.s.sizeUnknown': 'Chưa ai biết nguyên tử {Name} lớn cỡ nào: nó được vẽ bằng một đường viền có dấu hỏi, không theo tỉ lệ.',
   'compare.s.none': '{A} và {b}, đặt cạnh nhau.',
 };
 

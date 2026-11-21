@@ -1,0 +1,5 @@
+{
+  "_note": "Elements with no electron affinity in PubChem because adding an electron releases no energy: their singly charged negative ion is not stable (electron affinity ≤ 0). tools/build-data.mjs gives their electron-affinity gap this reason instead of 'no value'. Basis per entry.",
+  "basis": "moony's review of 21 Nov 2026 (reviews/patterns-p3.md #8): the noble gases, N, Be, Mg, Zn, Cd and Hg have unstable gas-phase anions (electron affinity ≤ 0), citing Chemistry LibreTexts, Electron Affinity. Our cross-check source (CRC Handbook values via mendeleev) gives negative values for He (−19.7), Be (−2.4), N (−1.4), Ar (−11.5) and Xe (−0.056) and no value for the others.",
+  "symbols": ["He", "Ne", "Ar", "Kr", "Xe", "Rn", "N", "Be", "Mg", "Zn", "Cd", "Hg"]
+}

@@ -260,6 +260,8 @@
     --fl: 0px; --fr: 0px; -webkit-mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
     mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent); }
   .compare-pairs::-webkit-scrollbar { display: none; }
-  .compare-pairs.fade-l { --fl: 24px; } .compare-pairs.fade-r { --fr: 24px; }
+  .compare-pairs.fade-l { --fl: 16px; padding-left: 16px; } .compare-pairs.fade-r { --fr: 24px; }
+  /* a long caption wraps rather than widening the name until it covers the other one (oganesson, c06) */
+  .lbl.compare-name small { display: block; max-width: 11em; margin: 0 auto; white-space: normal; }
   .compare-pairs .ui-chip { flex: none; padding: 0 12px; }
 }

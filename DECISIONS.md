@@ -666,3 +666,24 @@ The answer to `reviews/atom-a1.md`. Reviewed against STYLE.md and the PARALLEL.m
 **The gold/iron ratio** (moony asked whether it now reads 2.45): it still reads "2.4×". Our cited densities are PubChem's 19.282 and 7.874 g/cm³: 2.4488, which is 2.4 to one decimal (2.45 only to two). No change.
 
 **Checks:** unit tests 47/47, validator (two new checks, plus krypton/xenon), smoke 48/48 twice; index.html 1,795 KB.
+
+## Patterns and side-by-side polish 1, after the cold review `reviews/patterns-p3.md`, 21 Nov 2026
+Both places passed that review (patterns 4.0/4.0/4.5/4.0/4.5, side by side 4.0/4.0/4.0/4.0/4.5). The main session made a short polish round on master from its list, facts first.
+1. **Every gap with its true reason, from our data:**
+   - **Electron appetite:** the noble gases, N, Be, Mg, Zn, Cd and Hg read "adding an electron releases no energy (electron affinity ≤ 0)".
+     - `data/curated/ea-unbound.json` gives the basis: moony's review list citing Chemistry LibreTexts. The CRC values via mendeleev are negative for He, Be, N, Ar and Xe.
+     - These gaps keep source "none" with the reason in the note, so the card's "All numbers" says it too.
+   - **Melting point:** helium "never freezes at normal pressure" (its sourced `noSolid`).
+   - Only the remaining gaps say "no value in our sources" (was "not measured", which nobody could know).
+2. **"One atom of each" gets its own headline.**
+   - A litre sentence (a weight story, or helium · osmium's curated litre line) becomes a size sentence in the drawn radius ("about the same size", or "N times as wide").
+   - An atom of unknown size is a dashed outline with a "?" inside, and the headline says it is not to scale.
+3. **Column questions:** grip on electrons gets one ("Why do atoms lower down a column let go of an electron more easily?"). The other row questions also hold for columns.
+4. **"Pick any two…"** now asks for both: "Pick the first of two", then at once "And the second, beside …". The tiles' "change ▾" keeps the one-slot "Instead of …".
+5. **The balance:** mercury is quicksilver (the forge's mirror recipe, tinted 30 % by its family colour), per STYLE.md §6. The other metals keep their family glaze (§6, and the litre-colour decision: real appearance only once it is sourced).
+6. **Labels, rail and pills:**
+   - Oganesson's label was culled on phones (its long caption, slid inward, covered hydrogen's); captions under the stage now wrap.
+   - The scrolled pair rail fades at both ends.
+   - **Checked and left:** the inline Source pills already reach 44 px through an invisible extension (24 px pill + 2 × 10 px).
+
+**Checks:** unit tests 47/47, validator, smoke 48/48 twice (the pick-two step now checks both steps). Shots: `/workspace/out/redesign/polish-1/`.

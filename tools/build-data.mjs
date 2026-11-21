@@ -36,7 +36,8 @@ const TENTATIVE = curated('tentative-isotopes.json').entries;
 // lines whose eye-mix fails the lamp check (Wikipedia "Gas-discharge lamp", oldid 1351286820): krypton comes out
 // magenta (lamps: grey off-white to green), xenon too saturated a blue (lamps: grey or blue-grey dim white).
 // Real tubes are not in equilibrium and their ion lines are not in our data, so no glow is drawn for them.
-const GLOW_FAILS = new Set(['Kr', 'Xe']); // NUBASE entries not yet confirmed: never the longest-lived kind
+const GLOW_FAILS = new Set(['Kr', 'Xe']);
+const EA_UNBOUND = new Set(curated('ea-unbound.json').symbols); // adding an electron releases no energy (electron affinity ≤ 0) // NUBASE entries not yet confirmed: never the longest-lived kind
 const warnings = [];
 const warn = (...a) => warnings.push(a.join(' '));
 const num = v => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
@@ -44,6 +45,7 @@ const round = (v, d = 4) => (v == null ? v : Number(Number(v).toPrecision(d + 2)
 const clean = o => { if (!o) return o; for (const k of Object.keys(o)) if (o[k] === undefined) delete o[k]; return Object.keys(o).length ? o : undefined; };
 const V = (v, s, flags) => { const f = clean(flags ? { ...flags } : undefined); return f ? [v, s, f] : [v, s]; };
 const NONE = reason => [null, 'none', { n: reason }];
+const NONE_WHY = (reason, extra) => [null, 'none', { n: reason, ...extra }]; // a gap whose reason is itself a fact (cited in the note)
 const K0 = 273.15;
 const NLINES = 8; // "a handful of visible lines per element" (NIST policy)
 
@@ -587,7 +589,9 @@ for (const Z of ZS) {
   // ---- electronegativity, electron affinity, oxidation states
   f.en = num(pc.Electronegativity) != null ? V(num(pc.Electronegativity), 'pc', { n: 'Pauling scale', p: superheavy ? 1 : undefined }) : NONE('no Pauling electronegativity in PubChem');
   ccAdd(Z, 'en', f.en, mdl.en_pauling != null ? V(mdl.en_pauling, 'mdl-crc') : null);
-  f.ea = num(pc.ElectronAffinity) != null ? V(num(pc.ElectronAffinity), 'pc', { p: superheavy ? 1 : undefined }) : NONE('no electron affinity in PubChem');
+  f.ea = num(pc.ElectronAffinity) != null ? V(num(pc.ElectronAffinity), 'pc', { p: superheavy ? 1 : undefined })
+    : EA_UNBOUND.has(sym) ? NONE_WHY('adding an electron releases no energy: its negative ion is not stable (electron affinity ≤ 0). Basis: data/curated/ea-unbound.json (Chemistry LibreTexts, Electron Affinity; CRC values via mendeleev are negative for He, Be, N, Ar, Xe)', { le0: 1 })
+      : NONE('no electron affinity in PubChem');
   ccAdd(Z, 'ea', f.ea, mdl.electron_affinity != null ? V(mdl.electron_affinity, 'mdl-crc') : null);
   f.ox = pc.OxidationStates ? V(pc.OxidationStates.replace(/\s+/g, ' '), 'pc', { p: superheavy ? 1 : undefined }) : NONE('no oxidation states in PubChem');
 

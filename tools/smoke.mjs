@@ -281,10 +281,16 @@ await step('side by side: curated pairs, swap, carbon\'s two forms, pick any two
   const sw = await page.evaluate(() => [window.__pt.state.Z, window.__pt.state.Z2]);
   await page.locator('.compare-pairs .ui-chip', { hasText: 'Graphite · diamond' }).click(); await settle();
   const cc = await page.evaluate(() => ({ Z: window.__pt.state.Z, Z2: window.__pt.state.Z2, rows: [...document.querySelectorAll('.compare-row')].map(r => r.textContent).join(' | ') }));
+  // "Pick any two…" asks for both: the first, then at once the second (patterns review p3)
   await page.locator('.compare-pick').click();
+  const t1 = await page.locator('.compare-picker h4').textContent();
   await page.locator('.compare-find').fill('sod');
+  await page.locator('.compare-result').first().click(); await page.waitForTimeout(400);
+  const t2 = await page.locator('.compare-picker h4').textContent();
+  await page.locator('.compare-find').fill('chl');
   await page.locator('.compare-result').first().click(); await settle();
-  const z2 = await page.evaluate(() => window.__pt.state.Z2);
+  const z2 = await page.evaluate(() => (window.__pt.state.Z === 11 && window.__pt.state.Z2 === 17 ? 11 : [window.__pt.state.Z, window.__pt.state.Z2]));
+  if (!/first of two/.test(t1) || !/second/.test(t2)) throw new Error(JSON.stringify({ t1, t2 }));
   if (!/One more proton/.test(lead) || sw[0] !== 80 || sw[1] !== 79 || cc.Z !== 6 || cc.Z2 !== 6 || !/Neighbours per atom\D*3\D*4/.test(cc.rows) || z2 !== 11) throw new Error(JSON.stringify({ lead, sw, cc, z2 }));
   return 'carbon: graphite 3, diamond 4 neighbours';
 });

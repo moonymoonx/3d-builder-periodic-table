@@ -85,7 +85,7 @@ function softGlaze({ color = 0xffffff, roughness = 0.42, glaze = 0.7 } = {}) {
  * stripes when the state is predicted and, on a solid block, its symbol printed in ink on the front.
  */
 function specimenGlaze({ roughness = 0.2, glaze = TILE.glaze, shade = 0.86 } = {}) {
-  const uni = { uSym: { value: null }, uHasSym: { value: 0 }, uInk: { value: new THREE.Color(TOK.ink) }, uStripe: { value: 0 }, uGlaze: { value: glaze }, uShade: { value: shade }, uHalf: { value: 5 }, uSheen: { value: 0 }, uPoolR: { value: 10 } };
+  const uni = { uMirror: { value: 0 }, uSym: { value: null }, uHasSym: { value: 0 }, uInk: { value: new THREE.Color(TOK.ink) }, uStripe: { value: 0 }, uGlaze: { value: glaze }, uShade: { value: shade }, uHalf: { value: 5 }, uSheen: { value: 0 }, uPoolR: { value: 10 } };
   const m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness, metalness: 0 });
   m.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, uni);
@@ -94,7 +94,7 @@ function specimenGlaze({ roughness = 0.2, glaze = TILE.glaze, shade = 0.86 } = {
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
         uniform sampler2D uSym; uniform float uHasSym; uniform vec3 uInk; uniform float uStripe; uniform float uGlaze; uniform float uShade; uniform float uHalf;
-        uniform float uSheen; uniform float uPoolR;
+        uniform float uSheen; uniform float uPoolR; uniform float uMirror;
         varying vec3 vLoc; varying vec3 vNo;
         ${GLAZE}`)
       .replace('#include <color_fragment>', `#include <color_fragment>
@@ -107,7 +107,13 @@ function specimenGlaze({ roughness = 0.2, glaze = TILE.glaze, shade = 0.86 } = {
           diffuseColor.rgb = mix(diffuseColor.rgb, uInk, ink * 0.9);
         }`)
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
-        reflectedLight.indirectSpecular += uGlaze * glazeStudio(inverseTransformDirection(normal, viewMatrix), inverseTransformDirection(geometryViewDir, viewMatrix), material.roughness);
+        reflectedLight.indirectSpecular += uGlaze * (1.0 - uMirror) * glazeStudio(inverseTransformDirection(normal, viewMatrix), inverseTransformDirection(geometryViewDir, viewMatrix), material.roughness);
+        if (uMirror > 0.0) { // quicksilver (STYLE.md §6): a mirror of the studio over a dark body, barely tinted by its family colour
+          vec3 wN = inverseTransformDirection(normal, viewMatrix), wV = inverseTransformDirection(geometryViewDir, viewMatrix);
+          float mF = 0.72 + 0.28 * pow(1.0 - clamp(dot(wN, wV), 0.0, 1.0), 5.0);
+          reflectedLight.directDiffuse *= 1.0 - 0.78 * uMirror; reflectedLight.indirectDiffuse *= 1.0 - 0.78 * uMirror;
+          reflectedLight.indirectSpecular += uMirror * mF * studioLight(reflect(-wV, wN), material.roughness) * mix(vec3(1.0), diffuseColor.rgb, 0.3);
+        }
         if (uSheen > 0.0 && vNo.y > 0.9) { // a liquid's still surface (the pool's top; x to the right, y toward the viewer)
           vec2 q = vLoc.xz / uPoolR;
           float inside = 1.0 - smoothstep(0.84, 0.96, length(q));
@@ -121,6 +127,17 @@ function specimenGlaze({ roughness = 0.2, glaze = TILE.glaze, shade = 0.86 } = {
         }`);
   };
   return { m, uni };
+}
+const QUICK_CATS = new Set(['alkali', 'alkaline-earth', 'transition', 'post-transition', 'lanthanide', 'actinide']); // metals
+/** A large question mark, for an atom whose size is not known (drawn inside its dashed outline). */
+let qTex = null;
+function QMARK() {
+  if (qTex) return qTex;
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.font = `600 84px ${font.serif}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('?', 64, 70);
+  return (qTex = new THREE.CanvasTexture(c));
 }
 /** The symbol (and its number) drawn on a canvas, printed on a block's front. */
 function symbolTexture() {
@@ -253,6 +270,9 @@ export function createCompareView() {
     s.block.visible = kind === 'solid'; s.pool.visible = kind === 'liquid'; s.glass.visible = kind === 'gas'; s.gas.visible = kind === 'gas'; s.dashed.visible = kind === 'unknown';
     s.block.material.color.set(col); s.pool.material.color.set(col); s.gas.material.color.set(col);
     s.blk.uni.uStripe.value = sp.pred ? 1 : 0; s.liq.uni.uStripe.value = sp.pred ? 1 : 0;
+    // a metal liquid at 20 °C is quicksilver (mercury), as in the forge and the sample place (STYLE.md §6)
+    const quick = kind === 'liquid' && QUICK_CATS.has(e.f.cat[0]);
+    s.liq.uni.uMirror.value = quick ? 1 : 0; s.liq.uni.uSheen.value = quick ? 0.2 : 0.42;
     s.sym.draw(e.sym, e.Z);
     placeGas(i, 0);
   }
@@ -297,8 +317,9 @@ export function createCompareView() {
     const ringGeo = new THREE.BufferGeometry().setFromPoints(Array.from({ length: 97 }, (_, i) => new THREE.Vector3(Math.cos((i / 96) * Math.PI * 2), Math.sin((i / 96) * Math.PI * 2), 0)));
     const ring = new THREE.Line(ringGeo, new THREE.LineDashedMaterial({ color: TOK.ink3, dashSize: 0.06, gapSize: 0.05, transparent: true, opacity: 0.8 }));
     ring.computeLineDistances();
-    atomsG.add(mesh, shadow, ring);
-    return { mesh, shadow, ring, r: 100, rTo: 100, rFrom: 100, known: true, col: new THREE.Color(), colFrom: new THREE.Color(), colTo: new THREE.Color() };
+    const q = new THREE.Sprite(new THREE.SpriteMaterial({ map: QMARK(), color: TOK.ink3, transparent: true, depthWrite: false }));
+    atomsG.add(mesh, shadow, ring, q);
+    return { mesh, shadow, ring, q, r: 100, rTo: 100, rFrom: 100, known: true, col: new THREE.Color(), colFrom: new THREE.Color(), colTo: new THREE.Color() };
   });
   const barMat = new THREE.MeshBasicMaterial({ color: TOK.ink });
   const bar = new THREE.Group();
@@ -318,7 +339,8 @@ export function createCompareView() {
     const ra = A.r, rb = B.r, big = Math.max(ra, rb, ATOM_FLOOR * 0.6), gap = big * 0.5;
     const xa = -(gap / 2 + ra), xb = gap / 2 + rb;
     for (const [b, x] of [[A, xa], [B, xb]]) {
-      b.mesh.visible = b.known; b.shadow.visible = b.known; b.ring.visible = !b.known;
+      b.mesh.visible = b.known; b.shadow.visible = b.known; b.ring.visible = !b.known; b.q.visible = !b.known;
+      b.q.scale.setScalar(b.r * 1.1); b.q.position.set(x, b.r, 0); // "?" inside the outline: no size is claimed
       b.mesh.scale.setScalar(b.r); b.mesh.position.set(x, b.r, 0);
       b.shadow.scale.set(b.r * 2.3, 1, b.r * 2.3); b.shadow.position.set(x + b.r * 0.08, 0.2, b.r * 0.1);
       b.ring.scale.setScalar(b.r); b.ring.position.set(x, b.r, 0); // standing, facing the viewer: a sphere's outline

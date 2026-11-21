@@ -295,7 +295,14 @@ export function buildPatterns(ui, hooks = {}) {
     const items = [];
     if (F.points.some(p => p.pred)) items.push(h('span', null, h('i', { class: 'patterns-key__bead is-pred' }), t('key.pred')));
     if (F.points.some(p => p.kind === 'sub')) items.push(h('span', null, h('i', { class: 'patterns-key__bead is-sub' }), t('patterns.key.sub')));
-    if (F.points.length < 118) items.push(h('span', null, h('i', { class: 'patterns-key__gap' }), t('patterns.key.gap')));
+    // every gap with its own reason, from our data: helium never freezes at normal pressure; the noble gases,
+    // N, Be, Mg, Zn, Cd and Hg release no energy when an electron is added (electron affinity ≤ 0)
+    const have = new Set(F.points.map(p => p.Z)), gaps = elements().filter(e => !have.has(e.Z));
+    const why = e => (pid === 'ea' && e.f.ea?.[2]?.le0 ? 'unbound' : (pid === 'mp' || pid === 'bp') && e.ph.noSolid && !have.has(e.Z) ? 'never' : 'none');
+    const never = gaps.filter(e => why(e) === 'never'), unbound = gaps.filter(e => why(e) === 'unbound'), none = gaps.filter(e => why(e) === 'none');
+    if (never.length) items.push(h('span', null, h('i', { class: 'patterns-key__gap' }), t('patterns.key.gapNever', { names: never.map(inSentence).join(', ') })));
+    if (unbound.length) items.push(h('span', null, h('i', { class: 'patterns-key__gap' }), t('patterns.key.gapUnbound')));
+    if (none.length) items.push(h('span', null, h('i', { class: 'patterns-key__gap' }), t('patterns.key.gap')));
     if (spec(pid).room) items.push(h('span', { class: 'patterns-key__ref' }, h('i', { class: 'patterns-key__gap is-ref' }), t('patterns.room')));
     items.push(h('span', { class: 'patterns-key__rows' }, h('i', { class: 'patterns-key__band' }), t('patterns.rowsCap')));
     replace(key, ...items, h('span', { class: 'patterns-key__hint' }, t('patterns.hint')));

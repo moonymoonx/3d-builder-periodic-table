@@ -259,3 +259,8 @@
   - **Fixed:** a stray "null" in the desktop card's numbers (from cf98e90).
   - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,795 KB.
   - **Reshoot:** `/workspace/out/redesign/atom-r2-merged/`.
+- 2026-11-21 ~11:49 (Saigon) — **Patterns and side-by-side polish 1**, after `reviews/patterns-p3.md` (committed, with `reviews/sample-s2.md`). Details in DECISIONS.md › Patterns and side-by-side polish 1.
+  - **Patterns:** true reasons for chart gaps (electron affinity ≤ 0 from a cited curated list; helium never freezes); the column question for grip on electrons.
+  - **Side by side:** a size headline on "One atom of each"; oganesson an outline with "?"; a two-step "Pick any two…"; quicksilver mercury on the balance; oganesson's phone label; rail fades.
+  - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,802 KB.
+  - **Shots:** `/workspace/out/redesign/polish-1/`.
