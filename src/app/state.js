@@ -1,7 +1,7 @@
 // Global app state + shareable URL hash (#v=table&el=Fe&p=ie1&lay=s18&lang=vi ...).
 const listeners = new Set();
 // 'table' is home; the other views are reached through the element card (the quiz is parked on a branch)
-export const VIEWS = ['table', 'atom', 'sample', 'trends', 'compare', 'heat']; // heat: the forge (Hold a piece · heat it)
+export const VIEWS = ['table', 'atom', 'sample', 'trends', 'compare', 'heat', 'hold']; // heat: the forge (Hold a piece · heat it); hold: the sample place (liquids, gases, honest cards)
 export const LENSES = ['families', 'heat', 'mp', 'density', 'rCov', 'ie1', 'en', 'year', 'abund', 'bp', 'ea', 'aw', 'rVdw', 'zeff'];
 export const LAYOUTS = ['s18', 's32', 'helix'];
 
@@ -58,7 +58,7 @@ function writeHash() {
   if (state.view === 'compare') q.set('el2', symOf(state.Z2));
   if (state.view === 'trends') { q.set('p', state.prop); if (state.log) q.set('log', '1'); }
   if (state.view === 'table') { if (state.lens !== 'families') q.set('lens', state.lens); if (state.card) q.set('card', '1'); if (state.layout !== 's18') q.set('lay', state.layout); }
-  if (state.view === 'sample' || (state.view === 'table' && state.lens === 'heat')) q.set('T', String(Math.round(state.T * 100) / 100));
+  if (state.view === 'sample' || state.view === 'hold' || (state.view === 'table' && state.lens === 'heat')) q.set('T', String(Math.round(state.T * 100) / 100));
   if (state.view === 'atom') { if (state.orbital) q.set('orb', state.orbital); if (state.density !== 'orbital') q.set('den', state.density); }
   if (state.view === 'sample' && state.allotrope) q.set('alt', state.allotrope);
   if (state.view === 'trends' && state.trendLine !== 'period') q.set('line', state.trendLine);

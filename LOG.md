@@ -205,3 +205,10 @@
   - **Phone:** card peek ends at "More about …" (no fade, nothing sliced); heft from a little higher with a 2.6 cap.
   - **Checks:** unit tests 33/33, validator ALL PASS, smoke 31/31 twice, no console errors.
   - **Review set:** `/workspace/out/redesign/hero-r7/` (30 PNG, README.txt). No new FPS (machine load 15–20 from the parallel sessions).
+- 2026-11-21 ~08:41 (Saigon) — **Merged `view-sample`** (Hold a sample: liquids, gases and honest cards in the forge's look). Reviewed against STYLE.md and the PARALLEL.md checklist: passed. Details in DECISIONS.md › Merge review: view-sample.
+  - **Rebase:** onto 3e774ff. Conflicts in `views/sample.js` (molecule pairs combined with the per-instance radius), `tools/shots.mjs` (the generic set loader kept; `shots-sample.mjs` exports `cases()`) and `tools/smoke.mjs` (both blocks kept).
+  - **Proposals:** one superseded proposal dropped. WIRING-sample.md applied with four router hunks merged by hand alongside the patterns wiring.
+  - **Fixed in shared code:** mercury's card note (gallium's temperature under mercury's name); predicted temperatures in whole degrees; the phone strip's "not known". The reported `heat.js` stem bug was already fixed in round 6.
+  - **Checks:** unit tests 33/33, validator ALL PASS, smoke 40/40 twice, no console errors, index.html 1,644 KB.
+  - **FPS:** frozen mercury and liquid nitrogen hold a 60 FPS median (load 6–7).
+  - **Reshoot:** `/workspace/out/redesign/sample-merged/`.

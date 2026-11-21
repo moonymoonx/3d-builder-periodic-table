@@ -84,8 +84,9 @@ export function buildElementCard(ui, hooks) {
       .map(x => ({ x, K: propValue(x, 'mp')[0] })).sort((a, b) => a.K - b.K);
     const lbl = m => `${inSentence(m.x)} (${degC(m.K)})`;
     if (e.sym === 'W') return t('card.hottest');
+    if (e.sym === 'Hg') return t('card.lowestMetal'); // the ladder's coldest rung is itself (sample session's bug report)
     const lo = [...lm].reverse().find(m => m.K < mpK), hi = lm.find(m => m.K > mpK);
-    if (!lo) return t('card.coldest', { t: degC(lm[0].K) });
+    if (!lo) return lm[0].x.sym === 'Hg' ? t('card.coldest', { t: degC(lm[0].K) }) : t('card.lowestMetal');
     if (!hi) return t('card.above', { lo: lbl(lo) });
     return t('card.hotCool', { lo: lbl(lo), hi: lbl(hi) });
   }
@@ -119,7 +120,8 @@ export function buildElementCard(ui, hooks) {
         note: [ph.mp && ph.mp[0] != null ? t('card.freezesAt', { t: degC(ph.mp[0]) }) : null, ln2Anchor(e)].filter(Boolean).join(' · ') });
     } else if (ph.mp && ph.mp[0] != null) {
       const pre = isPred(ph.mp) ? '≈ ' : '', est = isPred(ph.mp) ? ` (${t('card.est')})` : '';
-      out.push({ label: t('card.melts'), text: `${pre}${degC(ph.mp[0])}${est}`, sText: `${pre}${degC(ph.mp[0])}`, v: ph.mp, src: t('f.mp'), short: t('card.sMelts'), across: 'mp',
+      const mpT = isPred(ph.mp) ? `${fmtNum(ph.mp[0] - 273.15, 0)} °C`.replace(/^-/, '−') : degC(ph.mp[0]); // predictions in whole degrees
+      out.push({ label: t('card.melts'), text: `${pre}${mpT}${est}`, sText: `${pre}${mpT}`, v: ph.mp, src: t('f.mp'), short: t('card.sMelts'), across: 'mp',
         note: [ph.bp && ph.bp[0] != null ? t('card.boilsAt', { bp: `${isPred(ph.bp) ? '≈ ' : ''}${degC(ph.bp[0])}` }) : null, meltAnchor(e, ph.mp[0])].filter(Boolean).join(' · ') });
     } else out.push({ label: t('card.melts'), short: t('card.sMelts'), none: t('card.notKnown') });
     // 3. heft: what a litre weighs
@@ -177,7 +179,7 @@ export function buildElementCard(ui, hooks) {
     if (e.line) lead.append(' ', h('button', { type: 'button', class: 'card-src', title: t('card.sourceOf'), onclick: src(t('card.sourceOf'), e.line, e, lineFor(e)) }, t('card.sourceOf')));
     const F = factData(e);
     const across = (prop, label) => h('button', { type: 'button', class: label ? 'ui-btn ui-btn--quiet card-across-row' : 'card-across', title: t('card.acrossLabel'), 'aria-label': label || t('card.acrossLabel'), onclick: () => hooks.onPattern(prop) }, label ? `↗ ${label}` : `↗ ${t('card.across')}`);
-    const valueOf = (f, short) => (f.none ? h('span', { class: 'card-v is-none' }, f.none)
+    const valueOf = (f, short) => (f.none ? h('span', { class: 'card-v is-none' }, short ? t('card.notKnownShort') : f.none)
       : valBtn(short ? (f.sText || f.text) : f.text, short ? (f.sSrc || f.src) : f.src, short ? (f.sV || f.v) : f.v, e));
     const all = disclosure({
       summary: t('card.all'),

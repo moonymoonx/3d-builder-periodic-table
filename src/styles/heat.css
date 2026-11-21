@@ -15,7 +15,7 @@ body.kiln .ui-back { background: rgba(242, 232, 218, 0.1); color: var(--kiln-tex
 body.kiln .ui-back span:first-child { color: #F0A070; }
 
 .heat-panel { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(860px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 8px;
-  padding: 14px 22px 12px; border-radius: 18px; background: var(--card); color: var(--ink); box-shadow: var(--elev-float); border: 1px solid transparent;
+  padding: 14px 22px 12px; border-radius: var(--r-card); background: var(--card); color: var(--ink); box-shadow: var(--elev-float); border: 1px solid transparent;
   transition: background 600ms var(--ease-in-out), color 600ms var(--ease-in-out), border-color 600ms var(--ease-in-out); }
 body.kiln .heat-panel { background: rgba(30, 23, 17, 0.88); color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.1); box-shadow: none; }
 .heat-caption { margin: 0; min-height: 2.9em; font: 400 18px/1.45 var(--font-serif); text-wrap: balance; }
