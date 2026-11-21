@@ -12,7 +12,7 @@ import { cellVectors, fracToCart, lindemannRms, rmsSpeed } from '../../physics/l
 import { cmfAt, mul3, gammaEncode } from '../../physics/color.js';
 import { CATEGORY_COLORS, CATEGORY_COLORS_CB } from '../palette.js';
 import { pigment, pigmentCB, color as TOK, light as LIGHT } from '../../design/tokens.js';
-import { glassMaterial, glowSprites, moltenPool } from './forgeArt.js';
+import { glassMaterial, glassFootCanvas, glowSprites, moltenPool } from './forgeArt.js';
 import { roundedBox, softRectCanvas, GLAZE } from './tableArt.js';
 import { rng32 } from '../../physics/orbitals.js';
 
@@ -117,11 +117,14 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   const floor = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: FORGE ? '#CBBAA4' : 0x101a2e, roughness: FORGE ? 0.4 : 0.9 }));
   box.visible = !FORGE; // the forge's vessel shows only at its glass edges
   world.add(box, glass, floor);
-  let hearthShadow = null;
+  let hearthShadow = null, glassFoot = null;
   if (FORGE) { // the hearth sits on the paper: a soft contact shadow under it
     const tx = new THREE.CanvasTexture(softRectCanvas(128, 0.32, 0.18));
     hearthShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: TOK.shadow, map: tx, transparent: true, opacity: 0.38, depthWrite: false }));
     hearthShadow.renderOrder = -1; world.add(hearthShadow);
+    // by day the glass stands on the hearth: a thin line where its foot meets the glaze
+    glassFoot = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: TOK.shadow, map: new THREE.CanvasTexture(glassFootCanvas()), transparent: true, opacity: 0.32, depthWrite: false }));
+    glassFoot.renderOrder = 1; world.add(glassFoot);
   }
   const cellMat = new THREE.LineBasicMaterial({ color: FORGE ? TOK.ink : 0xffcf6b, transparent: true, opacity: FORGE ? 0.5 : 0.9 });
   const cellLines = new THREE.LineSegments(new THREE.BufferGeometry(), cellMat);
@@ -350,6 +353,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       floor.geometry = roundedBox(w, hgt, w, Math.min(hgt * 0.45, w * 0.04), 3);
       floor.scale.set(1, 1, 1); floor.position.set(0, -L[1] / 2 - hgt / 2, 0);
       hearthShadow.scale.set(w * 1.22, 1, w * 1.22); hearthShadow.position.set(L[0] * 0.03, -L[1] / 2 - hgt - L[1] * 0.002, L[2] * 0.04);
+      glassFoot.scale.set(L[0] / 0.88, 1, L[2] / 0.88); glassFoot.position.set(0, -L[1] / 2 + L[1] * 0.001, 0); // its line falls on the glass walls
       decal.scale.set(L[0] * 1.5, 1, L[2] * 1.5); decal.position.set(0, -L[1] / 2 + L[1] * 0.002, 0);
     } else { floor.scale.set(L[0] * 1.25, L[1] * 0.04, L[2] * 1.25); floor.position.set(0, -L[1] / 2 - L[1] * 0.02, 0); }
   }
@@ -631,7 +635,9 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       // the glow pools on the hearth; the molten pool and the glass take its colour
       decal.material.color.copy(col); decal.material.opacity = Math.min(kind === 'gas' ? 0.4 : 0.85, on * 0.95);
       pool.uni.uCol.value.copy(col); pool.uni.uK.value = on * 1.5;
-      glassMat.uniforms.uCol.value.copy(INK).lerp(KILN_TEXT, k); glassMat.uniforms.uK.value = 0.2 - 0.06 * k;
+      // by day the glass edges catch more light on the cream paper; in the kiln they stay as they were
+      glassMat.uniforms.uCol.value.copy(INK).lerp(KILN_TEXT, k); glassMat.uniforms.uK.value = 0.34 - 0.2 * k; glassMat.uniforms.uBase.value = 0.022 - 0.016 * k;
+      glassFoot.material.opacity = 0.32 * (1 - k);
       // the unit cell: verdigris atoms by day; warm-gold rims once the metal glows
       boxMat.color.copy(INK).lerp(KILN_TEXT, k); cellMat.color.copy(boxMat.color);
     } else {
