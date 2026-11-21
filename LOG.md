@@ -233,3 +233,10 @@
   - **Checks:** unit tests 45/45, validator ALL PASS, smoke 45/45 twice, no console errors, index.html 1,736 KB.
   - **FPS:** 60 FPS median in every measured state at load 9–13 (another session's job running).
   - **Reshoot:** `/workspace/out/redesign/patterns-r2-merged/` (44 states, README.txt, fps.txt).
+- 2026-11-21 ~10:43 (Saigon) — **Merged `view-sample-r2`** (the sample place, round 2; answers `reviews/sample-s1.md`, committed with `atom-a1.md` and `patterns-p2.md`). Reviewed: passed; all PROPOSAL commits accepted; STYLE.md §6 amended. Details in DECISIONS.md › Merge review: view-sample-r2.
+  - **Oganesson:** oganesson-294 (0.7 ± 0.3 ms, the only confirmed kind) is shown first; oganesson-295 (680 ± 540 ms, unconfirmed) is a tentative note (curated basis; data build changed; only Og's data changes).
+  - **Card:** the desktop card gives the source hint.
+  - **Smoke:** the oganesson step checks the new wording and both sources.
+  - **Checks:** unit tests 45/45, validator ALL PASS, smoke 45/45 twice, no console errors, index.html 1,762 KB.
+  - **Reshoot:** `/workspace/out/redesign/sample-r2-merged/` (34 sample states + hero spot checks).
+  - **FPS:** not re-measured at the merge (usage limit). The session's own run (`sample-r2/fps.txt`) has all 34 states at a 60 FPS median.

@@ -76,7 +76,8 @@ export function rowsFor(e) {
   if (f.discoverers) add('discoverers', f.discoverers, { more: true });
   add('nStable', f.nStable, { more: true });
   if (f.isoMain) add('isoMain', f.isoMain, { more: true });
-  if (f.halfLife) add('halfLife', f.halfLife, { more: true });
+  if (f.halfLife) add('halfLife', f.halfLife, { more: true, label: f.halfLife[2]?.conf ? t('f.halfLifeConf') : undefined });
+  if (f.halfLifeTent) add('halfLifeTent', f.halfLifeTent, { more: true, text: fmtField('halfLife', f.halfLifeTent) }); // listed, not yet confirmed (oganesson-295)
   if (f.rNuc) add('rNuc', f.rNuc, { more: true });
   const zo = outerZeff(e);
   if (zo) add('zeff', zo, { more: true, text: `${fmtNum(zo[0], 2)} (${zo[2].n.split(' ')[0]})` });

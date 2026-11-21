@@ -103,15 +103,17 @@ export function bakeContactShadows({ W, color, opacity, ppu = 40, maxPx = 1536 }
  * front bevels). World-space normal n, direction to the eye v, roughness r. Returns reflected light.
  */
 export const GLAZE = `
-  vec3 glazeStudio(vec3 n, vec3 v, float r) {
-    vec3 R = reflect(-v, n);
-    float fres = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
+  vec3 studioLight(vec3 R, float r) { // the soft studio seen along the reflected direction R
     float soft = 0.05 + 0.45 * r;
     vec3 room = mix(vec3(0.42, 0.39, 0.35), vec3(0.70, 0.66, 0.58), smoothstep(0.05, -0.3, R.y));
     float back = smoothstep(-0.05, 0.3, -R.z) * (1.0 - smoothstep(0.7, 1.0, abs(R.x) / max(1e-3, length(R.xz))));
     float strip = (1.0 - smoothstep(0.1, 0.1 + soft, abs(R.y - 0.57))) * back;
     float key = smoothstep(1.0 - (0.04 + 0.6 * soft), 1.0, dot(R, vec3(-0.6, 0.52, 0.64)));
-    return fres * (room + vec3(1.0, 0.97, 0.92) * (strip * 2.0 + key * 4.5));
+    return room + vec3(1.0, 0.97, 0.92) * (strip * 2.0 + key * 4.5);
+  }
+  vec3 glazeStudio(vec3 n, vec3 v, float r) {
+    float fres = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
+    return fres * studioLight(reflect(-v, n), r);
   }`;
 
 /**

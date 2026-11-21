@@ -7,13 +7,37 @@ import * as THREE from 'three';
 /** Glass: nearly invisible face-on, a soft sheen where you look along it (no CAD wireframe). */
 export function glassMaterial() {
   return new THREE.ShaderMaterial({
-    uniforms: { uCol: { value: new THREE.Color('#ffffff') }, uK: { value: 0.22 } },
+    uniforms: { uCol: { value: new THREE.Color('#ffffff') }, uK: { value: 0.22 }, uBase: { value: 0.006 } },
     vertexShader: `varying vec3 vN; varying vec3 vV;
       void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform vec3 uCol; uniform float uK; varying vec3 vN; varying vec3 vV;
-      void main() { float f = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 5.0); gl_FragColor = vec4(uCol, 0.006 + uK * f); }`, // faces almost clear, rounded edges catch the light
+    fragmentShader: `uniform vec3 uCol; uniform float uK; uniform float uBase; varying vec3 vN; varying vec3 vV;
+      void main() { float f = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 5.0); gl_FragColor = vec4(uCol, uBase + uK * f); }`, // faces almost clear (a faint haze by day), rounded edges catch the light
     transparent: true, depthWrite: false, side: THREE.DoubleSide,
   });
+}
+
+/**
+ * Where the glass meets the hearth: a thin soft line along the vessel's foot (a rounded square of
+ * half-size `edge`, in 0..0.5 units), so the vessel reads as glass standing on the hearth in daylight.
+ */
+export function glassFootCanvas(size = 256, edge = 0.44, width = 0.006) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  const r = 0.035; // the vessel's rounded corner, as in the glass mesh
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const u = Math.abs((x + 0.5) / size - 0.5), v = Math.abs((y + 0.5) / size - 0.5);
+    const dx = Math.max(u - (edge - r), 0), dy = Math.max(v - (edge - r), 0);
+    const out = Math.hypot(dx, dy) - r, inside = Math.max(u, v) < edge - r ? Math.max(u, v) - edge : out;
+    const d = dx > 0 || dy > 0 ? out : inside;
+    const line = Math.exp(-((d / width) ** 2)), shade = d < 0 ? 0.12 * Math.exp(d / 0.02) : 0; // the line, and a faint shade just inside
+    const i = (y * size + x) * 4;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+    img.data[i + 3] = Math.round(255 * Math.min(1, line + shade));
+  }
+  ctx.putImageData(img, 0, 0);
+  return c;
 }
 
 /**

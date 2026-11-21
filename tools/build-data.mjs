@@ -32,6 +32,7 @@ const placeholders = curated('placeholders.json');
 const FIX = curated('factcheck-fixes.json');
 const LINES = curated('element-lines.json').lines;
 const HIT = curated('phases-highT.json');
+const TENTATIVE = curated('tentative-isotopes.json').entries; // NUBASE entries not yet confirmed: never the longest-lived kind
 const warnings = [];
 const warn = (...a) => warnings.push(a.join(' '));
 const num = v => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
@@ -179,7 +180,7 @@ for (const r of db.prepare('select * from screeningconstants').all()) {
 const UNIT_S = { ys: 1e-24, zs: 1e-21, as: 1e-18, fs: 1e-15, ps: 1e-12, ns: 1e-9, us: 1e-6, ms: 1e-3, s: 1, m: 60, h: 3600, d: 86400 };
 const YEAR_S = 365.25 * 86400;
 Object.assign(UNIT_S, { y: YEAR_S, ky: 1e3 * YEAR_S, My: 1e6 * YEAR_S, Gy: 1e9 * YEAR_S, Ty: 1e12 * YEAR_S, Py: 1e15 * YEAR_S, Ey: 1e18 * YEAR_S, Zy: 1e21 * YEAR_S, Yy: 1e24 * YEAR_S });
-const NUBASE = new Map(); // Z -> [{A, stable, hlText, hlSec, est, abundance}]
+const NUBASE = new Map(); // Z -> [{A, stable, hlText, hlSec, hlU, est, abundance}]
 for (const line of readRaw('nubase/nubase_4.mas20.txt', 'latin1').split('\n')) {
   if (!line || line.startsWith('#')) continue;
   const A = +line.slice(0, 3), zzzi = line.slice(4, 8), Z = +zzzi.slice(0, 3), iso = zzzi[3];
@@ -191,6 +192,9 @@ for (const line of readRaw('nubase/nubase_4.mas20.txt', 'latin1').split('\n')) {
   if (!rec.stable && hlRaw && hlRaw !== 'p-unst') {
     const v = Number(hlRaw.replace(/[#<>~]/g, ''));
     if (Number.isFinite(v) && UNIT_S[unit]) { rec.hlSec = v * UNIT_S[unit]; rec.hlText = `${hlRaw.replace('#', '')} ${unit}`; }
+    // the half-life's uncertainty (columns 82-88, same unit); limits such as ">300ns" are not uncertainties
+    const dT = line.slice(81, 88).trim();
+    if (rec.hlSec && /^\d+(\.\d+)?$/.test(dT)) { rec.hlU = Number(dT) * UNIT_S[unit]; rec.hlUText = `${hlRaw.replace('#', '')} ± ${dT} ${unit}`; }
   }
   if (!NUBASE.has(Z)) NUBASE.set(Z, []);
   NUBASE.get(Z).push(rec);
@@ -445,18 +449,33 @@ for (const Z of ZS) {
   const iso = NUBASE.get(Z) || [];
   f.nStable = V(iso.filter(x => x.stable).length, 'nubase', { n: 'ground states marked stable in NUBASE2020' });
   const natural = iso.filter(x => x.abundance != null).sort((a, b) => b.abundance - a.abundance);
-  const longest = iso.filter(x => x.hlSec > 0).sort((a, b) => b.hlSec - a.hlSec)[0];
+  // the longest-lived kind: confirmed ones only; a longer-lived listing that is not yet confirmed (oganesson-295)
+  // is kept beside it as a tentative value (data/curated/tentative-isotopes.json gives the basis)
+  const unconfirmed = x => TENTATIVE.some(u => u.Z === Z && u.A === x.A);
+  const tentative = iso.filter(x => x.hlSec > 0 && unconfirmed(x)).sort((a, b) => b.hlSec - a.hlSec)[0];
+  const confirmed = iso.filter(x => x.hlSec > 0 && !unconfirmed(x));
+  // beside a tentative listing, the confirmed kind must be an observed one, not a NUBASE '#' estimate
+  // (oganesson-293's "1 ms #" is a systematics estimate; oganesson-294's 0.7 ms is measured)
+  const pool = tentative && confirmed.some(x => !x.est) ? confirmed.filter(x => !x.est) : confirmed;
+  const longest = pool.sort((a, b) => b.hlSec - a.hlSec)[0];
+  const onlyConfirmed = !!(longest && tentative && tentative.hlSec > longest.hlSec);
   let nucA = null;
   if (natural.length) { f.isoMain = V(`${natural[0].A}${sym}`, 'nubase', { n: `natural abundance ${natural[0].abundance} %` }); nucA = natural[0].A; }
   if (!iso.some(x => x.stable)) {
     if (longest) {
-      if (f.aw[0] == null) f.massNumber = V(longest.A, 'nubase', { n: 'mass number of the longest-lived known isotope' });
-      f.halfLife = V(round(longest.hlSec, 4), 'nubase', { t: longest.hlText, A: longest.A, p: longest.est ? 1 : undefined, n: longest.est ? 'estimated from systematics (NUBASE #)' : undefined });
+      if (f.aw[0] == null) f.massNumber = V(longest.A, 'nubase', { n: `mass number of the longest-lived ${onlyConfirmed ? 'confirmed' : 'known'} isotope` });
+      const tentText = onlyConfirmed ? `NUBASE2020 also lists ${sym}-${tentative.A} at ${tentative.hlUText || tentative.hlText}, ${TENTATIVE.find(u => u.Z === Z && u.A === tentative.A).why}` : null;
+      f.halfLife = V(round(longest.hlSec, 4), 'nubase', { t: longest.hlText, A: longest.A, p: longest.est ? 1 : undefined, u: longest.hlU ? round(longest.hlU, 4) : undefined,
+        conf: onlyConfirmed ? 1 : undefined, // the only confirmed kind (a longer-lived listing is tentative)
+        n: longest.est ? 'estimated from systematics (NUBASE #)'
+          : [longest.hlU ? `NUBASE2020: ${longest.hlUText} for ${sym}-${longest.A}` : null, onlyConfirmed ? `the only confirmed kind; ${tentText}` : null].filter(Boolean).join('; ') || undefined });
+      if (onlyConfirmed) f.halfLifeTent = V(round(tentative.hlSec, 4), 'nubase', { t: tentative.hlText, A: tentative.A, u: tentative.hlU ? round(tentative.hlU, 4) : undefined,
+        n: `NUBASE2020: ${tentative.hlUText || tentative.hlText} for ${sym}-${tentative.A}; ${TENTATIVE.find(u => u.Z === Z && u.A === tentative.A).why} (${sym}-${longest.A} is the only confirmed kind)` });
       if (!nucA) nucA = longest.A;
     } else f.halfLife = NONE('no half-life in NUBASE2020');
   }
   if (nucA) {
-    f.nucA = V(nucA, 'nubase', { n: natural.length ? 'most abundant natural isotope' : 'longest-lived isotope' });
+    f.nucA = V(nucA, 'nubase', { n: natural.length ? 'most abundant natural isotope' : onlyConfirmed ? 'longest-lived confirmed isotope' : 'longest-lived isotope' });
     const r0 = FIX.nuclearR0_fm.value;
     f.rNuc = V(round(r0 * Math.cbrt(nucA), 3), 'fc', { p: 1, n: `estimate: rms charge radius ≈ ${r0}·A^(1/3) fm (${FIX.nuclearR0_fm.cite})` });
   }
@@ -819,7 +838,7 @@ for (const [key, note] of Object.entries(ccNotes)) {
 // ---------------------------------------------------------------------------------------------
 const FIELDS = {
   aw: { unit: '', kind: 'num' }, awStd: { kind: 'text' }, massNumber: { kind: 'int' }, nStable: { kind: 'int' }, isoMain: { kind: 'text' },
-  halfLife: { unit: 's', kind: 'num' }, nucA: { kind: 'int' }, rNuc: { unit: 'fm', kind: 'num' },
+  halfLife: { unit: 's', kind: 'num' }, halfLifeTent: { unit: 's', kind: 'num' }, nucA: { kind: 'int' }, rNuc: { unit: 'fm', kind: 'num' },
   period: { kind: 'int' }, group: { kind: 'int' }, block: { kind: 'enum' }, cat: { kind: 'enum' },
   config: { kind: 'text' }, term: { kind: 'text' }, madelung: { kind: 'enum' },
   ie1: { unit: 'eV', kind: 'num' }, ie2: { unit: 'eV', kind: 'num' }, ie3: { unit: 'eV', kind: 'num' },

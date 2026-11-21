@@ -1,0 +1,11 @@
+{
+  "_note": "NUBASE2020 ground states whose listed half-life rests on an observation that is not yet confirmed. tools/build-data.mjs never takes one as an element's longest-lived kind (half-life, mass number, nucleus); it keeps the value beside the confirmed one as halfLifeTent, so the app can say both. Each entry gives its basis.",
+  "entries": [
+    {
+      "Z": 118,
+      "A": 295,
+      "why": "not yet confirmed",
+      "basis": "NUBASE2020 lists oganesson-295 at 680 ± 540 ms (nubase_4.mas20.txt line 5868) beside oganesson-294 at 0.7 ± 0.3 ms (line 5867). The 295 value rests on a single unconfirmed observation: Wikipedia's isotope list and Smits et al., Angew. Chem. Int. Ed. (2020), cite only oganesson-294 (0.7(3) ms / 0.69 ms). Checked by moony, 21 Nov 2026."
+    }
+  ]
+}

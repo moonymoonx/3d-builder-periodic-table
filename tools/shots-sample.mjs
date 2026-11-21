@@ -1,7 +1,8 @@
 // Review set for the sample place (PARALLEL.md scope 2): node tools/shots.mjs --set=sample
 // Key states at desktop and phone size: a gas cooled until it turns liquid and freezes, the liquid metal
-// frozen and boiled, helium near absolute zero, the honest cards (a crystal we do not draw, an element
-// never made in bulk), a glowing melt in the kiln, "About this sample", and Vietnamese.
+// frozen and boiled, helium near absolute zero, the crystals we do not draw (one molecule or one atom
+// stands in), an element never made in bulk, a glowing melt in the kiln, "About this sample", Vietnamese,
+// and the vapour condensing mid-sweep.
 // Start states are reached the way a visitor does: from the element card's door, with the scale dive.
 export function sampleCases(SIZES) {
   const D = SIZES.desk, P = SIZES.phone;
@@ -41,6 +42,12 @@ export function sampleCases(SIZES) {
     { name: 's15-vi-oganesson-phone', vp: P, hash: 'v=hold&el=Og&lang=vi', touch: true, settle: 1600 },
     { name: 's15-vi-nitrogen-liquid-phone', vp: P, hash: 'v=hold&el=N&lang=vi', touch: true, settle: 800, act: to(73, 2600) },
     { name: 's16-neon-cool-it-playing-desktop', vp: D, hash: 'v=hold&el=Ne', settle: 1200, now: true, act: async page => { await page.locator('.sample-play', { hasText: 'Cool it' }).click(); await page.waitForTimeout(9000); } },
+    // the vapour just past −246 °C: it rains into the pool (no columns), 0.7 s after condensing
+    { name: 's16-neon-condensing-desktop', vp: D, hash: 'v=hold&el=Ne', settle: 800, now: true, act: async page => { await page.waitForTimeout(600); await page.evaluate(() => window.__pt.set({ T: 30 })); await page.waitForTimeout(1500); await page.evaluate(() => window.__pt.set({ T: 26.4 })); await page.waitForTimeout(700); } },
+    // a crystal of 58 atoms per box is not drawn: one manganese atom stands in, and glows in the kiln
+    { name: 's17-manganese-room-desktop', vp: D, hash: 'el=Mn&card=1', settle: 1500, act: door },
+    { name: 's17-manganese-red-hot-phone', vp: P, hash: 'v=hold&el=Mn', touch: true, settle: 800, act: to(1300, 2400) },
+    { name: 's18-iodine-room-phone', vp: P, hash: 'el=I&card=1', touch: true, settle: 1500, act: door },
   ];
 }
 // the generic set loader in tools/shots.mjs calls cases({ SIZES }) (added at the merge)

@@ -559,3 +559,39 @@ The side-by-side stage answers "two glossy marbles":
 **Noted:**
 - The side-by-side sheet now says "A litre of gold weighs 2.4 times as much as a litre of iron" (exact).
 - The card's pair hook (`strings-home.js`) still says "weighs 2.4× more". The number is right for our PubChem densities (19.282 / 7.874 = 2.449; the review's 2.5 used CRC's 19.30). The wording waits for moony's call.
+
+## Merge review: `view-sample-r2` (the sample place, round 2), 21 Nov 2026
+The sample session's answer to `reviews/sample-s1.md`, committed with this merge (with `reviews/atom-a1.md` and `reviews/patterns-p2.md`). Reviewed against STYLE.md and the PARALLEL.md checklist: passed. Its decisions are in `NOTES-sample.md`.
+
+**PROPOSAL commits: all accepted.**
+- **Data:** NUBASE2020's half-life uncertainty.
+- **Card:** oganesson is "predicted to be a solid, unlike the other noble gases" (from our state at 20 °C).
+- **Sample view:**
+  - atoms keep their size from liquid to gas (STYLE §6);
+  - molecules of any size (S₈ rings, P₄);
+  - a building-block specimen instead of an empty vessel (the vessel is sized to it; the 0.7 s glide re-frames on melting, so there is no change of scale);
+  - daylight glass with a faint haze and a foot line;
+  - a crisper glaze;
+  - condensation that rains into the pool.
+- **Quicksilver mercury:** asked for by moony ("mercury should read as shiny quicksilver"). STYLE.md §6 is amended for the glaze, the glass, quicksilver and the specimen.
+- **The table's glaze:** `tableArt.js` is a pure refactor (`glazeStudio` = fres × `studioLight`). The tiles render identically (checked against hero-r7).
+
+**Follow-ups:**
+- **Metals by day:** frozen mercury turns from quicksilver back to family blue. Decide this together with the forge's iron.
+- **The forge's vapour at the true bead size** is dense and blown-out at 2,950 °C (hero 17). Thin it: fewer drawn atoms or less glow.
+
+**Oganesson's half-life (moony's check, applied at the merge):**
+- NUBASE2020 lists oganesson-294 at 0.7 ± 0.3 ms (line 5867) and oganesson-295 at 680 ± 540 ms (line 5868). The 295 value rests on a single unconfirmed observation (Wikipedia's isotope list and Smits et al. 2020 cite only 294).
+- `data/curated/tentative-isotopes.json` records this. `tools/build-data.mjs` never takes a flagged entry as the longest-lived kind; beside one, it prefers an observed kind over a NUBASE '#' estimate (293's "1 ms #"). It keeps 295 as `halfLifeTent`.
+- **Only oganesson changes:** half-life 0.7 ± 0.3 ms with "the only confirmed kind", mass number 294 (IUPAC's [294]), nucleus A = 294.
+- **Display:**
+  - The sample place shows 294 first, with 295 as a note ("…listed at 680 ± 540 milliseconds, but it is not yet confirmed"), both tappable to NUBASE2020.
+  - The card's "All numbers" shows "Longest half-life (confirmed kinds)" plus a row for the unconfirmed kind.
+- **Note for the atom session (round 2):** its "longest-lived kind known (mass number 294)" could say "confirmed".
+
+**Its questions:**
+1. Vietnamese accent style ("thuỷ/hoá" vs "thủy/hóa"): left as is and listed for moony in QUESTIONS.md.
+2. Shared thermometer rules (knob margin, a disabled vs a hidden "Room temperature" button, the About link on the forge): decided when the kit's thermometer unifies both (scheduled).
+3. **The card's §6 items:**
+   - The desktop card now gives the source hint, as phones do.
+   - "Half-metals" keeps its break at the compound's own hyphen (like "Salt-makers"; the staircase is too narrow for one line at 14 px).
