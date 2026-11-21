@@ -520,6 +520,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       } else if (ss.kind === 'liquid' || ss.kind === 'gas') {
         if (prevKind !== 'liquid' && prevKind !== 'gas') prepareFluid(e, ss.kind);
         else if (ss.kind === 'gas' && prevKind === 'liquid') prepareFluid(e, 'gas');
+        else if (FORGE && ss.kind === 'liquid' && prevKind === 'gas') setAtomGeometry(0.5 * dNN); // condensing: the beads touch again, as in any liquid
         atoms.visible = true;
       } else {
         atoms.visible = false; cellLines.visible = false;
