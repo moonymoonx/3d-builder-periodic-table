@@ -9,7 +9,7 @@ const json = fs.readFileSync(new URL('../data/elements.json', import.meta.url), 
 globalThis.document = { getElementById: () => ({ textContent: json }) };
 const { loadData, bySym, byZ } = await import('../src/app/data.js');
 loadData();
-const { CURATED, curatedOf, curatedFacts, pairStory, ratioValue, forms, twoForms, defaultPartner, litre } = await import('../src/app/ui/comparePanel.js');
+const { CURATED, curatedOf, curatedFacts, pairStory, ratioValue, forms, twoForms, defaultPartner, litre, tempC, litreText, balanceTilt, specimenOf } = await import('../src/app/ui/comparePanel.js');
 const D = JSON.parse(json);
 const E = s => bySym(s);
 
@@ -60,4 +60,28 @@ test('side by side: the default partner is the element below (or above)', () => 
   assert.equal(byZ(defaultPartner(26)).sym, 'Ru');
   assert.equal(byZ(defaultPartner(118)).sym, 'Rn');
   assert.ok(D.elements.length === 118);
+});
+
+test('side by side: the stage shows each litre as it is at 20 °C, on a balance that tips by the weight ratio', () => {
+  assert.equal(specimenOf(E('Au')).state, 'solid');
+  assert.equal(specimenOf(E('Hg')).state, 'liquid');
+  assert.equal(specimenOf(E('Br')).state, 'liquid');
+  const he = specimenOf(E('He'));
+  assert.equal(he.state, 'gas'); assert.ok(he.gas && he.kg < 0.001);
+  assert.equal(specimenOf(E('Og')).kg, null); // no weight in our sources: plinths, not a balance
+  // tips toward the heavier litre, more for a bigger ratio, and never past about 11.5°
+  assert.ok(balanceTilt(7.87, 19.3) > 0 && balanceTilt(19.3, 7.87) < 0);
+  assert.ok(balanceTilt(1, 2.4) < balanceTilt(1, 136000));
+  assert.ok(Math.abs(balanceTilt(1.6e-4, 22.6)) <= 0.2);
+  assert.ok(Math.abs(balanceTilt(19.25, 19.3)) < 0.002); // tungsten and gold: level
+});
+
+test('side by side: numbers as people read them, never split from their unit', () => {
+  assert.equal(litreText(litre(E('He')).kg), '0.17\u00a0g');
+  assert.equal(litreText(litre(E('Cl')).kg), '3.0\u00a0g');
+  assert.equal(litreText(0.968), '0.97\u00a0kg');
+  assert.equal(litreText(19.3), '19.3\u00a0kg');
+  assert.equal(tempC(234.32), '−38.8\u00a0°C'); // mercury
+  assert.equal(tempC(1811), '1,538\u00a0°C'); // iron: whole kelvin, whole degrees
+  assert.equal(tempC(325, true), '≈\u00a052\u00a0°C'); // a prediction stays rounded
 });

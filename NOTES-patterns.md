@@ -4,6 +4,8 @@ Decisions of the "patterns" session (PARALLEL.md scope 3), for the main session 
 Who proposed each: **plan** (REDESIGN-PLAN / DESIGN-STUDY / PLAN-CRITIQUE, already approved) or **Claude** (this
 session's craft call, with the reason). Review set: `/workspace/out/redesign/patterns/` (33 PNG at 1440×900 and
 390×844, `?q=med`), frame statistics in `/workspace/out/redesign/patterns/fps/fps.txt` (automatic quality path).
+Round 2 (below, after the cold review `reviews/merged-m1.md`): `/workspace/out/redesign/patterns-r2/` (44 PNG) and
+`/workspace/out/redesign/patterns-r2/fps/` (fps.txt, ripple.txt, the load average before and after).
 
 ## Patterns across the table (`places/patterns.js`, `places/patternSpecs.js`, `ui/trends.js`)
 - **Each chart opens with a question, then a plain answer** (plan). Twelve patterns, one per numbers lens, with the
@@ -107,7 +109,63 @@ session's craft call, with the reason). Review set: `/workspace/out/redesign/pat
   max 67 ms (the first frame of a switch, building the model); phone median 16.7, max 16.8 ms. The pinned label's
   size is measured once per content (reading it every frame forced a layout; max was 117 ms before).
 
+## Round 2: the cold review's points, each checked first (code wins on code, sources on facts)
+### Patterns
+- **The noble-gas note pointed at caesium (55), not xenon (54)**: real. The leader stopped a bead short of xenon, on
+  the side where caesium sits. Fix (Claude): one layout pass places the picked label, the reference labels, then the
+  notes, by a cost over every bead, curve segment and label (indexed by x, so thousands of candidate spots stay
+  cheap). A leader may not pass within a bead's width of any element its note is not about, and leaders crossing
+  curves cost more. Notes hug their text: a balanced wrap left each box at its full max-width, stranding the leader
+  on empty paper; the lines now lean toward their leader.
+- **"×10" on a ×1,000 grid (p08)**: real (labelled lines every third power of ten). Fix: a faint line at every power
+  of ten, so "each line up: ×10" is literally true; labels stay every third.
+- **Row copy in column mode, the cobweb (p06)**: real. "Down each column" now draws only the picked element's column;
+  the row notes step aside for the column's own ("Down this column: hydrogen 31 pm → francium 260 pm"); the question
+  and answer switch to column words wherever the row words would mislead (atom sizes, felt pull: new questions;
+  melting, boiling, heft, pull, grip: new answers). Each column claim is checked against the data in
+  `tests/patterns.test.mjs` (e.g. "every column ends heavier than it starts", "the felt pull grows down every column").
+- **The "repeating wave" footer on Discovered and crust (p09)**: agreed; it shows for the nine periodic properties only.
+- **Pills hiding peaks, labels crossing curves**: the picked element's label chooses among ten spots around its bead
+  (above, below, beside; the caret on the side facing it) by the fewest beads and curves covered, its own row's
+  curve counting double, and keeps off the row names. The room-temperature label does the same along its line.
+- **Crisscrossing Vietnamese phone leaders**: phones draw one leader per note; the ink rings mark the rest.
+- **Phone: no "See it on the table"**: "On the table →" now sits beside "Other patterns ▾".
+- **Phone scrub left the dashed guide on the old element (p12)**: the guide follows the thumb; the picked ring dims.
+- **"More ▾" without sublabels**: each pattern carries its jargon as a caption (electronegativity…).
+- **Stranded °C**: a no-break space between every number and its unit (chart, sheet, stage, strings). Temperatures are
+  as precise as the source: a tenth of a degree only where the kelvin value has one (chlorine −101.5 °C, iron
+  1,538 °C). Crust values say "g per tonne".
+
+### Side by side
+- **"Two bare glossy plastic marbles with harsh hotspots"**: agreed. The default stage is now **a litre of each, as
+  it is at 20 °C, on a balance** (Claude, from the review's suggestion; every number is the sheet's own). A solid is a
+  glazed porcelain block with its symbol printed on the front like its tile; a liquid is a pool in the pan (a soft
+  window sheen across its far half, never a spot); a gas is a litre of clear glass with ink edges, like the forge's
+  vessel, a few atoms drifting slowly inside; a state we do not know is a dashed outline; stripes mark predictions.
+  The beam tips toward the heavier litre by `0.2·tanh(0.55·ln ratio)` rad: 2.4× reads clearly, 136,000× stops at
+  about 11.5°, tungsten beside gold hangs level. Without a weight in our sources (oganesson) the specimens stand on
+  plinths, with no balance. The beam glides 1.1 s ease-in-out, no bounce (STYLE.md §7).
+- **One atom of each** stays, as the second stage ("A litre of each | One atom of each"): beads in a soft glaze
+  (the table's studio minus the small key softbox, which focuses into a hard white dot on a sphere), with more paper
+  around them and the scale bar below the names.
+- Phones: "change ▾" under both tiles (they replace the "Pick any two" chip there); the active pair chip scrolls into
+  view; the sheet peeks at 44 % (was 52 %) so the balance fills about 70 % of the width; while peeking the sheet fades
+  at its bottom edge, and rows slide under the compact header through a soft paper edge (c08's clipped °C). Touch
+  scrolling checked headless: 0 → 236 px.
+- "gases at 20 °C" appears only when the pair has a gas. Desktop's picker opens beside the sheet, never over the table.
+
+### Frame rate (round 2; software renderer, automatic quality path, load average 1.4–7)
+- All 44 states (`fps/fps.txt`): median 16.7 ms (60 FPS), p95 ≤ 16.8 ms, the drifting-gas stages included.
+- The chart's SVG ripple (`fps/ripple.txt`, 4 switches): desktop median 16.7 ms, p95 33.4, max 83 (the first frame
+  of a switch: 10–27 ms of model and layout, then the SVG's first paint; 100 ms before the x-index); phone median
+  16.7, p95 16.8, max 33.4.
+- Tests: 39 unit tests (6 new), smoke 32/32 (a new step: the balance's words and the atom toggle), validator passes.
+
 ## Open questions (for the main session / moony)
+- Round 2: specimens wear their family pigment (STYLE.md: data colours only on specimens), so gold and mercury are the
+  same blue; form (block or pool), the beam and the words tell them apart. Real colours (yellow gold, silver mercury,
+  red-brown bromine) would tell more but break "one colour, one meaning". Keep the pigments?
+- Round 2: the stage choice is not in the link (P7).
 - Vietnamese: all new strings are drafts (e.g. "Quy luật trên cả bảng", "Độ giữ electron", "Những cặp bất ngờ").
 - A dot's source takes two taps on the chart (pick the dot, tap its value), like the card ("Tap a value to see where
   it comes from"). One tap straight to the source would cover the chart with a popover at every pick.
