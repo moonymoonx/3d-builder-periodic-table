@@ -558,12 +558,15 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         const o = 3 * i;
         Vv[o] += gauss() * jig * dt * 6; Vv[o + 1] += gauss() * jig * dt * 6 - dNN * (FORGE ? 22 : 6) * dt; Vv[o + 2] += gauss() * jig * dt * 6; // forge: it visibly slumps into a puddle
         const rx = P[o] - cx, rz = P[o + 2] - cz, rr = Math.hypot(rx, rz);
-        if (rr > Rp) { const pull = (rr - Rp) * 6 * dt / rr; Vv[o] -= rx * pull * 4; Vv[o + 2] -= rz * pull * 4; }
+        // forge look: the pool gathers what reaches the floor; a drop still in the air falls like rain
+        // (pulling it in at every height drew the condensing vapour into a tall column)
+        const wy = FORGE ? Math.max(0, Math.min(1, 1 - (P[o + 1] + hy - dNN * 4) / (dNN * 3))) : 1;
+        if (rr > Rp && wy > 0) { const pull = (wy * (rr - Rp) * 6 * dt) / rr; Vv[o] -= rx * pull * 4; Vv[o + 2] -= rz * pull * 4; }
         // a round pool, never the crucible's corners; only at the floor, so condensing droplets fall freely
         // and drift in (snapping them in mid-air stood them in columns on the pool's rim)
         if (FORGE && rr > Rp * 1.02 && P[o + 1] < -hy + dNN * 3) { const f = (Rp * 1.02) / rr; P[o] = cx + rx * f; P[o + 2] = cz + rz * f; Vv[o] *= 0.5; Vv[o + 2] *= 0.5; }
-        if (FORGE && rr > 1) { const sw = dNN * 2.2 * dt / rr; Vv[o] -= rz * sw; Vv[o + 2] += rx * sw; } // a slow swirl, as in a stirred melt
-        const damp = Math.exp(-4 * dt);
+        if (FORGE && rr > 1 && wy > 0) { const sw = (wy * dNN * 2.2 * dt) / rr; Vv[o] -= rz * sw; Vv[o + 2] += rx * sw; } // a slow swirl, as in a stirred melt
+        const damp = Math.exp(-(wy > 0 ? 4 : 1.2) * dt); // less drag in the air: the drops fall, then settle
         for (let k = 0; k < 3; k++) { Vv[o + k] *= damp; P[o + k] += Vv[o + k] * dt; }
         if (P[o] > hx || P[o] < -hx) { P[o] = Math.max(-hx, Math.min(hx, P[o])); Vv[o] *= -0.3; }
         if (P[o + 1] < -hy) { P[o + 1] = -hy; Vv[o + 1] *= -0.2; }
