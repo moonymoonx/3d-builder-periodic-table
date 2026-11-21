@@ -268,3 +268,8 @@
   - **Proposals:** OKLab gamut mapping scheduled; the kit no-× option not needed now.
   - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,810 KB.
   - **Reshoot:** `/workspace/out/redesign/atom-r3-merged/`.
+- 2026-11-21 ~12:37 (Saigon) — **Merged `view-sample-r3`** (answers `reviews/sample-s2.md`). Clean rebase onto cf21995; all five view proposals kept.
+  - **Engine:** resolution steps rate-limited (two slow windows, at most one step every 3 s).
+  - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,819 KB.
+  - **FPS:** dense states at a 60 FPS median (load 7–8); the neon sweep's p95 is still 83 ms.
+  - **Reshoot:** `/workspace/out/redesign/sample-r3-merged/`.

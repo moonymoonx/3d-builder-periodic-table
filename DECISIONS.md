@@ -705,3 +705,22 @@ The answer to `reviews/atom-a2.md` (clarity and ease were 3.5). Reviewed against
 - **A kit `closable: false` sheet option:** not now. The place's scoped CSS does the job; the kit option comes with the kit pass if a second place needs it.
 
 **Checks:** unit tests 47/47, validator, smoke 48/48 twice; index.html 1,810 KB. Reshoot: `/workspace/out/redesign/atom-r3-merged/`.
+
+## Merge review: `view-sample-r3` (the sample place, round 3), 21 Nov 2026
+The answer to `reviews/sample-s2.md` (beauty was 3.5). Reviewed against STYLE.md and the PARALLEL.md checklist: passed. The rebase onto cf21995 was clean.
+
+**PROPOSAL commits on `views/sample.js`: all accepted.**
+- Every bead stays inside the glass (neon no longer burst through).
+- Molecules read as joined, and S₈ is drawn as its crown (Wikipedia, Octasulfur / Allotropes of sulfur).
+- The building block rests on the hearth in a vessel sized to it, swaying to face the visitor.
+- Its contact shadow takes the hearth's polygon offset.
+
+The forge's heating path is untouched.
+
+**§0a, the engine's resolution steps: accepted, done by the main session (`engine.js`).** Each pixel-ratio step reallocates the canvas, a 50–67 ms frame on a software renderer. Steps now need two slow windows in a row and come at most once every 3 s; the proactive zoom step is unchanged.
+
+**FPS at the merge** (dense states, load 7–8):
+- All hold a 60 FPS median.
+- The neon "Cool it" sweep keeps an 83 ms p95. Its remaining long frames come with an idle main thread (the session's profile): the software renderer under load.
+
+**Checks:** unit tests 47/47, validator, smoke 48/48 twice; index.html 1,819 KB. Reshoot: `/workspace/out/redesign/sample-r3-merged/` (README and fps.txt).
