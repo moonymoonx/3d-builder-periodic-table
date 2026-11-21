@@ -179,7 +179,7 @@ for (const r of db.prepare('select * from screeningconstants').all()) {
 const UNIT_S = { ys: 1e-24, zs: 1e-21, as: 1e-18, fs: 1e-15, ps: 1e-12, ns: 1e-9, us: 1e-6, ms: 1e-3, s: 1, m: 60, h: 3600, d: 86400 };
 const YEAR_S = 365.25 * 86400;
 Object.assign(UNIT_S, { y: YEAR_S, ky: 1e3 * YEAR_S, My: 1e6 * YEAR_S, Gy: 1e9 * YEAR_S, Ty: 1e12 * YEAR_S, Py: 1e15 * YEAR_S, Ey: 1e18 * YEAR_S, Zy: 1e21 * YEAR_S, Yy: 1e24 * YEAR_S });
-const NUBASE = new Map(); // Z -> [{A, stable, hlText, hlSec, est, abundance}]
+const NUBASE = new Map(); // Z -> [{A, stable, hlText, hlSec, hlU, est, abundance}]
 for (const line of readRaw('nubase/nubase_4.mas20.txt', 'latin1').split('\n')) {
   if (!line || line.startsWith('#')) continue;
   const A = +line.slice(0, 3), zzzi = line.slice(4, 8), Z = +zzzi.slice(0, 3), iso = zzzi[3];
@@ -191,6 +191,9 @@ for (const line of readRaw('nubase/nubase_4.mas20.txt', 'latin1').split('\n')) {
   if (!rec.stable && hlRaw && hlRaw !== 'p-unst') {
     const v = Number(hlRaw.replace(/[#<>~]/g, ''));
     if (Number.isFinite(v) && UNIT_S[unit]) { rec.hlSec = v * UNIT_S[unit]; rec.hlText = `${hlRaw.replace('#', '')} ${unit}`; }
+    // the half-life's uncertainty (columns 82-88, same unit); limits such as ">300ns" are not uncertainties
+    const dT = line.slice(81, 88).trim();
+    if (rec.hlSec && /^\d+(\.\d+)?$/.test(dT)) { rec.hlU = Number(dT) * UNIT_S[unit]; rec.hlUText = `${hlRaw.replace('#', '')} ± ${dT} ${unit}`; }
   }
   if (!NUBASE.has(Z)) NUBASE.set(Z, []);
   NUBASE.get(Z).push(rec);
@@ -451,7 +454,8 @@ for (const Z of ZS) {
   if (!iso.some(x => x.stable)) {
     if (longest) {
       if (f.aw[0] == null) f.massNumber = V(longest.A, 'nubase', { n: 'mass number of the longest-lived known isotope' });
-      f.halfLife = V(round(longest.hlSec, 4), 'nubase', { t: longest.hlText, A: longest.A, p: longest.est ? 1 : undefined, n: longest.est ? 'estimated from systematics (NUBASE #)' : undefined });
+      f.halfLife = V(round(longest.hlSec, 4), 'nubase', { t: longest.hlText, A: longest.A, p: longest.est ? 1 : undefined, u: longest.hlU ? round(longest.hlU, 4) : undefined,
+        n: longest.est ? 'estimated from systematics (NUBASE #)' : longest.hlU ? `NUBASE2020: ${longest.hlUText} for ${sym}-${longest.A}` : undefined });
       if (!nucA) nucA = longest.A;
     } else f.halfLife = NONE('no half-life in NUBASE2020');
   }
