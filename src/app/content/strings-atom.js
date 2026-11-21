@@ -67,7 +67,7 @@ const EN = {
   'atom.light.gA': 'NIST gives no brightness for these lines: their heights show how often each jump happens.',
   'atom.light.lines': 'Its {k} brightest lines to the eye (of {n} NIST lists)',
   'atom.light.how': 'Each line is light given off when an electron drops to a lower level.',
-  'atom.light.glow': 'The glow is all of its lines mixed, as your eye would see them.',
+  'atom.light.glow': 'The glow is computed from its measured lines, mixed as your eye would see them.',
   'atom.col.violet': 'violet', 'atom.col.blue': 'blue', 'atom.col.teal': 'blue-green', 'atom.col.green': 'green', 'atom.col.yellow': 'yellow', 'atom.col.orange': 'orange', 'atom.col.red': 'red',
   // the stepper
   'atom.add': '+ proton', 'atom.remove': '− proton', 'atom.addTo': 'Add a proton: {name}', 'atom.removeTo': 'Take a proton away: {name}',
@@ -148,7 +148,7 @@ const VI = {
   'atom.light.gA': 'NIST không cho độ sáng của các vạch này: chiều cao vạch cho biết mỗi bước nhảy xảy ra thường xuyên đến đâu.',
   'atom.light.lines': '{k} vạch sáng nhất đối với mắt (trong {n} vạch NIST liệt kê)',
   'atom.light.how': 'Mỗi vạch là ánh sáng phát ra khi một electron rơi xuống một mức năng lượng thấp hơn.',
-  'atom.light.glow': 'Quầng sáng là tất cả các vạch của nó trộn lại, như mắt ta nhìn thấy.',
+  'atom.light.glow': 'Quầng sáng được tính từ các vạch đo được của nó, trộn lại như mắt ta nhìn thấy.',
   'atom.col.violet': 'tím', 'atom.col.blue': 'lam', 'atom.col.teal': 'lam lục', 'atom.col.green': 'lục', 'atom.col.yellow': 'vàng', 'atom.col.orange': 'cam', 'atom.col.red': 'đỏ',
   'atom.add': '+ proton', 'atom.remove': '− proton', 'atom.addTo': 'Thêm một proton: {name}', 'atom.removeTo': 'Bớt một proton: {name}',
   'atom.protons': '{n} proton', 'atom.proton1': '1 proton',

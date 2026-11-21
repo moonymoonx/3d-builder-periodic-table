@@ -24,17 +24,17 @@ export const gammaEncode = c => (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c
  *  fit's tails drift because its x̄ falls off faster than its ȳ: deep red turned olive, then green (749 nm
  *  came out #008946), and the violet end teal. At 400 and 680 nm the fit still gives a clean violet and
  *  red. (Found by the atom session, PROPOSALS-atom.md #1.) */
-export const HUE_VIOLET = 400, HUE_RED = 680;
+export const HUE_VIOLET = 400; // one name per export: tools/build.mjs registers only the first of `export const A = 1, B = 2`
+export const HUE_RED = 680;
 
-/** Display colour for one wavelength. Spectral colours lie outside sRGB: white is added until all
- *  channels are >= 0, then the colour is scaled so its largest channel is 1 and dimmed at the ends
+/** Display colour for one wavelength. Spectral colours lie outside sRGB: the channels below 0 are clipped
+ *  (adding white instead turned deep red crimson: 640 nm came out #ff0a46; PROPOSALS-atom.md r2 #3), then
+ *  the colour is scaled so its largest channel is 1 and dimmed at the ends
  *  of the visible range, where the eye is barely sensitive (the brightness follows the wavelength
  *  itself; the hue is held at HUE_VIOLET / HUE_RED beyond them). */
 export function wavelengthToRGB(lambda, fit, M) {
   const XYZ = cmfAt(fit, Math.min(HUE_RED, Math.max(HUE_VIOLET, lambda)));
-  let rgb = mul3(M, XYZ);
-  const mn = Math.min(...rgb);
-  if (mn < 0) rgb = rgb.map(c => c - mn);
+  const rgb = mul3(M, XYZ).map(c => Math.max(0, c));
   const mx = Math.max(...rgb);
   if (mx <= 0) return [0, 0, 0];
   const fade = Math.min(1, 0.25 + 3 * Math.max(0, cmfAt(fit, lambda)[1]));

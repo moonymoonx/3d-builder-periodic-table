@@ -211,6 +211,7 @@ export function runValidation({ report = false, quiet = false } = {}) {
     Ar: ['violet to pale lavender blue', (x, y) => x < 0.3 && y < 0.2], Hg: ['light blue', (x, y) => x < 0.3 && y < 0.3 && y > x],
     He: ['white to orange', (x, y) => x > 0.38 && y > 0.3], H: ['pink to magenta', (x, y) => x > 0.3 && y < 0.25] };
   const glowBad = Object.entries(GLOW).filter(([s, [, ok]]) => !(E(s).lines.glow && ok(...E(s).lines.glow)));
+  check('colour: no glow for krypton and xenon (their lines\' mix fails the lamp table)', !E('Kr').lines.glow && !E('Xe').lines.glow);
   check('colour: glow of H, He, Ne, Ar, Na, Hg matches the gas-discharge lamp colours (Wikipedia table)', glowBad.length === 0,
     Object.keys(GLOW).map(s => `${s} ${JSON.stringify(E(s).lines.glow)}`).join(' · ') + (glowBad.length ? ' — off: ' + glowBad.map(([s, [w]]) => `${s} (${w})`).join(', ') : ''));
   // Nuclear charge radii measured where Angeli & Marinova (2013) have the isotope we show.

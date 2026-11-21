@@ -32,7 +32,11 @@ const placeholders = curated('placeholders.json');
 const FIX = curated('factcheck-fixes.json');
 const LINES = curated('element-lines.json').lines;
 const HIT = curated('phases-highT.json');
-const TENTATIVE = curated('tentative-isotopes.json').entries; // NUBASE entries not yet confirmed: never the longest-lived kind
+const TENTATIVE = curated('tentative-isotopes.json').entries;
+// lines whose eye-mix fails the lamp check (Wikipedia "Gas-discharge lamp", oldid 1351286820): krypton comes out
+// magenta (lamps: grey off-white to green), xenon too saturated a blue (lamps: grey or blue-grey dim white).
+// Real tubes are not in equilibrium and their ion lines are not in our data, so no glow is drawn for them.
+const GLOW_FAILS = new Set(['Kr', 'Xe']); // NUBASE entries not yet confirmed: never the longest-lived kind
 const warnings = [];
 const warn = (...a) => warnings.push(a.join(' '));
 const num = v => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
@@ -373,7 +377,7 @@ function linesFor(Z, sym, ieEv) {
   const max = Math.max(...kept.map(x => x.P), 1e-30);
   return {
     basis, total: out.length, used: pool.length, dropped: out.length - bound.length,
-    glow: basis !== 'none' && S > 0 ? [round(X / S, 2), round(Y / S, 2)] : undefined,
+    glow: basis !== 'none' && S > 0 && !GLOW_FAILS.has(sym) ? [round(X / S, 2), round(Y / S, 2)] : undefined,
     v: kept.sort((a, b) => a.lam - b.lam).map(x => [Number(x.lam.toFixed(3)), basis === 'none' ? 0 : Math.max(1, Math.round((1000 * x.P) / max))]),
   };
 }

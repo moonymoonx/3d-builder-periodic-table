@@ -253,3 +253,9 @@
   - **Data choices:** chlorine's 3.62 eV kept (PubChem, our rule for electron affinity); a data-computed Gallium · Mercury hook accepted for later.
   - **Checks:** unit tests 45/45, validator ALL PASS, smoke 46/46 twice, index.html 1,778 KB.
   - **Reshoot:** `/workspace/out/redesign/patterns-r3-merged/` (47 states).
+- 2026-11-21 ~11:35 (Saigon) — **Merged `view-atom-r2`** (the atom place, round 2, answering `reviews/atom-a1.md`). Review passed (DECISIONS.md › Merge review: view-atom-r2).
+  - **Rebase:** onto 60a2cde. `build-data.mjs` merged by hand (the confirmed-kind and measured-radius rules together); data rebuilt from the merged build (IAEA raw file copied from the atom worktree after a SHA-256 check).
+  - **Decisions:** glow from the measured lines, none for krypton and xenon; the card says "the 8 that look brightest"; `color.js` clips and exports one name per line.
+  - **Fixed:** a stray "null" in the desktop card's numbers (from cf98e90).
+  - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,795 KB.
+  - **Reshoot:** `/workspace/out/redesign/atom-r2-merged/`.
