@@ -2,6 +2,7 @@
 
 **Round 2 (`view-sample-r2`): no new router lines.** Everything below was merged with f3d0ae7. The
 panel's wait during the scale dive watches `body.diving`, which `main.js` already sets.
+**Round 3 (`view-sample-r3`): no new router lines either.**
 
 The router lines the sample place needs (PARALLEL.md: `main.js` and `state.js` are the main session's; these
 are applied at merge). The patch below is exactly what this branch was tested with (smoke, shots, FPS):

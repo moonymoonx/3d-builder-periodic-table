@@ -2,7 +2,7 @@
 // Key states at desktop and phone size: a gas cooled until it turns liquid and freezes, the liquid metal
 // frozen and boiled, helium near absolute zero, the crystals we do not draw (one molecule or one atom
 // stands in), an element never made in bulk, a glowing melt in the kiln, "About this sample", Vietnamese,
-// and the vapour condensing mid-sweep.
+// the vapour condensing mid-sweep, and (round 3) specimens at rest, S₈'s crown and neon's fanned events.
 // Start states are reached the way a visitor does: from the element card's door, with the scale dive.
 export function sampleCases(SIZES) {
   const D = SIZES.desk, P = SIZES.phone;
@@ -48,6 +48,10 @@ export function sampleCases(SIZES) {
     { name: 's17-manganese-room-desktop', vp: D, hash: 'el=Mn&card=1', settle: 1500, act: door },
     { name: 's17-manganese-red-hot-phone', vp: P, hash: 'v=hold&el=Mn', touch: true, settle: 800, act: to(1300, 2400) },
     { name: 's18-iodine-room-phone', vp: P, hash: 'el=I&card=1', touch: true, settle: 1500, act: door },
+    // round 3: the P₄ pyramid on a face; S₈'s crown turned edge-on; neon's close events fanned on a phone
+    { name: 's19-phosphorus-room-desktop', vp: D, hash: 'v=hold&el=P', settle: 2200 },
+    { name: 's19-sulfur-crown-edge-on-desktop', vp: D, hash: 'v=hold&el=S', settle: 6000 },
+    { name: 's20-neon-close-events-phone', vp: P, hash: 'v=hold&el=Ne', touch: true, settle: 800, act: to(26.4, 2600) },
   ];
 }
 // the generic set loader in tools/shots.mjs calls cases({ SIZES }) (added at the merge)

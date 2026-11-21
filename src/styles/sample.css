@@ -43,6 +43,10 @@ body.kiln .sample-cell-word { color: inherit; font-weight: inherit; }
 .sample-track { position: relative; height: 92px; margin: calc(var(--rows, 0) * 17px) 0 0 18px; } /* close events stack their labels in rows: room above for them */
 .sample-rail { position: absolute; left: 0; right: 0; top: 40px; height: 12px; border-radius: 6px; background: var(--line); }
 .sample-fill { position: absolute; inset: 0; border-radius: 6px; }
+/* by day heat reads terracotta to ember on the cream panel; in the kiln the forge's dark-to-bright gradient */
+.sample-fill__layer { position: absolute; inset: 0; border-radius: 6px; }
+.sample-fill__layer.is-kiln { opacity: 0; transition: opacity var(--d-kiln) var(--ease-in-out); }
+body.kiln .sample-fill__layer.is-kiln { opacity: 1; }
 /* the bulb: the thermometer's reservoir (smaller than the knob, the rail's own colour), at room temperature */
 .sample-bulb { position: absolute; z-index: 2; top: 46px; width: 18px; height: 18px; margin-top: -9px; border-radius: 50%; background: #3B2B24; box-shadow: 0 0 0 3px var(--card); pointer-events: none; }
 /* the knob: the one thing you drag, a solid cream disc with an ember ring, drawn where the fill ends;
@@ -67,6 +71,11 @@ body.kiln .sample-cell-word { color: inherit; font-weight: inherit; }
 .sample-tick small.sample-tick__sep { margin: 0 1px 0 2px; }
 /* a label shared by close events: each event keeps its own stem up to it */
 .sample-tick.is-shared::after { display: none; }
+/* close events fanned apart: each label hangs on its own angled leader (drawn in one SVG), no straight stem */
+.sample-tick.is-fan::after { display: none; }
+.sample-leaders { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.sample-leaders polyline { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.5; }
+.sample-leaders polyline.is-pred { opacity: 0.35; }
 .sample-tick.is-pred::after { opacity: 0.35; }
 .sample-flags { position: absolute; left: 0; right: 0; top: 60px; height: 24px; pointer-events: none; }
 .sample-flag { position: absolute; top: 4px; transform: translateX(calc(-50% + var(--dx, 0px))); white-space: nowrap; font: italic 400 13px/1.2 var(--font-serif); color: var(--ink-3); padding-top: 6px; }
@@ -74,6 +83,8 @@ body.kiln .sample-cell-word { color: inherit; font-weight: inherit; }
 .sample-flag::before { content: ""; position: absolute; top: 0; left: calc(50% - var(--dx, 0px)); width: 1px; height: 6px; background: currentColor; }
 /* room temperature: where every sample starts, where the bulb sits and "Room temperature" returns */
 .sample-flag.is-room { color: var(--ink-2); }
+.sample-flag { transition: opacity var(--d-hover) var(--ease); }
+.sample-flag.is-near { opacity: 0.25; }
 .sample-actions { display: flex; justify-content: center; gap: 10px; }
 .sample-actions .ui-btn { white-space: nowrap; }
 .sample-play { min-width: 128px; }
@@ -105,7 +116,8 @@ body.kiln .sample-cell-word { color: inherit; font-weight: inherit; }
 /* the plain words come first; the name of the science, or what a number means, follows below it */
 .sample-sub { display: block; margin-top: 1px; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
 
-/* "About this sample" (the kit's sheet) */
+/* "About this sample" (the kit's sheet): a deeper fade than the kit's 22 px while more waits below */
+.ui-sheet.sample-sheet.has-more .ui-sheet__body { -webkit-mask: linear-gradient(#000 calc(100% - 44px), transparent); mask: linear-gradient(#000 calc(100% - 44px), transparent); }
 .sample-d-head { padding-right: 44px; }
 .sample-d-title { margin: 0; font: 600 var(--t-title)/var(--lh-title) var(--font-serif); }
 .sample-d-meta { margin: 2px 0 0; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
@@ -155,6 +167,7 @@ body.kiln .sample-room:hover { background: rgba(242, 232, 218, 0.08); }
   .sample-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sample-strip__cell:first-child { grid-column: 1 / -1; padding-right: 0; border-bottom: 1px solid var(--line); }
   .sample-strip__cell:nth-child(2) { padding-left: 0; border-left: 0; }
-  /* the sheet peeks with rows still below: the body fades out at the bottom (STYLE §5) */
-  .ui-sheet.sample-sheet.has-more:not(.is-full) .ui-sheet__body { -webkit-mask: linear-gradient(#000 calc(100% - 28px), transparent); mask: linear-gradient(#000 calc(100% - 28px), transparent); }
+  /* the sheet peeks with rows still below: the body fades out at the bottom (STYLE §5), deep enough that
+     no line is cut mid-glyph */
+  .ui-sheet.sample-sheet.has-more:not(.is-full) .ui-sheet__body { -webkit-mask: linear-gradient(#000 calc(100% - 44px), transparent); mask: linear-gradient(#000 calc(100% - 44px), transparent); }
 }
