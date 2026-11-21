@@ -41,6 +41,33 @@ const SOFT_STUDIO = `
     float win = smoothstep(0.35, 1.0, dot(R, normalize(vec3(-0.55, 0.6, 0.58))));
     return fres * (room + vec3(1.0, 0.97, 0.92) * (strip * 1.1 + win * 1.4));
   }`;
+/**
+ * The balance's studio: the room, a tall window front-left (on anything turned about a vertical axis, the column and
+ * the pans' walls, it draws one crisp vertical catchlight, as on glazed ware) and the long softbox low behind (a sheen
+ * along rims and the beam). Bright sources, so the catchlights still read on a pale glaze.
+ */
+const BALANCE_STUDIO = `
+  vec3 balanceStudio(vec3 n, vec3 v, float r) {
+    vec3 R = reflect(-v, n);
+    float fres = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
+    float soft = 0.05 + 0.45 * r;
+    vec3 room = mix(vec3(0.70, 0.66, 0.58), vec3(0.42, 0.39, 0.35), smoothstep(-0.3, 0.05, R.y));
+    vec2 az = normalize(R.xz + vec2(1e-5, 0.0));
+    float win = smoothstep(1.0 - 0.012 - 0.2 * soft, 1.0, dot(az, normalize(vec2(-0.62, 0.78)))) * smoothstep(-0.3, 0.0, R.y) * (1.0 - smoothstep(0.55, 0.85, R.y));
+    float strip = (1.0 - smoothstep(0.08, 0.08 + soft, abs(R.y - 0.5))) * smoothstep(-0.05, 0.3, -R.z);
+    return fres * (room + vec3(1.0, 0.97, 0.92) * (win * 12.0 + strip * 2.2));
+  }`;
+function balanceGlaze({ color, roughness = 0.14, glaze = 1 }) {
+  const m = new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 });
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uGlaze = { value: glaze };
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>\nuniform float uGlaze;\n${BALANCE_STUDIO}`)
+      .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+        reflectedLight.indirectSpecular += uGlaze * balanceStudio(inverseTransformDirection(normal, viewMatrix), inverseTransformDirection(geometryViewDir, viewMatrix), material.roughness);`);
+  };
+  return m;
+}
 /** Glazed porcelain for round shapes (atoms, balance parts): a broad, soft sheen, never a pin-point highlight. */
 function softGlaze({ color = 0xffffff, roughness = 0.42, glaze = 0.7 } = {}) {
   const m = new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 });
@@ -58,7 +85,7 @@ function softGlaze({ color = 0xffffff, roughness = 0.42, glaze = 0.7 } = {}) {
  * stripes when the state is predicted and, on a solid block, its symbol printed in ink on the front.
  */
 function specimenGlaze({ roughness = 0.2, glaze = TILE.glaze, shade = 0.86 } = {}) {
-  const uni = { uSym: { value: null }, uHasSym: { value: 0 }, uInk: { value: new THREE.Color(TOK.ink) }, uStripe: { value: 0 }, uGlaze: { value: glaze }, uShade: { value: shade }, uHalf: { value: 5 }, uSheen: { value: 0 }, uPoolR: { value: 10 } };
+  const uni = { uMirror: { value: 0 }, uSym: { value: null }, uHasSym: { value: 0 }, uInk: { value: new THREE.Color(TOK.ink) }, uStripe: { value: 0 }, uGlaze: { value: glaze }, uShade: { value: shade }, uHalf: { value: 5 }, uSheen: { value: 0 }, uPoolR: { value: 10 } };
   const m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness, metalness: 0 });
   m.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, uni);
@@ -67,7 +94,7 @@ function specimenGlaze({ roughness = 0.2, glaze = TILE.glaze, shade = 0.86 } = {
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
         uniform sampler2D uSym; uniform float uHasSym; uniform vec3 uInk; uniform float uStripe; uniform float uGlaze; uniform float uShade; uniform float uHalf;
-        uniform float uSheen; uniform float uPoolR;
+        uniform float uSheen; uniform float uPoolR; uniform float uMirror;
         varying vec3 vLoc; varying vec3 vNo;
         ${GLAZE}`)
       .replace('#include <color_fragment>', `#include <color_fragment>
@@ -80,15 +107,37 @@ function specimenGlaze({ roughness = 0.2, glaze = TILE.glaze, shade = 0.86 } = {
           diffuseColor.rgb = mix(diffuseColor.rgb, uInk, ink * 0.9);
         }`)
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
-        reflectedLight.indirectSpecular += uGlaze * glazeStudio(inverseTransformDirection(normal, viewMatrix), inverseTransformDirection(geometryViewDir, viewMatrix), material.roughness);
-        if (uSheen > 0.0 && vNo.y > 0.9) {
+        reflectedLight.indirectSpecular += uGlaze * (1.0 - uMirror) * glazeStudio(inverseTransformDirection(normal, viewMatrix), inverseTransformDirection(geometryViewDir, viewMatrix), material.roughness);
+        if (uMirror > 0.0) { // quicksilver (STYLE.md §6): a mirror of the studio over a dark body, barely tinted by its family colour
+          vec3 wN = inverseTransformDirection(normal, viewMatrix), wV = inverseTransformDirection(geometryViewDir, viewMatrix);
+          float mF = 0.72 + 0.28 * pow(1.0 - clamp(dot(wN, wV), 0.0, 1.0), 5.0);
+          reflectedLight.directDiffuse *= 1.0 - 0.78 * uMirror; reflectedLight.indirectDiffuse *= 1.0 - 0.78 * uMirror;
+          reflectedLight.indirectSpecular += uMirror * mF * studioLight(reflect(-wV, wN), material.roughness) * mix(vec3(1.0), diffuseColor.rgb, 0.3);
+        }
+        if (uSheen > 0.0 && vNo.y > 0.9) { // a liquid's still surface (the pool's top; x to the right, y toward the viewer)
           vec2 q = vLoc.xz / uPoolR;
-          float k = smoothstep(0.05, 0.7, -q.y) * (1.0 - smoothstep(0.88, 1.0, length(q))) * (1.0 - smoothstep(0.3, 0.85, abs(q.x + 0.12)));
-          reflectedLight.indirectSpecular += uSheen * k * vec3(1.0, 0.97, 0.92);
-          reflectedLight.indirectDiffuse *= 1.0 - 0.12 * smoothstep(0.2, 0.9, q.y); // the near side a shade deeper
+          float inside = 1.0 - smoothstep(0.84, 0.96, length(q));
+          // a window reflected across the far half: a broad pane with soft edges, never a spot
+          float pane = smoothstep(0.24, 0.40, -q.y) * (1.0 - smoothstep(0.78, 0.95, -q.y)) * (1.0 - smoothstep(0.40, 0.58, abs(q.x + 0.06)));
+          float room = 0.3 * smoothstep(-0.7, 0.95, -q.y); // the room grazing the surface, lighter toward the back
+          reflectedLight.indirectSpecular += uSheen * inside * (pane + room) * vec3(1.0, 0.97, 0.92);
+          // depth: deeper toward the viewer and toward the rim, as a liquid looks and a disc does not
+          float deep = 1.0 - 0.22 * smoothstep(0.0, 0.95, q.y) - 0.12 * smoothstep(0.5, 0.95, length(q));
+          reflectedLight.directDiffuse *= deep; reflectedLight.indirectDiffuse *= deep;
         }`);
   };
   return { m, uni };
+}
+const QUICK_CATS = new Set(['alkali', 'alkaline-earth', 'transition', 'post-transition', 'lanthanide', 'actinide']); // metals
+/** A large question mark, for an atom whose size is not known (drawn inside its dashed outline). */
+let qTex = null;
+function QMARK() {
+  if (qTex) return qTex;
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.font = `600 84px ${font.serif}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('?', 64, 70);
+  return (qTex = new THREE.CanvasTexture(c));
 }
 /** The symbol (and its number) drawn on a canvas, printed on a block's front. */
 function symbolTexture() {
@@ -119,6 +168,7 @@ const rodBetween = (mesh, a, b) => { // a cylinder of height 1 along y, stretche
 
 // ---- the balance (cm) -------------------------------------------------------------------------------------------
 const PIVOT = 38, ARM = 32, HANG = 24, PAN_R = 12.5, PAN_D = 3.3, PAN_FLOOR = 0.45, CUBE = 10, FOOT_R = 10;
+const BONE = 0xe9e2d4; // the balance's glaze: a bone cream a shade deeper than the paper, so its catchlights read
 
 export function createCompareView() {
   const scene = new THREE.Scene();
@@ -141,8 +191,10 @@ export function createCompareView() {
   // ================================ A litre of each ================================================================
   const litre = new THREE.Group();
   scene.add(litre);
-  const porcelain = softGlaze({ color: TOK.card, roughness: 0.3, glaze: 0.75 });
-  const inkMat = softGlaze({ color: TOK.ink, roughness: 0.38, glaze: 0.45 });
+  // the balance is glazed bone porcelain with a lacquered ink beam (its own studio: catchlights down the column and
+  // along every rim); round things (atoms) keep the soft studio, where a small bright source would be a hard white dot
+  const porcelain = balanceGlaze({ color: BONE, roughness: 0.14 });
+  const inkMat = balanceGlaze({ color: TOK.ink, roughness: 0.26, glaze: 0.6 }); // lacquer: a sheen, not a light outline
   const seg = low ? 32 : 56;
   // the stand: a low rounded foot, a slim column, an ink pivot and beam
   const stand = new THREE.Group();
@@ -192,7 +244,7 @@ export function createCompareView() {
   const specimens = [0, 1].map(() => {
     const sym = symbolTexture();
     const blk = specimenGlaze({ roughness: 0.22 }); blk.uni.uSym.value = sym.tex; blk.uni.uHasSym.value = 1;
-    const liq = specimenGlaze({ roughness: 0.07, glaze: 1.05, shade: 1 }); liq.uni.uSheen.value = 0.2; liq.uni.uPoolR.value = PAN_R - 1.25;
+    const liq = specimenGlaze({ roughness: 0.06, glaze: 1.1, shade: 1 }); liq.uni.uSheen.value = 0.42; liq.uni.uPoolR.value = PAN_R - 1.25;
     const block = new THREE.Mesh(blockGeo, blk.m);
     const pool = new THREE.Mesh(poolGeo, liq.m);
     const glassMat = glassMaterial(); glassMat.uniforms.uCol.value.set(TOK.ink); glassMat.uniforms.uK.value = 0.34; // ink edges by day, as the forge's vessel
@@ -218,6 +270,9 @@ export function createCompareView() {
     s.block.visible = kind === 'solid'; s.pool.visible = kind === 'liquid'; s.glass.visible = kind === 'gas'; s.gas.visible = kind === 'gas'; s.dashed.visible = kind === 'unknown';
     s.block.material.color.set(col); s.pool.material.color.set(col); s.gas.material.color.set(col);
     s.blk.uni.uStripe.value = sp.pred ? 1 : 0; s.liq.uni.uStripe.value = sp.pred ? 1 : 0;
+    // a metal liquid at 20 °C is quicksilver (mercury), as in the forge and the sample place (STYLE.md §6)
+    const quick = kind === 'liquid' && QUICK_CATS.has(e.f.cat[0]);
+    s.liq.uni.uMirror.value = quick ? 1 : 0; s.liq.uni.uSheen.value = quick ? 0.2 : 0.42;
     s.sym.draw(e.sym, e.Z);
     placeGas(i, 0);
   }
@@ -259,11 +314,12 @@ export function createCompareView() {
   const beads = [0, 1].map(() => {
     const mesh = new THREE.Mesh(sphere, softGlaze({ roughness: 0.44, glaze: 0.75 }));
     const shadow = mkShadow(0.45);
-    const ringGeo = new THREE.BufferGeometry().setFromPoints(Array.from({ length: 97 }, (_, i) => new THREE.Vector3(Math.cos((i / 96) * Math.PI * 2), 0, Math.sin((i / 96) * Math.PI * 2))));
+    const ringGeo = new THREE.BufferGeometry().setFromPoints(Array.from({ length: 97 }, (_, i) => new THREE.Vector3(Math.cos((i / 96) * Math.PI * 2), Math.sin((i / 96) * Math.PI * 2), 0)));
     const ring = new THREE.Line(ringGeo, new THREE.LineDashedMaterial({ color: TOK.ink3, dashSize: 0.06, gapSize: 0.05, transparent: true, opacity: 0.8 }));
     ring.computeLineDistances();
-    atomsG.add(mesh, shadow, ring);
-    return { mesh, shadow, ring, r: 100, rTo: 100, rFrom: 100, known: true, col: new THREE.Color(), colFrom: new THREE.Color(), colTo: new THREE.Color() };
+    const q = new THREE.Sprite(new THREE.SpriteMaterial({ map: QMARK(), color: TOK.ink3, transparent: true, depthWrite: false }));
+    atomsG.add(mesh, shadow, ring, q);
+    return { mesh, shadow, ring, q, r: 100, rTo: 100, rFrom: 100, known: true, col: new THREE.Color(), colFrom: new THREE.Color(), colTo: new THREE.Color() };
   });
   const barMat = new THREE.MeshBasicMaterial({ color: TOK.ink });
   const bar = new THREE.Group();
@@ -283,10 +339,11 @@ export function createCompareView() {
     const ra = A.r, rb = B.r, big = Math.max(ra, rb, ATOM_FLOOR * 0.6), gap = big * 0.5;
     const xa = -(gap / 2 + ra), xb = gap / 2 + rb;
     for (const [b, x] of [[A, xa], [B, xb]]) {
-      b.mesh.visible = b.known; b.shadow.visible = b.known; b.ring.visible = !b.known;
+      b.mesh.visible = b.known; b.shadow.visible = b.known; b.ring.visible = !b.known; b.q.visible = !b.known;
+      b.q.scale.setScalar(b.r * 1.1); b.q.position.set(x, b.r, 0); // "?" inside the outline: no size is claimed
       b.mesh.scale.setScalar(b.r); b.mesh.position.set(x, b.r, 0);
       b.shadow.scale.set(b.r * 2.3, 1, b.r * 2.3); b.shadow.position.set(x + b.r * 0.08, 0.2, b.r * 0.1);
-      b.ring.scale.setScalar(b.r); b.ring.position.set(x, 0.5, 0);
+      b.ring.scale.setScalar(b.r); b.ring.position.set(x, b.r, 0); // standing, facing the viewer: a sphere's outline
       b.mesh.material.color.copy(b.col);
     }
     const small = Math.min(ra, rb);
@@ -361,7 +418,7 @@ export function createCompareView() {
     labels.setText(lbl[0], t('compare.form.graphite'), t('compare.cnEach', { n: F[0].cn }));
     labels.setText(lbl[1], t('compare.form.diamond'), t('compare.cnEach', { n: F[1].cn }));
     // the same scale bar as for atoms, on the paper between the two crystals (clear of their names)
-    placeBar(cx, 100, big * 0.008, 0, big * 0.05);
+    placeBar(cx, 100, big * 0.008, big * 0.26, big * 0.05);
     return { w: G0.w + G1.w + gap, h: Math.max(G0.h, G1.h), cx, depth: big * 1.05, ty: Math.max(G0.h, G1.h) * 0.42 };
   }
 

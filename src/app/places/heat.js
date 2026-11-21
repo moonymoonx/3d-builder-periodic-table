@@ -1,12 +1,16 @@
 // Heat place: "Hold a piece · heat it", the wow moment (STYLE.md §9, SPEC §0). The chrome around the
 // forge view (views/sample.js, look 'forge'): one big thermometer to drag, its readout, one quiet caption
-// that names each moment, "Heat it ▶" to play the whole sweep, "Room temperature" to start again.
+// that names each moment, "Heat it ▶" to play the whole sweep, "◀ Cool it" to play it back down,
+// "Room temperature" (once away from it) to start again, and "About this sample ›" one tap deeper:
+// the same chrome as the sample place (places/sample.js) until the kit's thermometer unifies them.
 // The room dims to the kiln colour while the metal glows (sample view -> hooks.onKiln). Every
 // temperature on screen comes from our data (transitions, melting and boiling points, landmark metals).
 import { h, replace, isPhone } from '../dom.js';
-import { t, fmtNum } from '../i18n.js';
+import { t, fmtNum, getLang } from '../i18n.js';
 import { state, set } from '../state.js';
-import { byZ, bySym, name, propValue } from '../data.js';
+import { byZ, bySym, name, propValue, data, stateAt, isPred, fmtTemp, structText } from '../data.js';
+import { sheet } from '../ui/kit.js';
+import { showSource, closeSource } from '../ui/source.js';
 import { animate } from '../engine.js';
 import { sampleStateAt, eventsOf } from '../views/sample.js';
 
@@ -34,15 +38,21 @@ export function buildHeat(ui, hooks) {
   const flags = h('div', { class: 'heat-flags', 'aria-hidden': 'true' });
   const knob = h('div', { class: 'heat-knob', 'aria-hidden': 'true' });
   const track = h('div', { class: 'heat-track' }, ticks, h('div', { class: 'heat-rail' }, fill), knob, input, flags);
-  const play = h('button', { type: 'button', class: 'ui-btn ui-btn--primary heat-play', onclick: () => toggle() });
+  const play = h('button', { type: 'button', class: 'ui-btn ui-btn--primary heat-play', onclick: () => toggle(1) });
+  const cool = h('button', { type: 'button', class: 'ui-btn ui-btn--secondary heat-cool', onclick: () => toggle(-1) });
   const room = h('button', { type: 'button', class: 'ui-btn ui-btn--quiet heat-room', onclick: () => { stop(); setT(ROOM); } });
+  const aboutBtn = h('button', { type: 'button', class: 'heat-about', 'aria-haspopup': 'dialog', onclick: () => toggleAbout() });
+  const actions = h('div', { class: 'heat-actions' });
   const panel = h('section', { class: 'heat-panel', hidden: true },
     caption,
-    h('div', { class: 'heat-row' }, h('div', { class: 'heat-readbox' }, read, word), track),
-    h('div', { class: 'heat-actions' }, play, room));
-  ui.append(panel);
+    h('div', { class: 'heat-row' }, h('div', { class: 'heat-readbox' }, h('div', { class: 'heat-readline' }, read, word), aboutBtn), track),
+    actions);
+  // "About this sample": the kit's sheet (a card on the right on desktop, a bottom sheet on phones)
+  const about = sheet({ label: t('forge.about'), onClose: () => closeAbout(), closeLabel: t('card.close') });
+  about.el.classList.add('heat-sheet');
+  ui.append(panel, about.el);
 
-  let lo = ROOM, hi = 3000, events = [], playing = null, el = null, lastCaption = '';
+  let lo = ROOM, hi = 3000, events = [], playing = null, dir = 0, el = null, lastCaption = '';
   const toV = T => Math.round(((T - lo) / (hi - lo)) * 1000);
   const fromV = v => lo + (v / 1000) * (hi - lo);
   const pct = T => `${Math.max(0, Math.min(100, ((T - lo) / (hi - lo)) * 100)).toFixed(2)}%`;
@@ -123,7 +133,7 @@ export function buildHeat(ui, hooks) {
   function update() {
     if (!el) return;
     const rd = C(state.T);
-    if (rd !== lastRead) { lastRead = rd; replace(read, rd); } // only what changed: no DOM churn while playing
+    if (rd !== lastRead) { lastRead = rd; replace(read, rd); read.classList.toggle('is-hot', state.T > ROOM + 0.5); } // ink at 20 °C, ember once heated
     const ss = sampleStateAt(el, state.T, null);
     const wd = ss.kind === 'card' ? '' : ss.kind === 'solid' && ss.phase && ss.phase.cn ? t('forge.solidCn', { cn: ss.phase.cn }) : t('state.' + ss.kind);
     if (wd !== lastWord) { lastWord = wd; replace(word, wd); }
@@ -134,47 +144,99 @@ export function buildHeat(ui, hooks) {
     if (input.value !== v && document.activeElement !== input) input.value = v;
     if (state.T <= lo + 0.5 && !playing) say(startCaption());
     else if (state.T > lo + 40 && lastCaption === startCaption()) say(t('forge.warming')); // never "at room temperature" at 396 °C
+    if (about.isOpen()) renderAbout();
   }
   let lastBtn = '';
+  /** As in the sample place: "Room temperature" only once away from it ("Back to 20 °C" on phones), "◀ Cool it"
+   *  once there is somewhere to cool to; the main action is heating until the top of the scale, then cooling. */
   function renderButtons() {
-    const key = `${playing ? 'p' : state.T >= hi - 1 ? 'a' : 'h'}|${state.T <= lo + 0.5}|${t('forge.room')}`;
+    const atRoom = state.T <= lo + 0.5, top = state.T >= hi - 1, phone = isPhone();
+    const key = `${dir}|${atRoom}|${top}|${phone}|${getLang()}`;
     if (key === lastBtn) return;
     lastBtn = key;
-    replace(play, playing ? t('forge.pause') : state.T >= hi - 1 ? t('forge.again') : t('forge.play'));
-    replace(room, t('forge.room'));
-    room.disabled = state.T <= lo + 0.5;
+    replace(play, dir > 0 ? t('forge.pause') : top ? t('forge.again') : t('forge.play'));
+    replace(cool, dir < 0 ? t('forge.pause') : t('forge.cool'));
+    replace(room, phone ? t('forge.roomShort', { T: C(ROOM) }) : t('forge.room'));
+    room.setAttribute('aria-label', t('forge.room'));
+    const coolMain = dir < 0 || (top && dir === 0);
+    play.classList.toggle('ui-btn--primary', !coolMain); play.classList.toggle('ui-btn--secondary', coolMain);
+    cool.classList.toggle('ui-btn--primary', coolMain); cool.classList.toggle('ui-btn--secondary', !coolMain);
+    const keep = [atRoom ? null : cool, atRoom ? null : room, play].filter(Boolean);
+    // the focused button stays in the page (a keyboard user keeps their place)
+    if (keep.length !== actions.childNodes.length || keep.some((b, i) => actions.childNodes[i] !== b)) replace(actions, keep);
+    replace(aboutBtn, t('forge.about'));
+    aboutBtn.setAttribute('aria-expanded', String(about.isOpen()));
   }
 
-  // "Heat it ▶": sweep up through the whole range, stopping just past each event so its caption is read
-  function toggle() { if (playing) stop(); else start(); }
-  function start() {
-    if (state.T >= hi - 1) setT(lo);
+  // "Heat it ▶" / "◀ Cool it": sweep through the whole range, stopping just past each event so its caption is read
+  function toggle(d) { const was = dir; stop(); if (was !== d) start(d); }
+  function start(d) {
+    if (d > 0 && state.T >= hi - 1) setT(lo);
     let T = state.T, hold = 0;
     const speed = (hi - lo) / 10;
     hooks.onInteract && hooks.onInteract();
+    dir = d;
     playing = animate(dt => {
       if (hold > 0) { hold -= dt; return true; }
-      const next = events.find(x => x.T > T + 0.5);
-      let T2 = T + speed * Math.min(dt, 0.25); // wall-clock pace, also on slow frames
-      if (next && T2 >= next.T) { T2 = next.T + 2; hold = 1.8; }
-      T = Math.min(hi, T2); setT(T);
-      if (T >= hi) { playing = null; renderButtons(); return false; }
+      const next = d > 0 ? events.find(x => x.T > T + 0.5) : [...events].reverse().find(x => x.T < T - 0.5);
+      let T2 = T + d * speed * Math.min(dt, 0.25); // wall-clock pace, also on slow frames
+      if (next && (d > 0 ? T2 >= next.T : T2 <= next.T)) { T2 = next.T + 2 * d; hold = 1.8; }
+      T = Math.max(lo, Math.min(hi, T2)); setT(T);
+      if (d > 0 ? T >= hi : T <= lo) { playing = null; dir = 0; renderButtons(); return false; }
       return true;
     });
     renderButtons();
   }
-  function stop() { if (playing) { playing(); playing = null; renderButtons(); } }
+  function stop() { if (playing) { playing(); playing = null; dir = 0; renderButtons(); } }
 
-  window.addEventListener('resize', () => { if (!panel.hidden) layout(); });
+  // ---- "About this sample": the science one tap deeper, every value with its source ---------------------
+  let aboutSig = '';
+  function toggleAbout() { if (about.isOpen()) closeAbout(); else openAbout(); }
+  function openAbout() { aboutSig = ''; renderAbout(); about.open(); aboutBtn.setAttribute('aria-expanded', 'true'); hooks.onLayout && hooks.onLayout(); }
+  function closeAbout() { closeSource(); about.close(); aboutBtn.setAttribute('aria-expanded', 'false'); hooks.onLayout && hooks.onLayout(); }
+  function renderAbout() {
+    const e = el, T = state.T, ss = sampleStateAt(e, T, null), st = stateAt(e, T), ph = e.ph;
+    const sig = `${e.Z}|${getLang()}|${ss.kind}|${ss.phase ? ss.phase.id : ''}|${C(T)}`;
+    if (sig === aboutSig) return;
+    aboutSig = sig;
+    const rows = [];
+    const row = (label, node, sub = null) => rows.push(h('dt', null, label), h('dd', null, node, sub ? h('small', { class: 'heat-sub' }, sub) : null));
+    const val = (text, label, v) => (v && v[0] != null
+      ? h('button', { type: 'button', class: 'heat-v' + (isPred(v) ? ' is-est' : ''), onclick: ev => showSource(ev.currentTarget, label, v, e, text) }, text)
+      : h('span', { class: 'heat-v is-none' }, t('card.notKnownShort')));
+    row(t('forge.d.now'), val(cap(t('state.' + st.s)), t('forge.d.now'), [st.s, 'calc', { n: t('forge.d.nowN'), p: st.p ? 1 : undefined }]));
+    if (ph.mp && ph.mp[0] != null) row(t('forge.d.mp'), val(fmtTemp(ph.mp[0]), t('f.mp'), ph.mp));
+    if (ph.bp && ph.bp[0] != null) row(t('forge.d.bp'), val(fmtTemp(ph.bp[0]), t('f.bp'), ph.bp));
+    if (ss.kind === 'solid' && ss.phase) {
+      const p = ss.phase, c = p.cell, cubic = Math.abs(c.a - c.b) < 1e-6 && Math.abs(c.a - c.c) < 1e-6;
+      const side = cubic ? `${fmtNum(c.a, 2)} pm` : c.gamma === 120 ? `a = ${fmtNum(c.a, 2)} pm, c = ${fmtNum(c.c, 2)} pm` : `a = ${fmtNum(c.a, 1)}, b = ${fmtNum(c.b, 1)}, c = ${fmtNum(c.c, 1)} pm`;
+      row(t('forge.d.pattern'), val(`${p.label ? p.label + ': ' : ''}${structText(p.name)}`, t('forge.d.pattern'), [p.name, p.sitesSrc, { n: t('forge.d.patternN') }]));
+      row(t('forge.d.cell'), val(side, t('forge.d.cell'), [c.a, p.cellSrc, { n: [p.cond ? t('forge.d.measuredAt', { c: p.cond }) : null, p.cellNote].filter(Boolean).join(' · ') }]), t('forge.d.cellSub'));
+      row(t('forge.d.neighbours'), val(t('forge.d.neighboursV', { cn: p.cn, d: fmtNum(p.dNN, 0) }), t('forge.d.neighbours'), [p.dNN, 'calc', { n: t('forge.d.neighboursN') }]));
+      const Tm = ph.mp?.[0], L = data().model.lindemann;
+      if (Tm && L) row(t('forge.d.wobble'), val(t('forge.d.wobbleV', { p: fmtNum(100 * L[0] * Math.sqrt(Math.min(T, Tm) / Tm), 1) }), t('forge.d.wobble'), L));
+    }
+    replace(about.body,
+      h('h2', { class: 'heat-about__title' }, t('forge.about')),
+      h('dl', { class: 'heat-facts' }, rows),
+      h('p', { class: 'heat-hint' }, t('card.tapSource')),
+      h('p', { class: 'heat-note' }, t('forge.d.note')));
+  }
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  window.addEventListener('resize', () => { if (!panel.hidden) { layout(); renderButtons(); } });
   input.addEventListener('pointerdown', stop);
   input.addEventListener('input', () => { stop(); setT(fromV(+input.value)); });
   input.addEventListener('keydown', ev => ev.stopPropagation()); // arrows move the thermometer, not the element
 
   return {
     panel,
+    about,
+    aboutOpen: () => about.isOpen(),
+    closeAbout,
     show(on) {
       panel.hidden = !on;
-      if (!on) { stop(); return; }
+      if (!on) { stop(); if (about.isOpen()) closeAbout(); return; }
       layout(); lastCaption = ''; say(startCaption()); update(); renderButtons();
       requestAnimationFrame(layout);
     },

@@ -595,3 +595,95 @@ The sample session's answer to `reviews/sample-s1.md`, committed with this merge
 3. **The card's §6 items:**
    - The desktop card now gives the source hint, as phones do.
    - "Half-metals" keeps its break at the compound's own hyphen (like "Salt-makers"; the staircase is too narrow for one line at 14 px).
+
+## Shared sample fixes after the cold review `reviews/sample-s2.md`, 21 Nov 2026
+The shared items of the review, done by the main session on master. The sample-scope items went to `view-sample-r3`, which also commits the review.
+- **(A) The hearth floor:**
+  - **Cause:** the glass vessel's flat bottom face lay exactly on the hearth's top face and z-fought with it. That gave diagonal striping and a seam along the face's diagonal in the empty oganesson vessel; on a phone's steeper view the same diagonal read as the "hard horizontal band" on a glowing hearth.
+  - **Fix:** the vessel now stands open on the hearth (the flat bottom triangles are dropped; its rounded foot stays), and the decals lying on the hearth get a polygon offset.
+- **(B) The forge, as the sample place:**
+  - 20 °C in ink (ember once heated);
+  - "Room temperature" only once away from it ("Back to 20 °C" on phones);
+  - "◀ Cool it" once heated: a sweep back down that stops just past each event, primary at the top of the scale;
+  - "About this sample ›": a kit sheet with the state now, melting and boiling points, the stacking pattern, the box's side (with where it was measured), the neighbours and their distance, and how far atoms shake (Lindemann), every value tappable for its source, plus a note on what the drawing slows down. The router frames the crystal beside it, and Escape closes it first.
+
+  The sample place's own About stays in its file (`view-sample-r3` is open). The two are unified with the kit's thermometer.
+- **(C) A metal's finish belongs to the element, not its state** (STYLE.md §6):
+  - Mercury, the one metal liquid at room temperature (from our data), is quicksilver frozen, liquid or boiling. Its unit cell's atoms take the glaze, so the ink atom and its verdigris neighbours stay legible.
+  - Every other metal keeps its family glaze when it melts or boils: no snap from one finish to another, in the sample place or the forge.
+- **(D) The forge's vapour:**
+  - About a quarter of the atoms are drawn (was 40 %).
+  - Each keeps its own small glow (3.2× its radius, was 7.5×), and the bead's emission and core whitening are lower in a gas, so every atom stays a sphere: no white blob, no heavy bloom (STYLE §6, §10).
+  - It is also cheaper: p95 16.8 ms at 2,950 °C.
+- **(E) The card:**
+  - A predicted state reads "Predicted at 20 °C" with the value in italics on phones (the strip's `font` shorthand had reset the italics).
+  - The desktop card says "Tap a value…" once, under the facts, no longer again inside "All numbers & sources".
+- **Checks:** unit tests 45/45, validator, smoke 46/46 twice (a new forge-chrome step). Targeted shots in `/workspace/out/redesign/shared-fixes/` (`tools/shots-shared.mjs`).
+
+## Merge review: `view-patterns-r3` (side by side, round 3), 21 Nov 2026
+The answer to `reviews/patterns-p2.md` (committed with the sample round-2 merge). Reviewed against STYLE.md and the PARALLEL.md checklist: passed. Only scope files changed; the rebase was clean. The session's decisions are in `NOTES-patterns.md` › Round 3.
+- **Rows rest whole** under the phone sheet's compact header (scroll snapping).
+- **The phone rail** has its "Surprising pairs" label again, with "Pick any two…" always in view.
+- **"No weight known for oganesson"** replaces "weighed on a balance" where there is no balance.
+- **Text underlines** follow wrapped values.
+- **Look:** a glazed bone-porcelain balance with ink lacquer, and liquids with a window sheen. Hover colours appear only where a pointer hovers.
+- **Neon's sentence** now names both values.
+
+**Its questions:**
+1. **Chlorine's electron affinity:** PubChem's 3.617 eV ("3.62"). Our data rule takes electron affinity from PubChem (`tools/build-data.mjs`; the CRC value is only a cross-check), so every place shows 3.62; NIST's photodetachment 3.61 is not used.
+2. **A Gallium · Mercury hook ("solid at 20 °C, melts at 29.8 °C"): accepted for its next round,** provided the number is computed from our data (PubChem's 302.91 K = 29.76 °C) and not typed into a string.
+
+**Checks:** unit tests 45/45, validator, smoke 46/46 twice; index.html 1,778 KB. Reshoot: `/workspace/out/redesign/patterns-r3-merged/`.
+
+## Merge review: `view-atom-r2` (the atom place, round 2), 21 Nov 2026
+The answer to `reviews/atom-a1.md`. Reviewed against STYLE.md and the PARALLEL.md checklist: passed. The session's decisions are in `NOTES-atom.md` › Round 2.
+
+**Data proposals: both accepted.**
+- **The visible lines that look brightest:**
+  - Neutral-atom lines, 380–750 nm.
+  - Lines from levels above the first ionization energy are left out (sodium's core-excited lines).
+  - Brightness: radiant power at kT = 1 eV from NIST's graded transition probabilities where at least 3 lines are graded within 18 %, else NIST's relative intensities, times the eye's ȳ.
+  - Still at most 8 lines per element (the NIST policy is unchanged).
+  - Neon now shows 585.2–640.2 nm (checked by moony); sodium keeps its D doublet and the 568 nm pair.
+- **Measured nuclear charge radii** (Angeli & Marinova 2013, via the IAEA LiveChart API; the raw file stays local and only single values are used):
+  - 89 elements take the measured radius of the isotope we show; the others keep the flagged estimate.
+  - Gold-197 is 5.4371 ± 0.0038 fm (checked by moony).
+  - **At the merge:** the raw file was taken from the atom worktree after checking its SHA-256 against the branch's manifest; no symlink was added.
+  - The data was rebuilt from the merged build, which unites these with master's NUBASE uncertainties and oganesson-294 as the confirmed kind.
+
+**Its questions (decided as moony suggested):**
+1. **The glow:** accepted. It is the CIE mix of the element's measured lines, checked against the gas-discharge lamp table. The caption now says so ("computed from its measured lines"). Krypton (magenta) and xenon (too blue) fail the lamp check, so the data carries no glow for them, and the validator checks that.
+2. **The card's note:** now "the 8 that look brightest (NIST transition probabilities or relative intensities × the eye's sensitivity)".
+3. **Widening the window to 780 nm** for potassium's 766/770 nm lines: accepted for its next round, with an honest label (near-infrared edge). It needs the NIST lines fetched again.
+
+**Other proposals:**
+- **`color.js` clips** a spectral colour's negative channels instead of adding white (640 nm was crimson): applied.
+- **The bundler registers only the first name of `export const A = 1, B = 2`:** `color.js`'s line was mine (atom merge). It is split now; a bundler check is scheduled with the kit pass.
+- **The kit sheet's rows under the compact bar:** scheduled for the kit pass, with the shared thermometer and tokens.
+
+**Also fixed at the merge (main session):** the desktop card's "All numbers & sources" began with a stray "null". `Element.append(null)` prints it, a bug from the shared fixes (cf98e90).
+
+**The gold/iron ratio** (moony asked whether it now reads 2.45): it still reads "2.4×". Our cited densities are PubChem's 19.282 and 7.874 g/cm³: 2.4488, which is 2.4 to one decimal (2.45 only to two). No change.
+
+**Checks:** unit tests 47/47, validator (two new checks, plus krypton/xenon), smoke 48/48 twice; index.html 1,795 KB.
+
+## Patterns and side-by-side polish 1, after the cold review `reviews/patterns-p3.md`, 21 Nov 2026
+Both places passed that review (patterns 4.0/4.0/4.5/4.0/4.5, side by side 4.0/4.0/4.0/4.0/4.5). The main session made a short polish round on master from its list, facts first.
+1. **Every gap with its true reason, from our data:**
+   - **Electron appetite:** the noble gases, N, Be, Mg, Zn, Cd and Hg read "adding an electron releases no energy (electron affinity ≤ 0)".
+     - `data/curated/ea-unbound.json` gives the basis: moony's review list citing Chemistry LibreTexts. The CRC values via mendeleev are negative for He, Be, N, Ar and Xe.
+     - These gaps keep source "none" with the reason in the note, so the card's "All numbers" says it too.
+   - **Melting point:** helium "never freezes at normal pressure" (its sourced `noSolid`).
+   - Only the remaining gaps say "no value in our sources" (was "not measured", which nobody could know).
+2. **"One atom of each" gets its own headline.**
+   - A litre sentence (a weight story, or helium · osmium's curated litre line) becomes a size sentence in the drawn radius ("about the same size", or "N times as wide").
+   - An atom of unknown size is a dashed outline with a "?" inside, and the headline says it is not to scale.
+3. **Column questions:** grip on electrons gets one ("Why do atoms lower down a column let go of an electron more easily?"). The other row questions also hold for columns.
+4. **"Pick any two…"** now asks for both: "Pick the first of two", then at once "And the second, beside …". The tiles' "change ▾" keeps the one-slot "Instead of …".
+5. **The balance:** mercury is quicksilver (the forge's mirror recipe, tinted 30 % by its family colour), per STYLE.md §6. The other metals keep their family glaze (§6, and the litre-colour decision: real appearance only once it is sourced).
+6. **Labels, rail and pills:**
+   - Oganesson's label was culled on phones (its long caption, slid inward, covered hydrogen's); captions under the stage now wrap.
+   - The scrolled pair rail fades at both ends.
+   - **Checked and left:** the inline Source pills already reach 44 px through an invisible extension (24 px pill + 2 × 10 px).
+
+**Checks:** unit tests 47/47, validator, smoke 48/48 twice (the pick-two step now checks both steps). Shots: `/workspace/out/redesign/polish-1/`.

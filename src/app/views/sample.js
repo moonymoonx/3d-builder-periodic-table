@@ -18,6 +18,28 @@ import { rng32 } from '../../physics/orbitals.js';
 
 const SPEED_SCALE = 3; // display pm/s per real m/s (the real motion is ~3 x 10^11 times faster)
 const METALS = ['alkali', 'alkaline-earth', 'transition', 'post-transition', 'lanthanide', 'actinide'];
+/** Quicksilver: a metal that is liquid at room temperature (mercury). Its finish belongs to the element, not
+ *  its state: frozen, liquid or boiling it stays a mirror of the studio (STYLE.md §6); every other metal keeps
+ *  its family glaze through every change of state, so nothing snaps from one finish to another. */
+const quickZ = new Map();
+const quicksilver = e => { if (!quickZ.has(e.Z)) quickZ.set(e.Z, METALS.includes(e.f.cat[0]) && stateAt(e, 293.15).s === 'liquid'); return quickZ.get(e.Z); };
+/** Flat decals lying on the hearth win the depth test against it (no striping where two surfaces meet). */
+const ON_TOP = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 };
+/** The vessel stands open on the hearth: drop the glass box's flat bottom (its face lay exactly on the
+ *  hearth's top and z-fought with it: diagonal striping and a seam, most visible in an empty vessel). */
+function openFloor(g) {
+  const p = g.attributes.position, flat = i => Math.abs(p.getY(i) + 0.5) < 1e-5;
+  if (g.index) {
+    const ix = g.index.array, keep = [];
+    for (let k = 0; k < ix.length; k += 3) if (!(flat(ix[k]) && flat(ix[k + 1]) && flat(ix[k + 2]))) keep.push(ix[k], ix[k + 1], ix[k + 2]);
+    g.setIndex(keep);
+  } else {
+    const keep = [];
+    for (let i = 0; i < p.count; i += 3) if (!(flat(i) && flat(i + 1) && flat(i + 2))) keep.push(i, i + 1, i + 2);
+    g.setIndex(keep);
+  }
+  return g;
+}
 export const SLOWDOWN = 1e12 / SPEED_SCALE;
 
 // ---- what is in the box at temperature T -----------------------------------------------------
@@ -122,7 +144,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   const boxMat = new THREE.LineBasicMaterial({ color: FORGE ? TOK.ink : 0x9fbcff, transparent: true, opacity: FORGE ? 0.22 : 0.35 });
   const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), boxMat);
   const glassMat = FORGE ? glassMaterial() : null;
-  const glass = new THREE.Mesh(FORGE ? roundedBox(1, 1, 1, 0.035, 4) : new THREE.BoxGeometry(1, 1, 1), FORGE ? glassMat : new THREE.MeshStandardMaterial({ color: 0x8fb0ff, transparent: true, opacity: 0.05, roughness: 0.1, depthWrite: false, side: THREE.BackSide }));
+  const glass = new THREE.Mesh(FORGE ? openFloor(roundedBox(1, 1, 1, 0.035, 4)) : new THREE.BoxGeometry(1, 1, 1), FORGE ? glassMat : new THREE.MeshStandardMaterial({ color: 0x8fb0ff, transparent: true, opacity: 0.05, roughness: 0.1, depthWrite: false, side: THREE.BackSide }));
   // forge: a glazed ceramic hearth (rebuilt to size in setBox) instead of a flat slab
   const floor = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: FORGE ? '#CBBAA4' : 0x101a2e, roughness: FORGE ? 0.4 : 0.9 }));
   box.visible = !FORGE; // the forge's vessel shows only at its glass edges
@@ -133,7 +155,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     hearthShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: TOK.shadow, map: tx, transparent: true, opacity: 0.38, depthWrite: false }));
     hearthShadow.renderOrder = -1; world.add(hearthShadow);
     // by day the glass stands on the hearth: a thin line where its foot meets the glaze
-    glassFoot = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: TOK.shadow, map: new THREE.CanvasTexture(glassFootCanvas()), transparent: true, opacity: 0.32, depthWrite: false }));
+    glassFoot = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: TOK.shadow, map: new THREE.CanvasTexture(glassFootCanvas()), transparent: true, opacity: 0.32, depthWrite: false, ...ON_TOP }));
     glassFoot.renderOrder = 1; world.add(glassFoot);
   }
   const cellMat = new THREE.LineBasicMaterial({ color: FORGE ? TOK.ink : 0xffcf6b, transparent: true, opacity: FORGE ? 0.5 : 0.9 });
@@ -166,10 +188,12 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         #ifdef FORGE_GLOW
           // glazed beads: the same soft studio the table's tiles reflect
           vec3 wN = inverseTransformDirection(normal, viewMatrix), wV = inverseTransformDirection(geometryViewDir, viewMatrix);
-          reflectedLight.indirectSpecular += uGlaze * glazeStudio(wN, wV, material.roughness);
-          // a liquid metal is a mirror of that studio, barely tinted by its family colour (quicksilver)
+          // quicksilver is a mirror of that studio, barely tinted by its family colour; the unit cell's
+          // atoms keep the glaze, so the ink atom and its verdigris neighbours stay legible on it
+          float cellA = step(0.5, vHi);
+          reflectedLight.indirectSpecular += (uGlaze + 0.8 * uMirror * cellA) * glazeStudio(wN, wV, material.roughness);
           float mF = 0.72 + 0.28 * pow(1.0 - clamp(dot(wN, wV), 0.0, 1.0), 5.0);
-          reflectedLight.indirectSpecular += uMirror * mF * studioLight(reflect(-wV, wN), material.roughness) * mix(vec3(1.0), diffuseColor.rgb / max(uBody, 1e-3), 0.3);
+          reflectedLight.indirectSpecular += uMirror * (1.0 - cellA) * mF * studioLight(reflect(-wV, wN), material.roughness) * mix(vec3(1.0), diffuseColor.rgb / max(uBody, 1e-3), 0.3);
         #endif`)
       .replace('#include <color_fragment>', `#include <color_fragment>
         #ifdef FORGE_GLOW
@@ -230,7 +254,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   if (FORGE) {
     glow = glowSprites(atoms, seeds, uni); world.add(glow.mesh);
     pool = moltenPool(); world.add(pool.mesh);
-    decal = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: haloTexture(), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0 }));
+    decal = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ ...ON_TOP, map: haloTexture(), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0 }));
     decal.renderOrder = 2; world.add(decal);
     // the unit cell made visible: depth-tested rods from one atom to each neighbour it touches
     const rodGeo = new THREE.CylinderGeometry(1, 1, 1, 10, 1, false); rodGeo.translate(0, 0.5, 0);
@@ -323,7 +347,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     atoms.count = molN * n;
     // forge: a hot gas is sparse; draw a share of the particles so it reads as atoms flying apart
     // (whole molecules, never some of a molecule's atoms without the others)
-    if (FORGE && current && current.kind === 'gas') atoms.count = molN * Math.ceil(n * 0.4);
+    if (FORGE && current && current.kind === 'gas') atoms.count = molN * Math.ceil(n * 0.24); // sparse: atoms flying apart, never a cloud
     atoms.instanceMatrix.needsUpdate = true;
     if (glow) glow.mesh.count = atoms.count;
     if (FORGE) { // the glow's centre and reach follow the lump, pool or vapour
@@ -664,19 +688,19 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       const col = new THREE.Color().setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2], THREE.SRGBColorSpace);
       atomMat.emissiveIntensity = 0;
       glowU.uGlowCol.value.copy(col);
-      glowU.uGlowK.value = kind === 'gas' ? on * 1.7 : on * 1.35;
-      glowU.uHot.value = Math.min(0.9, Math.max(0, (state.T - 1500) / 1900));
+      glowU.uGlowK.value = kind === 'gas' ? on * 1.05 : on * 1.35; // a vapour atom keeps its shading: a sphere, not a disc
+      glowU.uHot.value = Math.min(kind === 'gas' ? 0.55 : 0.9, Math.max(0, (state.T - 1500) / 1900));
       const to = state.T > 760 && g > 0.01 && (kind !== 'card' || spec) ? 1 : 0;
       if (to !== kilnTo) { kilnTo = to; if (hooks.onKiln) hooks.onKiln(!!to); }
       const k = kilnK;
       hemi.intensity = 1.0 * (1 - 0.86 * k); key.intensity = 2.0 * (1 - 0.8 * k);
       // glazed beads catch the same soft studio as the table's tiles; a liquid metal by day (mercury) is
       // a mirror: a crisper, stronger glaze over a darker body. The reflections fade with the room light.
-      const liquidMetal = kind === 'liquid' && METALS.includes(e.f.cat[0]);
-      atomMat.roughness = liquidMetal ? 0.1 : 0.24;
-      glowU.uBody.value = liquidMetal ? 0.22 : 1;
-      glowU.uGlaze.value = liquidMetal ? 0 : 0.8 * (1 - k);
-      glowU.uMirror.value = liquidMetal ? 1 - k : 0;
+      const quick = quicksilver(e); // mercury: a mirror frozen, liquid or boiling (STYLE.md §6)
+      atomMat.roughness = quick ? 0.1 : 0.24;
+      glowU.uBody.value = quick ? 0.22 : 1;
+      glowU.uGlaze.value = quick ? 0 : 0.8 * (1 - k);
+      glowU.uMirror.value = quick ? 1 - k : 0;
       heatLight.color.copy(col); heatLight.intensity = on * 1.8;
       heatLight.position.set(0, (world.userData.lift || 0) * 0.4, 0);
       // one soft aura behind the crystal (depth-tested: it shows around it, not through it)
@@ -686,15 +710,15 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       halo.position.set(0, (world.userData.lift || 0) * 0.5, 0);
       // a glow around every hot atom; larger and sparser in the vapour
       glow.mat.uniforms.uCol.value.copy(col);
-      glow.mat.uniforms.uK.value = kind === 'gas' ? on * 0.42 : on * 0.5;
-      glow.mat.uniforms.uSize.value = radius * (kind === 'gas' ? 7.5 : 3.4);
+      glow.mat.uniforms.uK.value = kind === 'gas' ? on * 0.26 : on * 0.5;
+      glow.mat.uniforms.uSize.value = radius * (kind === 'gas' ? 3.2 : 3.4); // each vapour atom its own small glow (no blob)
       // per-atom glows are a fill cost software renderers cannot afford (low tier): there the beads'
       // own incandescence and a stronger aura carry the glow
       const sprites = tierConfig().points >= 0.7;
       glow.mesh.visible = sprites && on > 0.02;
       if (!sprites) halo.material.opacity = Math.min(0.5, on * 0.55);
       // the glow pools on the hearth; the molten pool and the glass take its colour
-      decal.material.color.copy(col); decal.material.opacity = Math.min(kind === 'gas' ? 0.4 : 0.85, on * 0.95);
+      decal.material.color.copy(col); decal.material.opacity = Math.min(kind === 'gas' ? 0.28 : 0.85, on * 0.95);
       pool.uni.uCol.value.copy(col); pool.uni.uK.value = on * 1.5;
       // by day the glass edges catch more light on the cream paper; in the kiln they stay as they were
       glassMat.uniforms.uCol.value.copy(INK).lerp(KILN_TEXT, k); glassMat.uniforms.uK.value = 0.34 - 0.2 * k; glassMat.uniforms.uBase.value = 0.022 - 0.016 * k;

@@ -32,7 +32,12 @@ const placeholders = curated('placeholders.json');
 const FIX = curated('factcheck-fixes.json');
 const LINES = curated('element-lines.json').lines;
 const HIT = curated('phases-highT.json');
-const TENTATIVE = curated('tentative-isotopes.json').entries; // NUBASE entries not yet confirmed: never the longest-lived kind
+const TENTATIVE = curated('tentative-isotopes.json').entries;
+// lines whose eye-mix fails the lamp check (Wikipedia "Gas-discharge lamp", oldid 1351286820): krypton comes out
+// magenta (lamps: grey off-white to green), xenon too saturated a blue (lamps: grey or blue-grey dim white).
+// Real tubes are not in equilibrium and their ion lines are not in our data, so no glow is drawn for them.
+const GLOW_FAILS = new Set(['Kr', 'Xe']);
+const EA_UNBOUND = new Set(curated('ea-unbound.json').symbols); // adding an electron releases no energy (electron affinity ≤ 0) // NUBASE entries not yet confirmed: never the longest-lived kind
 const warnings = [];
 const warn = (...a) => warnings.push(a.join(' '));
 const num = v => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
@@ -40,6 +45,7 @@ const round = (v, d = 4) => (v == null ? v : Number(Number(v).toPrecision(d + 2)
 const clean = o => { if (!o) return o; for (const k of Object.keys(o)) if (o[k] === undefined) delete o[k]; return Object.keys(o).length ? o : undefined; };
 const V = (v, s, flags) => { const f = clean(flags ? { ...flags } : undefined); return f ? [v, s, f] : [v, s]; };
 const NONE = reason => [null, 'none', { n: reason }];
+const NONE_WHY = (reason, extra) => [null, 'none', { n: reason, ...extra }]; // a gap whose reason is itself a fact (cited in the note)
 const K0 = 273.15;
 const NLINES = 8; // "a handful of visible lines per element" (NIST policy)
 
@@ -66,7 +72,8 @@ const SOURCES = {
   ciaaw: { name: 'IUPAC CIAAW — abridged standard atomic weights', url: 'https://www.ciaaw.org/abridged-atomic-weights.htm', accessed: accessedOf('ciaaw/'), licence: 'numeric facts, cited (CIAAW; Prohaska et al., Pure Appl. Chem. 94 (2022) 573)' },
   'ciaaw-full': { name: 'IUPAC CIAAW — standard atomic weights (full table with intervals)', url: 'https://www.ciaaw.org/atomic-weights.htm', accessed: accessedOf('ciaaw/'), licence: 'numeric facts, cited' },
   'nist-ie': { name: `${NIST_CITE} — ground states and ionization energies`, url: 'https://physics.nist.gov/PhysRefData/ASD/ionEnergy.html', accessed: accessedOf('nist-asd/ie'), licence: '© U.S. Secretary of Commerce (SRD). Used only as individual cited values (moony, 2026-11-20); no NIST table is redistributed' },
-  'nist-lines': { name: `${NIST_CITE} — strongest visible lines of the neutral atom (air wavelengths)`, url: 'https://physics.nist.gov/PhysRefData/ASD/lines_form.html', accessed: accessedOf('nist-asd/lines'), licence: `© U.S. Secretary of Commerce (SRD). Only the ${NLINES} strongest lines per element are used, as cited values` },
+  'nist-lines': { name: `${NIST_CITE} — the visible lines of the neutral atom that look brightest (air wavelengths). Brightness from NIST's transition probabilities (graded within 18 %) for a gas at 1 eV, as NIST's LIBS tool assumes, or else NIST's relative intensities; weighted by the eye's sensitivity (CIE 1931)`, url: 'https://physics.nist.gov/PhysRefData/ASD/lines_form.html', accessed: accessedOf('nist-asd/lines'), licence: `© U.S. Secretary of Commerce (SRD). Only ${NLINES} lines per element are shown, as cited values; the glow colour is computed from the element's lines and no table is redistributed` },
+  'iaea-radii': { name: 'I. Angeli, K. P. Marinova, "Table of experimental nuclear ground state charge radii: An update", Atomic Data and Nuclear Data Tables 99 (2013) 69–95 — via the IAEA LiveChart of Nuclides', url: 'https://doi.org/10.1016/j.adt.2011.12.006', accessed: accessedOf('iaea-radii/'), licence: 'measured values used as individual cited facts (IAEA Nuclear Data Section terms of use)' },
   wp: { name: 'Wikipedia element infoboxes (Template:Infobox <element>): numbers only, with the references cited there', url: 'https://en.wikipedia.org/wiki/Template:Infobox_element', accessed: accessedOf('wikipedia/infobox'), licence: 'CC BY-SA 4.0 page; only numeric facts are used (revision id per element in `wpRev`)' },
   wpa: { name: 'Wikipedia articles (numbers only): Curium, Berkelium, Californium, Einsteinium, Cerium, Helium', url: 'https://en.wikipedia.org/', accessed: accessedOf('wikipedia/articles-factcheck'), licence: 'CC BY-SA 4.0 page; only numeric facts are used' },
   'wp-syn': { name: 'Wikipedia: "Synthetic element" (which elements occur in nature)', url: 'https://en.wikipedia.org/wiki/Synthetic_element', accessed: accessedOf('wikipedia/article-synthetic'), licence: 'CC BY-SA 4.0 page; facts only' },
@@ -200,6 +207,21 @@ for (const line of readRaw('nubase/nubase_4.mas20.txt', 'latin1').split('\n')) {
   NUBASE.get(Z).push(rec);
 }
 
+// 7b. Measured nuclear charge radii (rms, fm): Angeli & Marinova (2013), via the IAEA LiveChart of Nuclides
+// API (ground_states: radius, unc_r). Fetch with `node tools/fetch.mjs --only=iaea-radii` (kept local).
+const RADII = new Map(); // "Z-A" -> { r, u }
+{
+  const rel = 'iaea-radii/ground-states.csv';
+  if (!fs.existsSync(RAW(rel))) throw new Error(`missing data/raw/${rel}: run node tools/fetch.mjs --only=iaea-radii`);
+  const rows = parseCSV(readRaw(rel));
+  const head = rows[0].map(h => h.trim()), col = n => head.indexOf(n);
+  for (const r of rows.slice(1)) {
+    const rad = num(r[col('radius')]);
+    if (rad == null || !(Number(r[col('z')]) > 0)) continue;
+    RADII.set(`${Number(r[col('z')])}-${Number(r[col('z')]) + Number(r[col('n')])}`, { r: rad, u: num(r[col('unc_r')]) });
+  }
+}
+
 // 8. CODATA (individual constants only)
 const CODATA = (() => {
   const t = readRaw('nist-codata/allascii.txt');
@@ -293,9 +315,33 @@ for (const sym of Object.keys(COD_PHASES)) {
   }
 }
 
-// 13. NIST lines: the NLINES strongest visible lines of the neutral atom (wavelength + relative intensity)
+// 13. NIST lines: a handful of visible lines of the neutral atom, and the colour they mix to.
+// How the lines are chosen and how bright they are (atom view round 2, PROPOSALS-atom.md r2 #1):
+//  - NIST ASD lines of the neutral atom between 380 and 750 nm (air), observed by NIST.
+//  - Lines from levels above the first ionization energy are left out: core-excited levels (sodium's
+//    2p5 3s 3d at ~36 eV gave its old violet lines) never show in a flame, lamp or tube.
+//  - NIST's relative intensities depend on the light source, and some elements mix papers on different
+//    scales: neon's 540.06 and 585.25 nm lines share an upper level, so NIST's own transition rates fix
+//    their ratio at about 1 : 63, yet both are listed as 20,000. So where NIST grades the transition
+//    probability of at least 3 visible lines within 18 % (grade C+ or better), every graded line's
+//    radiant power is estimated from them for a gas in equilibrium at kT = 1 eV (the default plasma of
+//    NIST's LIBS spectrum tool): P ∝ g_k A_ki exp(-E_k / kT) / λ. Otherwise NIST's relative intensities
+//    are used ('intensity'), or g_k A_ki when no intensity is given ('gA').
+//  - The NLINES lines that look brightest are kept: power × the eye's sensitivity V(λ) (CIE 1931 ȳ,
+//    the CIE table in data/raw/cie); a line within 0.5 nm of a brighter kept line is skipped (a
+//    spectroscope shows them as one; the sodium D doublet, 0.6 nm apart, stays two lines). v = [wavelength,
+//    radiant power relative to the strongest kept, 1–1000].
+//  - glow = the CIE 1931 chromaticity (x, y) of all those lines together (not only the kept ones):
+//    the colour the eye would see. Checked in validate.mjs against the lamp colours of Wikipedia's
+//    "Gas-discharge lamp" table.
 function parseJ(s) { if (!s) return null; if (s.includes('/')) { const [a, b] = s.split('/'); return Number(a) / Number(b); } return num(s); }
-function linesFor(Z, sym) {
+const levelCm = s => (!s || /[a-z]/i.test(s) ? null : num(String(s).replace(/[[\]()+?]/g, ''))); // "[40860.648]" -> 40860.648; "+x" levels -> null
+const CIE_TABLE = new Map(readRaw('cie/CIE_xyz_1931_2deg.csv').trim().split(/\r?\n/).map(l => { const [w, x, y, z] = l.split(',').map(Number); return [w, [x, y, z]]; }));
+const cieAt = lam => { const a = Math.floor(lam), t = lam - a, A = CIE_TABLE.get(a), B = CIE_TABLE.get(a + 1) || A; return A.map((v, i) => v + (B[i] - v) * t); };
+const ACC = { AAA: 0.003, AA: 0.01, 'A+': 0.02, A: 0.03, 'B+': 0.07, B: 0.1, 'C+': 0.18, C: 0.25, 'D+': 0.4, D: 0.5, E: 1 }; // NIST ASD accuracy codes: relative uncertainty of A_ki
+const EV_CM = CODATA.eV_J / (CODATA.h * CODATA.c) / 100; // 1 eV in cm^-1 (CODATA)
+const LIBS_KT_EV = 1; // NIST LIBS form default electron temperature, eV (https://physics.nist.gov/PhysRefData/ASD/LIBS/libs-form.html)
+function linesFor(Z, sym, ieEv) {
   const rel = `nist-asd/lines/${Z}-${sym}_I.csv`;
   if (!fs.existsSync(RAW(rel))) {
     if (fs.existsSync(RAW(`nist-asd/lines/${Z}-${sym}_I.none.txt`))) return { none: 'NIST ASD lists no lines of the neutral atom between 380 and 750 nm' };
@@ -311,18 +357,31 @@ function linesFor(Z, sym) {
     const lam = obs ?? ritz;
     if (!(lam >= 380 && lam <= 750)) continue;
     const im = (c[col('intens')] || '').match(/\d+(?:\.\d+)?/);
-    const Aki = num(c[col('Aki(s^-1)')]), Jk = parseJ(c[col('J_k')]);
-    out.push({ lam, obs: obs != null, I: im ? Number(im[0]) : null, gA: Aki != null && Jk != null ? (2 * Jk + 1) * Aki : null });
+    out.push({ lam, obs: obs != null, I: im ? Number(im[0]) : null, A: num(c[col('Aki(s^-1)')]), acc: c[col('Acc')], Ek: levelCm(c[col('Ek(cm-1)')]), Jk: parseJ(c[col('J_k')]) });
   }
-  const withI = out.filter(x => x.I > 0 && x.obs);
-  let basis, ranked;
-  if (withI.length >= 3) { basis = 'intensity'; ranked = withI.sort((a, b) => b.I - a.I); }
-  else if (out.some(x => x.gA > 0)) { basis = 'gA'; ranked = out.filter(x => x.gA > 0).sort((a, b) => b.gA - a.gA); }
-  else { basis = 'none'; ranked = out.slice(); }
-  const kept = ranked.slice(0, NLINES);
-  const w = x => (basis === 'intensity' ? x.I : basis === 'gA' ? x.gA : 0);
-  const max = Math.max(...kept.map(w), 1e-30);
-  return { basis, total: out.length, v: kept.sort((a, b) => a.lam - b.lam).map(x => [Number(x.lam.toFixed(3)), basis === 'none' ? 0 : Math.max(1, Math.round((1000 * w(x)) / max))]) };
+  const ieCm = ieEv != null ? ieEv * EV_CM : null;
+  const bound = out.filter(x => !(ieCm != null && x.Ek != null && x.Ek > ieCm));
+  const seen = bound.filter(x => x.obs);
+  const graded = bound.filter(x => x.A > 0 && x.Ek != null && x.Jk != null && (ACC[x.acc] ?? 1) <= ACC['C+']);
+  const withI = seen.filter(x => x.I > 0);
+  const gA = seen.filter(x => x.A > 0 && x.Jk != null);
+  let basis, pool;
+  if (graded.length >= 3) { basis = 'model'; pool = graded.map(x => ({ ...x, P: ((2 * x.Jk + 1) * x.A * Math.exp(-x.Ek / (LIBS_KT_EV * EV_CM))) / x.lam })); }
+  else if (withI.length >= 3) { basis = 'intensity'; pool = withI.map(x => ({ ...x, P: x.I })); }
+  else if (gA.length) { basis = 'gA'; pool = gA.map(x => ({ ...x, P: (2 * x.Jk + 1) * x.A })); }
+  else { basis = 'none'; pool = (seen.length ? seen : bound).map(x => ({ ...x, P: 0 })); }
+  const eye = pool.map(x => ({ ...x, B: x.P * cieAt(x.lam)[1] })).sort((a, b) => b.B - a.B || a.lam - b.lam);
+  const kept = [];
+  for (const x of eye) { if (kept.length === NLINES) break; if (!kept.some(k => Math.abs(k.lam - x.lam) < 0.5)) kept.push(x); }
+  let X = 0, Y = 0, Zt = 0;
+  for (const x of pool) { const [a, b, c] = cieAt(x.lam); X += x.P * a; Y += x.P * b; Zt += x.P * c; }
+  const S = X + Y + Zt;
+  const max = Math.max(...kept.map(x => x.P), 1e-30);
+  return {
+    basis, total: out.length, used: pool.length, dropped: out.length - bound.length,
+    glow: basis !== 'none' && S > 0 && !GLOW_FAILS.has(sym) ? [round(X / S, 2), round(Y / S, 2)] : undefined,
+    v: kept.sort((a, b) => a.lam - b.lam).map(x => [Number(x.lam.toFixed(3)), basis === 'none' ? 0 : Math.max(1, Math.round((1000 * x.P) / max))]),
+  };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -476,8 +535,10 @@ for (const Z of ZS) {
   }
   if (nucA) {
     f.nucA = V(nucA, 'nubase', { n: natural.length ? 'most abundant natural isotope' : onlyConfirmed ? 'longest-lived confirmed isotope' : 'longest-lived isotope' });
-    const r0 = FIX.nuclearR0_fm.value;
-    f.rNuc = V(round(r0 * Math.cbrt(nucA), 3), 'fc', { p: 1, n: `estimate: rms charge radius ≈ ${r0}·A^(1/3) fm (${FIX.nuclearR0_fm.cite})` });
+    const r0 = FIX.nuclearR0_fm.value, meas = RADII.get(`${Z}-${nucA}`);
+    f.rNuc = meas
+      ? V(meas.r, 'iaea-radii', { u: meas.u ?? undefined, n: `measured rms charge radius of ${sym}-${nucA}` })
+      : V(round(r0 * Math.cbrt(nucA), 3), 'fc', { p: 1, n: `estimate: rms charge radius ≈ ${r0}·A^(1/3) fm (${FIX.nuclearR0_fm.cite}); Angeli & Marinova (2013) list no measured value for ${sym}-${nucA}` });
   }
 
   // ---- electron configuration (NIST; PubChem for Z > 108)
@@ -528,7 +589,9 @@ for (const Z of ZS) {
   // ---- electronegativity, electron affinity, oxidation states
   f.en = num(pc.Electronegativity) != null ? V(num(pc.Electronegativity), 'pc', { n: 'Pauling scale', p: superheavy ? 1 : undefined }) : NONE('no Pauling electronegativity in PubChem');
   ccAdd(Z, 'en', f.en, mdl.en_pauling != null ? V(mdl.en_pauling, 'mdl-crc') : null);
-  f.ea = num(pc.ElectronAffinity) != null ? V(num(pc.ElectronAffinity), 'pc', { p: superheavy ? 1 : undefined }) : NONE('no electron affinity in PubChem');
+  f.ea = num(pc.ElectronAffinity) != null ? V(num(pc.ElectronAffinity), 'pc', { p: superheavy ? 1 : undefined })
+    : EA_UNBOUND.has(sym) ? NONE_WHY('adding an electron releases no energy: its negative ion is not stable (electron affinity ≤ 0). Basis: data/curated/ea-unbound.json (Chemistry LibreTexts, Electron Affinity; CRC values via mendeleev are negative for He, Be, N, Ar, Xe)', { le0: 1 })
+      : NONE('no electron affinity in PubChem');
   ccAdd(Z, 'ea', f.ea, mdl.electron_affinity != null ? V(mdl.electron_affinity, 'mdl-crc') : null);
   f.ox = pc.OxidationStates ? V(pc.OxidationStates.replace(/\s+/g, ' '), 'pc', { p: superheavy ? 1 : undefined }) : NONE('no oxidation states in PubChem');
 
@@ -647,8 +710,8 @@ for (const Z of ZS) {
     : V(1, 'model', { n: 'gas drawn as single atoms (monatomic vapour)' });
 
   // ---- spectrum (a handful of NIST lines)
-  const ln = linesFor(Z, sym);
-  const lines = ln.none ? { none: ln.none } : { basis: ln.basis, n: ln.total, v: ln.v };
+  const ln = linesFor(Z, sym, NIST_IE.get(Z)?.get(0)?.ie ?? null);
+  const lines = ln.none ? { none: ln.none } : clean({ basis: ln.basis, n: ln.total, used: ln.used, ex: ln.dropped || undefined, glow: ln.glow, v: ln.v });
 
   // the element card's first line: our own words, checked against the Wikipedia lead (REDESIGN-PLAN §2, QUESTIONS Q17)
   const ln1 = LINES[sym];

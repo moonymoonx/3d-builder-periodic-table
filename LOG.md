@@ -240,3 +240,27 @@
   - **Checks:** unit tests 45/45, validator ALL PASS, smoke 45/45 twice, no console errors, index.html 1,762 KB.
   - **Reshoot:** `/workspace/out/redesign/sample-r2-merged/` (34 sample states + hero spot checks).
   - **FPS:** not re-measured at the merge (usage limit). The session's own run (`sample-r2/fps.txt`) has all 34 states at a 60 FPS median.
+- 2026-11-21 ~11:16 (Saigon) — **Shared sample fixes** after `reviews/sample-s2.md` (on master; the sample session takes the rest on `view-sample-r3`). Details in DECISIONS.md › Shared sample fixes.
+  - **Hearth floor:** the glass's floor z-fought the hearth (striping, seam, the phone's band); the vessel now stands open.
+  - **Forge chrome:** matches the sample place's (ink 20 °C, room button only when away, ◀ Cool it, About this sample).
+  - **Mercury:** quicksilver in every state; STYLE.md §6 records the rule.
+  - **Vapour:** a sparse vapour of spheres.
+  - **Card:** oganesson's predicted state cue on phones; one source hint on the desktop card.
+  - **Checks:** unit tests 45/45, validator ALL PASS, smoke 46/46 twice, no console errors, index.html 1,773 KB.
+  - **FPS:** forge states at a 60 FPS median (load 8–9).
+  - **Shots:** `/workspace/out/redesign/shared-fixes/` (12 targeted states).
+- 2026-11-21 ~11:23 (Saigon) — **Merged `view-patterns-r3`** (side by side round 3, answering `reviews/patterns-p2.md`). Clean rebase onto cf98e90; review passed (DECISIONS.md › Merge review: view-patterns-r3).
+  - **Data choices:** chlorine's 3.62 eV kept (PubChem, our rule for electron affinity); a data-computed Gallium · Mercury hook accepted for later.
+  - **Checks:** unit tests 45/45, validator ALL PASS, smoke 46/46 twice, index.html 1,778 KB.
+  - **Reshoot:** `/workspace/out/redesign/patterns-r3-merged/` (47 states).
+- 2026-11-21 ~11:35 (Saigon) — **Merged `view-atom-r2`** (the atom place, round 2, answering `reviews/atom-a1.md`). Review passed (DECISIONS.md › Merge review: view-atom-r2).
+  - **Rebase:** onto 60a2cde. `build-data.mjs` merged by hand (the confirmed-kind and measured-radius rules together); data rebuilt from the merged build (IAEA raw file copied from the atom worktree after a SHA-256 check).
+  - **Decisions:** glow from the measured lines, none for krypton and xenon; the card says "the 8 that look brightest"; `color.js` clips and exports one name per line.
+  - **Fixed:** a stray "null" in the desktop card's numbers (from cf98e90).
+  - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,795 KB.
+  - **Reshoot:** `/workspace/out/redesign/atom-r2-merged/`.
+- 2026-11-21 ~11:49 (Saigon) — **Patterns and side-by-side polish 1**, after `reviews/patterns-p3.md` (committed, with `reviews/sample-s2.md`). Details in DECISIONS.md › Patterns and side-by-side polish 1.
+  - **Patterns:** true reasons for chart gaps (electron affinity ≤ 0 from a cited curated list; helium never freezes); the column question for grip on electrons.
+  - **Side by side:** a size headline on "One atom of each"; oganesson an outline with "?"; a two-step "Pick any two…"; quicksilver mercury on the balance; oganesson's phone label; rail fades.
+  - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,802 KB.
+  - **Shots:** `/workspace/out/redesign/polish-1/`.

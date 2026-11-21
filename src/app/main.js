@@ -127,7 +127,7 @@ function boot() {
   registerView('sample', sample);
   registerView('heat', forge);
   registerView('hold', holdView);
-  const heat = buildHeat(ui, { onInteract: () => {} });
+  const heat = buildHeat(ui, { onInteract: () => {}, onLayout: () => updateSafe() });
   const holdPlace = buildSample(ui, { onDoor: v => set({ view: v, ...(v === 'atom' ? { orbital: null } : {}), ...(savedT != null ? { T: savedT } : {}) }), onLayout: () => updateSafe() });
   const atomPlace = buildAtom(ui, { view: atom, onBack: () => goBack() });
   registerView('compare', createCompareView());
@@ -256,6 +256,7 @@ function boot() {
       if (shell.modalOpen()) { shell.closeModal(); return; }
       if (home.menuOpen()) { home.closeMenu(); return; }
       if (state.view === 'hold' && holdPlace.aboutOpen()) { holdPlace.closeAbout(); return; }
+      if (state.view === 'heat' && heat.aboutOpen()) { heat.closeAbout(); return; }
       if (state.view !== 'table' || state.card) { goBack(); return; }
       shell.closePanels(); return;
     }
@@ -296,9 +297,10 @@ function boot() {
       return;
     }
     if (state.view === 'atom') { setSafe(atomPlace.safe(tb.bottom)); return; } // beside the card, above the phone sheet
-    if (state.view === 'heat') { // the crystal sits between the top bar and the thermometer
-      const pr = heat.panel.getBoundingClientRect();
-      setSafe({ left: 0, right: 0, top: tb.bottom + 8, bottom: H - pr.top + 12 });
+    if (state.view === 'heat') { // the crystal sits between the top bar and the thermometer, beside "About this sample"
+      const pr = heat.panel.getBoundingClientRect(), ab = heat.aboutOpen() ? restingRect(heat.about.el) : null;
+      if (isPhone()) setSafe({ left: 0, right: 0, top: tb.bottom + 8, bottom: H - (ab ? ab.top : pr.top) + 12 });
+      else setSafe({ left: 0, right: ab ? W - ab.left + 12 : 0, top: tb.bottom + 8, bottom: H - pr.top + 12 });
       return;
     }
     if (state.view === 'trends') { setSafe(patterns.safeArea()); return; }
@@ -315,7 +317,7 @@ function boot() {
     setSafe({ left: show(shell.left) ? L.right + 8 : 0, right: show(shell.right) ? W - R.left + 8 : 0, top: tb.bottom + 6, bottom: 0 });
   }
   const ro = new ResizeObserver(() => updateSafe());
-  for (const el of [shell.left, shell.right, home.top, home.bottom, home.head, card.el, heat.panel, holdPlace.panel, holdPlace.about.el, atomPlace.el, atomPlace.band]) ro.observe(el);
+  for (const el of [shell.left, shell.right, home.top, home.bottom, home.head, card.el, heat.panel, heat.about.el, holdPlace.panel, holdPlace.about.el, atomPlace.el, atomPlace.band]) ro.observe(el);
   window.addEventListener('resize', () => { home.render(); updateSafe(); });
 
   renderAll();

@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-20T19:23:56.205Z",
+ "generated": "2026-11-21T02:55:39.958Z",
  "note": "Provenance of every raw download. sha256 is of the bytes as served.",
  "files": {
   "ciaaw/abridged-atomic-weights.htm": {
@@ -750,6 +750,15 @@
    "sha256": "9e0be5e5c81f254f728daeec5e403f16d4a34db9682c07910b6b0d5a09c9b4c4",
    "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
    "committed": true
+  },
+  "iaea-radii/ground-states.csv": {
+   "source": "iaea-radii",
+   "url": "https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=all",
+   "accessed": "2026-11-21T02:55:39.957Z",
+   "bytes": 900613,
+   "sha256": "8aee5dc431af1e35fcb49746387b83e927b3c300e7787defbda621a08212c795",
+   "licence": "IAEA Nuclear Data Section, LiveChart of Nuclides API (ground_states); charge radii from I. Angeli, K. P. Marinova, Atomic Data and Nuclear Data Tables 99 (2013) 69-95, doi:10.1016/j.adt.2011.12.006. IAEA terms of use (https://nucleus.iaea.org/Pages/Others/Terms-Of-Use.aspx); only individual measured radii are used, as cited values. Raw dump kept local only.",
+   "committed": false
   },
   "mendeleev/elements.db": {
    "source": "mendeleev",

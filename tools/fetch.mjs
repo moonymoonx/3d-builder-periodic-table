@@ -35,6 +35,7 @@ export const LICENCES = {
   cie: { licence: 'CIE dataset "Colour-matching functions of CIE 1931 standard colorimetric observer", doi:10.25039/CIE.DS.xvudnb9b, CC BY-SA 4.0.', commit: true },
   w3c: { licence: 'W3C CSS Color 4 sample code (conversions.js), W3C Software and Document License; only the XYZ->sRGB matrix is used.', commit: true },
   nubase: { licence: 'NUBASE2020 evaluation (F. G. Kondev et al., Chinese Physics C 45 (2021) 030001, open access CC BY 3.0); ASCII table distributed by the Atomic Mass Data Center.', commit: true },
+  'iaea-radii': { licence: 'IAEA Nuclear Data Section, LiveChart of Nuclides API (ground_states); charge radii from I. Angeli, K. P. Marinova, Atomic Data and Nuclear Data Tables 99 (2013) 69-95, doi:10.1016/j.adt.2011.12.006. IAEA terms of use (https://nucleus.iaea.org/Pages/Others/Terms-Of-Use.aspx); only individual measured radii are used, as cited values. Raw dump kept local only.', commit: false },
 };
 
 function sha256(buf) { return crypto.createHash('sha256').update(buf).digest('hex'); }
@@ -220,6 +221,14 @@ async function nubase() {
   if (!got) await fetchTo('nubase', 'nubase/nubase_4.mas20.txt', 'https://amdc.impcas.ac.cn/masstables/Ame2020/nubase_4.mas20.txt', { timeout: 120000, validate: ok });
 }
 
+// ---- 8c. Measured nuclear charge radii (Angeli & Marinova 2013) via the IAEA LiveChart API -----
+async function iaeaRadii() {
+  console.log('IAEA LiveChart ground states (charge radii)');
+  await fetchTo('iaea-radii', 'iaea-radii/ground-states.csv', 'https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=all', {
+    timeout: 180000, validate: b => (/^z,n,symbol,radius,unc_r/.test(b.toString('utf8', 0, 64)) ? null : 'not the ground_states CSV'),
+  });
+}
+
 // ---- 5b. CODATA constants (a0, R, k, u, NA) -------------------------------------------------
 async function codata() {
   console.log('NIST CODATA constants');
@@ -349,7 +358,7 @@ async function wikipediaIntros() {
 // ---- run ----------------------------------------------------------------------------------
 const steps = [['pubchem', pubchem], ['ciaaw', ciaaw], ['nist-ie', nistIE], ['nist-lines', nistLines], ['wikipedia', wikipedia],
   ['codata', codata], ['colour', colour], ['vi-gdpt', viGdpt], ['wikidata', wikidata], ['mendeleev', mendeleev], ['nubase', nubase], ['cod', cod], ['cod-hiT', codHighT], ['vi-gdpt2', viGdpt2],
-  ['wikipedia-intros', wikipediaIntros]];
+  ['wikipedia-intros', wikipediaIntros], ['iaea-radii', iaeaRadii]];
 fs.mkdirSync(RAW, { recursive: true });
 for (const [id, fn] of steps) {
   if (!want(id)) continue;

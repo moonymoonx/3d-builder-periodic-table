@@ -57,10 +57,59 @@ test('atom: a cloud of charge Z is the Z = 1 cloud shrunk by 1/Z (the cached sam
   assert.ok(Math.abs(s / 30000 - want) / want < 0.02, `${s / 30000} vs ${want}`);
 });
 
-test('its light: one line per wavelength, colour words, and no olive or teal at the ends of the spectrum', () => {
-  assert.equal(S.uniqueLines(bySym('He')).length, 3, 'helium lists 388.865 and 587.562 nm more than once');
+test('its light: the lines that look brightest, one per wavelength, and no olive, teal or crimson', () => {
+  // round 2: neon shows its orange-red lines (not near-infrared ones), sodium its D doublet and 568.8 nm pair
+  const has = (sym, ...nm) => nm.every(w => S.uniqueLines(bySym(sym)).some(([l]) => Math.abs(l - w) < 0.06));
+  assert.ok(has('Ne', 585.25, 614.31, 640.22), 'neon: 585.2, 614.3 and 640.2 nm');
+  assert.ok(!S.uniqueLines(bySym('Ne')).some(([l]) => l > 690), 'neon: no near-infrared line among the 8');
+  assert.ok(has('Na', 589.0, 589.59, 568.82), 'sodium: D lines and the 568.8 nm pair');
+  assert.ok(!S.uniqueLines(bySym('Na')).some(([l]) => l < 450), 'sodium: none of the core-excited violet lines');
+  assert.ok(S.uniqueLines(bySym('Fe')).every(([l]) => l > 400), 'iron: no near-ultraviolet stack');
+  const ne = S.looks(bySym('Ne')), top = ne.reduce((a, b) => (b.b > a.b ? b : a));
+  assert.ok(Math.abs(top.lam - 640.22) < 0.1, `neon looks brightest at 640.2 nm (got ${top.lam})`);
   assert.deepEqual([405, 470, 495, 540, 589, 610, 656].map(S.colourWord), ['violet', 'blue', 'teal', 'green', 'yellow', 'orange', 'red']);
-  for (const nm of [690, 720, 749]) { const [r, g, b] = S.lineColour(nm); assert.ok(r > 2 * g && r > 2 * b, `${nm} nm reads red: ${[r, g, b]}`); }
+  for (const nm of [640, 656, 690, 720, 749]) { const [r, g, b] = S.lineColour(nm); assert.ok(r > 4 * g && r > 4 * b, `${nm} nm reads red, not crimson: ${[r, g, b]}`); }
   for (const nm of [380, 390]) { const [r, g, b] = S.lineColour(nm); assert.ok(b > g && r > g, `${nm} nm reads violet: ${[r, g, b]}`); }
   assert.equal(S.uniqueLines(bySym('Og')).length, 0);
+  // the glow: neon red-orange, sodium orange-yellow (R > G > B), argon violet (B the largest)
+  const [nr, ng, nb] = S.glowRGB(bySym('Ne')); assert.ok(nr > 0.9 && ng < 0.45 && nb < 0.1, `neon glow ${[nr, ng, nb]}`);
+  const [sr, sg, sb] = S.glowRGB(bySym('Na')); assert.ok(sr > sg && sg > sb && sg > 0.4, `sodium glow ${[sr, sg, sb]}`);
+  const [ar, ag, ab] = S.glowRGB(bySym('Ar')); assert.ok(ab >= ar && ab > ag, `argon glow ${[ar, ag, ab]}`);
+  assert.equal(S.glowRGB(bySym('Og')), null);
+});
+
+test('one cloud: flat surfaces where it is zero, true spheres for s clouds, turns in the usual order', () => {
+  const planes = (l, m) => V.nodalPlanes(l, m).map(v => v.map(x => Math.round(x * 1000) / 1000 + 0));
+  assert.deepEqual(planes(1, 0), [[0, 0, 1]], 'p_z: the xy plane');
+  assert.deepEqual(planes(1, 1), [[-1, 0, 0]], 'p_x: the yz plane');
+  assert.equal(V.nodalPlanes(2, 1).length, 2, 'd_xz: two planes');
+  assert.equal(V.nodalPlanes(2, 0).length, 0, 'd_z²: cones, no plane');
+  assert.equal(V.nodalPlanes(3, -2).length, 3, 'f_xyz: three planes');
+  // every plane really is a zero of psi
+  for (const [l, m] of [[1, -1], [1, 0], [1, 1], [2, -2], [2, -1], [2, 1], [2, 2], [3, -3], [3, -2], [3, 0], [3, 2], [3, 3]]) {
+    for (const [a, b, c] of V.nodalPlanes(l, m)) {
+      const u = Math.abs(c) > 0.9 ? [1, 0, 0] : [0, 0, 1], w = [b * u[2] - c * u[1], c * u[0] - a * u[2], a * u[1] - b * u[0]];
+      for (const t of [0.7, 2.3]) { const p = w.map((x, i) => t * x + 0.4 * t * (i === 2 && Math.abs(c) < 0.9 ? 1 : 0)); assert.ok(Math.abs(O.psi(l + 1, l, m, 1, p[0], p[1], p[2])) < 1e-9, `psi(${l},${m}) is zero on its plane`); }
+    }
+  }
+  // 1s: one sphere; 4s: nested spheres alternating in sign, the outermost the 4s cloud's 90 % reach
+  assert.equal(V.sSpheres(1).length, 1);
+  const s4 = V.sSpheres(4);
+  assert.ok(s4.length >= 3, `4s: ${s4.length} spheres`);
+  assert.ok(s4.every((x, i) => !i || x.r > s4[i - 1].r));
+  assert.deepEqual(V.turnOrder(1), [1, -1, 0], 'p: x, y, z');
+  assert.deepEqual(V.turnOrder(2).map(m => O.ORBITAL_SUFFIX[2][m]), ['xy', 'xz', 'yz', 'x²−y²', 'z²']);
+});
+
+test('the nucleus is drawn a round factor bigger; filling-order surprises in plain words', async () => {
+  assert.deepEqual([850, 1300, 1800, 3400, 7600].map(V.niceFactor), [1000, 1000, 2000, 5000, 10000]);
+  await import('../src/app/content/strings-atom.js');
+  assert.equal(V.movePhrase(['5f: 4→3', '6d: 0→1']), 'one electron sits in 6d instead of 5f', 'uranium');
+  assert.equal(V.movePhrase(['4d: 8→10', '5s: 2→0']), 'two electrons sit in 4d instead of 5s', 'palladium');
+  assert.equal(V.movePhrase(bySym('Th').f.madelung[2].d), 'two electrons sit in 6d instead of 5f', 'thorium, from the data');
+  // every filling-order exception in the data reads as one plain phrase (no raw "5f: 4 → 3" shorthand)
+  for (const Z of Array.from({ length: 118 }, (_, i) => i + 1)) {
+    const e = (await import('../src/app/data.js')).byZ(Z), md = e.f.madelung;
+    if (md[0] === 'exception') assert.match(V.movePhrase(md[2].d), /^(one|two|three) electrons? sits? in \d[spdf] instead of \d[spdf]$|^its electrons sit in [\d\w, ]+ instead of [\d\w, ]+$/, `${e.sym}: ${V.movePhrase(md[2].d)}`);
+  }
 });

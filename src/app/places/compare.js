@@ -10,7 +10,7 @@ import { state, set } from '../state.js';
 import { byZ, bySym, name, search, propValue, stateAt, isPred, fmtTemp, source, structText } from '../data.js';
 import { sheet, chip, iconButton, disclosure, segmented } from '../ui/kit.js';
 import { showSource, closeSource } from '../ui/source.js';
-import { CURATED, curatedOf, twoForms, pairStory, ratioValue, curatedFacts, forms, litre, neighbours, getStage, setStage, onStage, tempC, litreText } from '../ui/comparePanel.js';
+import { CURATED, curatedOf, twoForms, pairStory, ratioValue, curatedFacts, forms, litre, neighbours, getStage, setStage, onStage, tempC, litreText, specimenOf, radiusOf } from '../ui/comparePanel.js';
 import { REFS } from '../content/patterns-refs.js';
 import { pigment, pigmentCB } from '../../design/tokens.js';
 import { PATTERNS_KEYS } from '../content/strings-patterns.js';
@@ -35,7 +35,8 @@ export function buildCompare(ui, hooks = {}) {
   const stageBar = h('div', { class: 'compare-stage', hidden: true }, stageSeg, stageCap);
   const pairsLbl = h('span', { class: 'compare-pairs__lbl' });
   const pairs = h('div', { class: 'compare-pairs', role: 'toolbar' });
-  const pairsBox = h('div', { class: 'compare-pairsbox', hidden: true }, pairsLbl, pairs);
+  const pickSlot = h('span', { class: 'compare-pairs__pick' }); // "Pick any two…": never scrolled out of view
+  const pairsBox = h('div', { class: 'compare-pairsbox', hidden: true }, pairsLbl, h('div', { class: 'compare-pairs__row' }, pairs, pickSlot));
   ui.append(stageBar, pairsBox, sh.el);
   const pal = () => (state.cb ? pigmentCB : pigment);
   const A = () => byZ(state.Z), B = () => byZ(state.Z2 || state.Z);
@@ -98,8 +99,19 @@ export function buildCompare(ui, hooks = {}) {
   }
 
   // ---- the takeaway: why this pair is worth a look -----------------------------------------------------------------
+  /** On "One atom of each" a litre sentence would describe what is not on screen: say how wide the atoms are
+   *  instead (in the radius drawn), or that one size is not known (patterns review p3, c11). */
+  function sizeLead(a, b) {
+    const k = state.cmpR === 'vdw' ? 'vdw' : 'cov', ra = radiusOf(a, k), rb = radiusOf(b, k);
+    if (!ra || !rb) return t('compare.s.sizeUnknown', { Name: atStart(!ra ? a : b) });
+    const r = Math.max(ra[0], rb[0]) / Math.min(ra[0], rb[0]), big = ra[0] >= rb[0] ? a : b, small = big === a ? b : a;
+    if (r < 1.05) return t('cmp.s.sameSize', { a: inSentence(a), b: inSentence(b) }).replace(/^./, c => c.toUpperCase());
+    return t('compare.s.size', { Big: atStart(big), big: inSentence(big), small: inSentence(small), r: fmtNum(r, 1) });
+  }
+  const LITRE_LEADS = new Set(['heavier', 'same']); // stories told in litres
   function takeaway(a, b) {
     const cur = curatedOf(a.Z, b.Z);
+    if (getStage() === 'atoms' && !formsNow() && ((cur && cur.id === 'he-os') || (!cur && LITRE_LEADS.has(pairStory(a, b).kind)))) return { lead: sizeLead(a, b), more: null, refs: null, cur: null };
     if (cur) {
       const f = curatedFacts(cur.id);
       const p = {};
@@ -152,16 +164,22 @@ export function buildCompare(ui, hooks = {}) {
 
   // ---- pick any two: a small finder for one side of the pair -------------------------------------------------------
   let picker = null;
-  function closePicker() { if (picker) { picker.remove(); picker = null; } }
+  function closePicker() { if (picker) { picker.remove(); picker = null; } pairsBox.classList.remove('is-under'); }
   document.addEventListener('pointerdown', ev => { if (picker && !picker.contains(ev.target) && !ev.target.closest('.compare-slot,.compare-pick')) closePicker(); }, true);
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && picker) { closePicker(); ev.stopPropagation(); } });
-  function openPicker(anchor, slot) {
+  /** step 0: one slot ("change ▾": instead of this one); "Pick any two…" asks for both: step 1, then step 2. */
+  function openPicker(anchor, slot, step = 0) {
     if (picker) { const was = picker.dataset.slot; closePicker(); if (was === slot) return; }
     closeRefs(); closeSource();
     const cur = slot === 'a' ? A() : B(), other = slot === 'a' ? B() : A();
     const input = h('input', { type: 'search', class: 'compare-find', autocomplete: 'off', spellcheck: 'false', placeholder: t('home.find'), 'aria-label': t('home.find') });
     const list = h('div', { class: 'compare-results', role: 'listbox' });
-    const choose = e => { closePicker(); if (slot === 'a') set({ Z: e.Z, ...(e.Z === state.Z2 && !twoForms(e.Z) ? { Z2: cur.Z } : {}) }); else set({ Z2: e.Z }); };
+    const choose = e => {
+      closePicker();
+      if (slot === 'a') set({ Z: e.Z, ...(e.Z === state.Z2 && !twoForms(e.Z) ? { Z2: cur.Z } : {}) }); else set({ Z2: e.Z });
+      // "Pick any two…": the first chosen, ask at once for the second (the rail has been re-rendered: find its chip again)
+      if (step === 1) requestAnimationFrame(() => { const a2 = document.querySelector('.compare-pick'); if (a2) openPicker(a2, 'b', 2); });
+    };
     const item = (e, extra) => h('button', { type: 'button', class: 'compare-result', role: 'option', onclick: () => choose(e) },
       h('span', { class: 'compare-result__sym', style: { background: pal()[e.f.cat[0]] } }, e.sym), h('span', { class: 'compare-result__name' }, atStart(e)), h('span', { class: 'compare-result__meta' }, extra || String(e.Z)));
     const fill = () => {
@@ -172,7 +190,8 @@ export function buildCompare(ui, hooks = {}) {
     };
     input.addEventListener('input', fill);
     input.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') { const first = list.querySelector('.compare-result'); if (first) first.click(); } if (ev.key === 'Escape') closePicker(); });
-    picker = h('div', { class: 'ui-menu compare-picker', role: 'dialog', 'data-slot': slot }, h('h4', null, t('compare.instead', { name: atStart(cur) })), input, list);
+    const title = step === 1 ? t('compare.pickFirst') : step === 2 ? t('compare.pickSecond', { name: inSentence(other) }) : t('compare.instead', { name: atStart(cur) });
+    picker = h('div', { class: 'ui-menu compare-picker', role: 'dialog', 'data-slot': slot }, h('h4', null, title), input, list);
     ui.append(picker);
     fill();
     // the finder opens beside the sheet, never over the rows it changes: to its left on desktop, above it on phones
@@ -182,12 +201,17 @@ export function buildCompare(ui, hooks = {}) {
       picker.style.width = `${w}px`; picker.style.left = '8px';
       picker.style.top = ''; picker.style.bottom = `${Math.round(H - sr.top + 8)}px`;
       picker.style.maxHeight = `${Math.round(sr.top - 70)}px`;
+      pairsBox.classList.add('is-under'); // the rail would peek out beside it
     } else {
       const w = 320, hh = picker.offsetHeight;
       picker.style.width = `${w}px`;
       picker.style.left = `${Math.max(8, Math.round(sr.left - w - 14))}px`;
-      const top = anchor.closest('.compare-sheet') ? r.top - 8 : r.top - hh - 10;
-      picker.style.top = `${Math.round(Math.max(76, Math.min(top, H - hh - 12)))}px`;
+      if (anchor.closest('.compare-sheet')) { // from a tile: beside it, growing down
+        picker.style.top = `${Math.round(Math.max(76, Math.min(r.top - 8, H - hh - 12)))}px`;
+      } else { // from the rail: standing on its chip, so as the results narrow it shrinks toward the chip, off the stage's labels
+        picker.style.top = ''; picker.style.bottom = `${Math.round(H - r.top + 10)}px`;
+        picker.style.maxHeight = `${Math.round(r.top - 10 - 76)}px`;
+      }
       input.focus({ preventScroll: true });
     }
   }
@@ -210,10 +234,31 @@ export function buildCompare(ui, hooks = {}) {
     if (fm) return;
     const m = getStage();
     replace(stageSeg, segmented({ label: t('compare.stage'), value: m, options: [{ id: 'litre', label: t('compare.stage.litre') }, { id: 'atoms', label: t('compare.stage.atoms') }], onPick: v => setStage(v) }));
-    replace(stageCap, m === 'litre' ? t(isPhone() ? 'compare.stage.litreCapShort' : 'compare.stage.litreCap') : t(state.cmpR === 'vdw' ? 'compare.stage.atomsCapVdw' : 'compare.stage.atomsCap'));
+    const els = [A(), B()], unknown = els.filter(e => specimenOf(e).kg == null);
+    const litreCap = unknown.length // no weight, no balance: the specimens stand on plinths
+      ? t(isPhone() ? 'compare.stage.noScaleShort' : 'compare.stage.noScale', { names: unknown.map(inSentence).join(t('compare.and')) })
+      : t(isPhone() ? 'compare.stage.litreCapShort' : 'compare.stage.litreCap');
+    replace(stageCap, m === 'litre' ? litreCap : t(state.cmpR === 'vdw' ? 'compare.stage.atomsCapVdw' : 'compare.stage.atomsCap'));
+    if (modeRow) modeRow.hidden = m !== 'atoms'; // "draw the atoms" only where atoms are drawn
   }
+  // the sheet rests on whole rows (CSS scroll snapping, patterns.css); its very end must be such a rest too, or a fling
+  // to the bottom leaves the top row half under the compact title bar: pad the end by at most one row
+  const SNAP = ':scope > *, .compare-row, .compare-bars, .ui-disclosure__summary';
+  function alignEnd() {
+    const b = sh.body;
+    b.style.paddingBottom = '';
+    const cs = getComputedStyle(b), base = parseFloat(cs.paddingBottom) || 0, pad = parseFloat(cs.scrollPaddingTop) || 0;
+    const M = b.scrollHeight - b.clientHeight;
+    if (M <= 0) return;
+    const o = b.getBoundingClientRect().top - b.scrollTop;
+    const next = [...b.querySelectorAll(SNAP)].map(el => el.getBoundingClientRect().top - o - pad).filter(v => v >= M - 0.5).sort((x, y) => x - y)[0];
+    if (next != null && next - M > 0.5) b.style.paddingBottom = `${(base + next - M).toFixed(1)}px`;
+  }
+  const endRO = new ResizeObserver(() => requestAnimationFrame(alignEnd)); // the disclosure opening, the sheet pulled up
+  endRO.observe(sh.body);
+  let modeRow = null; // "Draw the atoms: when bonded | when touching", in All numbers (atom stage only)
   function render() {
-    closeSource();
+    closeSource(); modeRow = null;
     const a = A(), b = B(), fm = formsNow();
     const F = fm ? forms(a) : null;
     const la = fm ? t(`compare.form.${F[0].label}`) : atStart(a), lb = fm ? t(`compare.form.${F[1].label}`) : atStart(b);
@@ -238,12 +283,14 @@ export function buildCompare(ui, hooks = {}) {
       summary: t('card.all'),
       build: body => {
         // the size the stage draws: when bonded (covalent) or when touching (van der Waals)
-        body.append(h('div', { class: 'compare-mode' }, h('span', null, t('compare.drawn')),
-          segmented({ label: t('compare.drawn'), value: state.cmpR === 'vdw' ? 'vdw' : 'cov', options: [{ id: 'cov', label: t('compare.bonded') }, { id: 'vdw', label: t('compare.touching') }], onPick: m => { setStage('atoms'); set({ cmpR: m }); } })));
+        modeRow = h('div', { class: 'compare-mode', hidden: getStage() !== 'atoms' }, h('span', null, t('compare.drawn')),
+          segmented({ label: t('compare.drawn'), value: state.cmpR === 'vdw' ? 'vdw' : 'cov', options: [{ id: 'cov', label: t('compare.bonded') }, { id: 'vdw', label: t('compare.touching') }], onPick: m => set({ cmpR: m }) }));
+        body.append(modeRow);
         for (const r of ['size', 'touch', 'weight', 'grip', 'pull', 'appetite', 'boil', 'crust', 'year']) body.append(barRow(r, a, b));
       },
     });
     replace(sh.body, h('p', { class: 'compare-eyebrow' }, t('compare.eyebrow')), head, lead, more, grid, hint, all);
+    for (const el of sh.body.children) endRO.observe(el);
     sh.setBar(h('span', { class: 'compare-bar' }, h('span', { class: 'compare-bar__tile', style: { background: pal()[a.f.cat[0]] } }, a.sym), h('b', null, `${la} · ${lb}`), h('span', { class: 'compare-bar__tile', style: { background: pal()[b.f.cat[0]] } }, b.sym)));
     requestAnimationFrame(sh.updateMore);
     renderStage();
@@ -271,9 +318,8 @@ export function buildCompare(ui, hooks = {}) {
     replace(pairsLbl, t('compare.pairs'));
     const chips = CURATED.map(c => chip({ label: c.forms ? t('compare.c-c.chip') : `${atStart(bySym(c.a))} · ${atStart(bySym(c.b))}`, pressed: !!cur && cur.id === c.id,
       onClick: () => { closePicker(); closeRefs(); set({ Z: bySym(c.a).Z, Z2: bySym(c.b).Z }); } }));
-    // phones change either element from the sheet ("change ▾" under each tile), so the rail holds only the pairs
-    if (!isPhone()) chips.push(chip({ label: `${t('compare.pick')}…`, attrs: { class: 'ui-chip compare-pick' }, onClick: ev => openPicker(ev.currentTarget, 'b') }));
     replace(pairs, ...chips);
+    replace(pickSlot, chip({ label: `${t('compare.pick')}…`, attrs: { class: 'ui-chip compare-pick' }, onClick: ev => openPicker(ev.currentTarget, 'a', 1) }));
     pairs.setAttribute('aria-label', t('compare.pairs'));
     requestAnimationFrame(() => {
       // the chosen pair is always in view on a scrolling rail
@@ -288,8 +334,9 @@ export function buildCompare(ui, hooks = {}) {
   }
   function fades() {
     const more = pairs.scrollWidth > pairs.clientWidth + 2;
-    pairs.classList.toggle('fade-l', more && pairs.scrollLeft > 2);
-    pairs.classList.toggle('fade-r', more && pairs.scrollLeft < pairs.scrollWidth - pairs.clientWidth - 2);
+    // a rail that scrolls fades at both ends, always: a chip never meets a hard edge (its padding keeps the first clear)
+    pairs.classList.toggle('fade-l', more);
+    pairs.classList.toggle('fade-r', more);
   }
   pairs.addEventListener('scroll', fades, { passive: true });
   /** Phones: the pair chips ride just above the sheet, whatever its height. */
@@ -300,7 +347,7 @@ export function buildCompare(ui, hooks = {}) {
   const ro = new ResizeObserver(() => { if (sh.isOpen()) { placePairs(); if (hooks.onLayout) hooks.onLayout(); } });
   ro.observe(sh.el); ro.observe(pairsBox); ro.observe(stageBar);
   window.addEventListener('resize', () => { if (sh.isOpen()) { closePicker(); render(); } });
-  onStage(() => { if (sh.isOpen()) { renderStage(); if (hooks.onLayout) hooks.onLayout(); } });
+  onStage(() => { if (sh.isOpen()) { render(); if (hooks.onLayout) hooks.onLayout(); } }); // the headline follows the stage too
 
   /** The part of the screen the two specimens can use: beside the sheet (desktop) or above it (phones). */
   function safeArea() {

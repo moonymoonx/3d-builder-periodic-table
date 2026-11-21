@@ -171,6 +171,28 @@ await step('sample view: "Heat it" raises the temperature', async () => {
   return `T rose to ${Math.round(T)} K`;
 });
 
+await step('forge chrome as the sample place\'s: ink 20 °C, no room button there; hot: ◀ Cool it and Room temperature; About this sample with sources; Escape closes it', async () => {
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }); p.openCard(26); });
+  await page.waitForTimeout(700);
+  await page.locator('.ui-door', { hasText: 'Hold a piece' }).click();
+  await page.waitForFunction(() => window.__pt.state.view === 'heat', null, { timeout: 8000 });
+  await page.waitForTimeout(1400);
+  const btns = () => page.evaluate(() => [...document.querySelectorAll('.heat-actions button')].map(b => b.textContent.trim()));
+  const cold = await btns(), hotRead = await page.evaluate(() => document.querySelector('.heat-read').classList.contains('is-hot'));
+  await page.evaluate(() => window.__pt.set({ T: 1873.15 })); await page.waitForTimeout(600);
+  const hot = await btns();
+  await page.locator('.heat-about').click(); await page.waitForTimeout(500);
+  const rows = await page.locator('.heat-sheet .heat-facts').textContent();
+  await page.locator('.heat-sheet .heat-v').nth(1).click(); await page.waitForTimeout(200);
+  const pop = await page.locator('.popover').textContent();
+  await page.keyboard.press('Escape'); await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+  const st = await page.evaluate(() => ({ view: window.__pt.state.view, about: window.__pt.heat.aboutOpen() }));
+  await page.locator('[data-back=card]').click(); await page.waitForTimeout(900);
+  if (cold.join('|') !== 'Heat it ▶' || hotRead) throw new Error('at 20 °C: ' + JSON.stringify({ cold, hotRead }));
+  if (!/Cool it/.test(hot.join('|')) || !/Room temperature/.test(hot.join('|'))) throw new Error('hot: ' + hot.join('|'));
+  if (!/Melts at\D*1,538/.test(rows) || !/Source/.test(pop) || st.view !== 'heat' || st.about) throw new Error(JSON.stringify({ rows: rows.slice(0, 120), st }));
+  return `${cold.join('|')} → ${hot.join('|')}`;
+});
 // (four legacy trends/compare steps retired at the patterns merge: the // ---- patterns ---- block covers them)
 await step('forge: the iron card door dives into the crystal; 930 °C re-stacks to 12 neighbours; back returns to the card', async () => {
   await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }); p.openCard(26); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
@@ -259,10 +281,16 @@ await step('side by side: curated pairs, swap, carbon\'s two forms, pick any two
   const sw = await page.evaluate(() => [window.__pt.state.Z, window.__pt.state.Z2]);
   await page.locator('.compare-pairs .ui-chip', { hasText: 'Graphite · diamond' }).click(); await settle();
   const cc = await page.evaluate(() => ({ Z: window.__pt.state.Z, Z2: window.__pt.state.Z2, rows: [...document.querySelectorAll('.compare-row')].map(r => r.textContent).join(' | ') }));
+  // "Pick any two…" asks for both: the first, then at once the second (patterns review p3)
   await page.locator('.compare-pick').click();
+  const t1 = await page.locator('.compare-picker h4').textContent();
   await page.locator('.compare-find').fill('sod');
+  await page.locator('.compare-result').first().click(); await page.waitForTimeout(400);
+  const t2 = await page.locator('.compare-picker h4').textContent();
+  await page.locator('.compare-find').fill('chl');
   await page.locator('.compare-result').first().click(); await settle();
-  const z2 = await page.evaluate(() => window.__pt.state.Z2);
+  const z2 = await page.evaluate(() => (window.__pt.state.Z === 11 && window.__pt.state.Z2 === 17 ? 11 : [window.__pt.state.Z, window.__pt.state.Z2]));
+  if (!/first of two/.test(t1) || !/second/.test(t2)) throw new Error(JSON.stringify({ t1, t2 }));
   if (!/One more proton/.test(lead) || sw[0] !== 80 || sw[1] !== 79 || cc.Z !== 6 || cc.Z2 !== 6 || !/Neighbours per atom\D*3\D*4/.test(cc.rows) || z2 !== 11) throw new Error(JSON.stringify({ lead, sw, cc, z2 }));
   return 'carbon: graphite 3, diamond 4 neighbours';
 });
@@ -280,9 +308,14 @@ await step('side by side (VI): sentences use the familiar Vietnamese names; size
   await page.evaluate(() => window.__pt.set({ Z: 26, Z2: 29, lang: 'vi' })); await settle();
   const lead = await page.locator('.compare-lead').textContent();
   await page.evaluate(() => window.__pt.set({ lang: 'en' })); await settle();
+  // "Draw the atoms" lives with the atom stage (on the litre stage it would change what is not on screen)
+  const hiddenOnLitre = await page.evaluate(() => { const m = document.querySelector('.compare-sheet .compare-mode'); return !m || m.hidden; });
+  await page.locator('.compare-stage button', { hasText: 'One atom of each' }).click(); await settle();
   await page.locator('.compare-sheet .ui-disclosure__summary').click();
   await page.getByRole('button', { name: 'when touching' }).click(); await settle();
   const r = await page.evaluate(() => window.__pt.state.cmpR);
+  await page.locator('.compare-stage button', { hasText: 'A litre of each' }).click(); await settle();
+  if (!hiddenOnLitre) throw new Error('"Draw the atoms" shown on the litre stage');
   await page.locator('[data-back=card]').click(); await settle();
   const back = await page.evaluate(() => ({ view: window.__pt.state.view, card: window.__pt.state.card, Z: window.__pt.state.Z }));
   if (!/Sắt/.test(lead) || !/đồng/.test(lead) || r !== 'vdw' || back.view !== 'table' || !back.card || back.Z !== 26) throw new Error(JSON.stringify({ lead, r, back }));
@@ -465,17 +498,40 @@ await step('atom place: one cloud picks a subshell and a turn; the link keeps it
   if (a !== '3d:1' || b !== '3p:1' || c.orbital !== '3p:all' || !/orb=3p%3Aall|orb=3p:all/.test(hash) || d.orbital !== null || !/All 3 3p clouds/.test(c.cap)) throw new Error(JSON.stringify({ a, b, c, hash, d }));
   return `${a} → ${b} → ${c.orbital}`;
 });
+await step('atom place: every shell count shows (on its globe or in the legend), a scale bar, a round nucleus factor', async () => {
+  const w = await page.evaluate(() => ({ rings: [...document.querySelectorAll('.lbl.atom-ring')].filter(l => l.style.visibility === 'visible').map(l => l.textContent),
+    legend: document.querySelector('.atom-legend')?.style.display !== 'none' ? document.querySelector('.atom-legend').textContent : '',
+    ruler: document.querySelector('.atom-ruler b')?.textContent || '', nuc: [...document.querySelectorAll('.lbl.atom-tag')].map(l => l.textContent).find(x => /nucleus/.test(x)) || '' }));
+  const all = w.legend ? /2 · 8 · 14 · 2/.test(w.legend) : ['2', '8', '14'].every(n => w.rings.includes(n)) && w.rings.some(x => /2 electrons/.test(x));
+  const f = Number((/drawn ([\d,]+)× bigger/.exec(w.nuc) || [])[1]?.replace(/,/g, ''));
+  if (!all || !/^\d[\d,]* pm$/.test(w.ruler) || !(f > 0) || !/^[125]0*$/.test(String(f))) throw new Error(JSON.stringify(w));
+  return `${w.ruler}; ${w.nuc.replace('nucleus', '')}; ${w.legend || w.rings.join(' ')}`;
+});
+await step('atom place: one cloud of carbon: turns x, y, z; a paper sheet where the 2p cloud is never found; uranium in plain words', async () => {
+  await page.evaluate(() => window.__pt.set({ Z: 6 })); await page.waitForTimeout(400);
+  await page.locator('.atom-modes [data-mode="cloud"]').click(); await page.waitForTimeout(500);
+  const c = await page.evaluate(() => ({ turns: [...document.querySelectorAll('.atom-pick__turns [data-m]')].map(b => b.textContent), cap: document.querySelector('.atom-caption').textContent,
+    sheets: (() => { let n = 0; window.__pt.E.active.scene.traverse(o => { if (o.isMesh && o.material.type === 'MeshBasicMaterial' && o.visible) n++; }); return n; })() }));
+  await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(300);
+  await page.evaluate(() => window.__pt.set({ Z: 92 })); await page.waitForTimeout(500);
+  const u = await A();
+  await page.evaluate(() => window.__pt.set({ Z: 26 })); await page.waitForTimeout(400);
+  if (c.turns.join(' ') !== 'x y z all 3' || c.sheets !== 1 || !/paper sheet between them/.test(c.cap) || !/one electron sits in 6d instead of 5f/.test(u.cap) || /→/.test(u.cap)) throw new Error(JSON.stringify({ c, u: u.cap }));
+  return u.cap.slice(u.cap.indexOf('Uranium breaks'), u.cap.indexOf('Uranium breaks') + 80);
+});
 await step('atom place: its light dims the room; the brightest line is described with its source; daylight returns', async () => {
   await page.locator('.atom-modes [data-mode="light"]').click(); await page.waitForTimeout(800);
-  const on = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), band: !!document.querySelector('.atom-band:not([hidden]) .atom-spec__strip'), detail: document.querySelector('.atom-light__detail')?.textContent || '' }));
-  if (!on.kiln || !on.band || !/387\.9 nm: violet light/.test(on.detail)) throw new Error(JSON.stringify(on));
+  const on = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), band: !!document.querySelector('.atom-band:not([hidden]) .atom-spec__strip'), detail: document.querySelector('.atom-light__detail')?.textContent || '',
+    glow: window.__pt.E.active.scene.children.some(o => o.isMesh && o.visible && o.material.uniforms && o.material.uniforms.uProf) }));
+  // round 2: the line that looks brightest (NIST transition rates × the eye's sensitivity), and the glow on
+  if (!on.kiln || !on.band || !on.glow || !/538\.3 nm: green light/.test(on.detail) || !/its brightest line to the eye/.test(on.detail)) throw new Error(JSON.stringify(on));
   await page.locator('.atom-light__detail .atom-v').click();
   const pop = await page.locator('.popover').textContent();
   await page.keyboard.press('Escape');
   if (!/NIST/.test(pop)) throw new Error('source: ' + pop.slice(0, 80));
   await page.locator('.atom-band .atom-spec__strip').focus(); await page.keyboard.press('End'); await page.waitForTimeout(150);
   const last = await page.locator('.atom-light__detail').textContent();
-  if (!/527\.0 nm: green light/.test(last)) throw new Error('arrow keys: ' + last);
+  if (!/561\.6 nm: green light/.test(last) || !/as bright to the eye as its brightest line/.test(last)) throw new Error('arrow keys: ' + last);
   await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(700);
   const off = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), band: !document.querySelector('.atom-band') || document.querySelector('.atom-band').hidden }));
   if (off.kiln || !off.band) throw new Error(JSON.stringify(off));
@@ -484,7 +540,7 @@ await step('atom place: its light dims the room; the brightest line is described
 await step('atom place: "About this atom" shows the arrangement and the nucleus, each value with its source', async () => {
   await page.locator('.atom-about .ui-disclosure__summary').click(); await page.waitForTimeout(200);
   const txt = await page.locator('.atom-facts').textContent();
-  if (!/\[Ar\] 3d⁶ 4s²/.test(txt) || !/26 protons, 30 neutrons/.test(txt) || !/iron-56/.test(txt) || !/about 5\.4 of 26 protons \(4s\)/.test(txt)) throw new Error(txt.slice(0, 160));
+  if (!/\[Ar\] 3d⁶ 4s²/.test(txt) || !/26 protons, 30 neutrons/.test(txt) || !/iron-56/.test(txt) || !/about 5\.4 of 26 protons \(4s\)/.test(txt) || !/3\.74 fm \(measured\)/.test(txt)) throw new Error(txt.slice(0, 240));
   await page.locator('.atom-facts .atom-v').first().click();
   const pop = await page.locator('.popover').textContent();
   await page.keyboard.press('Escape');
@@ -513,11 +569,12 @@ await step('atom place (phone): the sheet stands under the atom, the band above 
   const m = await page.evaluate(() => {
     const s = document.querySelector('.atom-sheet').getBoundingClientRect(), b = document.querySelector('.atom-band').getBoundingClientRect();
     const wide = [...document.querySelectorAll('#ui *')].filter(el => el.offsetParent && el.getBoundingClientRect().right > window.innerWidth + 1).map(el => el.className).slice(0, 3);
-    return { top: Math.round(s.top), h: Math.round(s.height), bandBottom: Math.round(b.bottom), bandW: Math.round(b.width), wide, scrollW: document.documentElement.scrollWidth };
+    const d = document.querySelector('.atom-light__detail').getBoundingClientRect(), f = document.querySelector('.atom-sheet .ui-sheet__foot').getBoundingClientRect();
+    return { top: Math.round(s.top), h: Math.round(s.height), bandBottom: Math.round(b.bottom), bandW: Math.round(b.width), wide, scrollW: document.documentElement.scrollWidth, detail: Math.round(d.bottom), foot: Math.round(f.top) };
   });
   await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(300);
   await page.setViewportSize({ width: 1600, height: 900 }); await page.waitForTimeout(500);
-  if (m.h > 844 * 0.62 || m.bandBottom > m.top || m.bandW > 390 || m.wide.length || m.scrollW > 390) throw new Error(JSON.stringify(m));
+  if (m.h > 844 * 0.62 || m.bandBottom > m.top || m.bandW > 390 || m.wide.length || m.scrollW > 390 || m.detail > m.foot) throw new Error(JSON.stringify(m));
   return `sheet ${m.h}px from ${m.top}px; band ${m.bandW}px wide`;
 });
 
