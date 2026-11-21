@@ -246,7 +246,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   let spec = null; // { n, T (template, resting), bond, r, foot, lo, hi, y, yaw }
   const specQ = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0);
   const specShadow = FORGE ? new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: TOK.shadow, map: contactShadowTexture(), transparent: true, opacity: 0.4, depthWrite: false })) : null;
+    new THREE.MeshBasicMaterial({ color: TOK.shadow, map: contactShadowTexture(), transparent: true, opacity: 0.4, depthWrite: false, ...ON_TOP })) : null;
   if (specShadow) { specShadow.renderOrder = 1; specShadow.visible = false; world.add(specShadow); }
   // forge: a soft incandescent glow around every hot atom, the molten pool, the glow pooling on the
   // hearth, and spokes from one atom to the neighbours it touches
@@ -765,9 +765,9 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
           const side = Math.max((spec.n === 1 ? 5 : 4) * spec.foot, 1.9 * (spec.hi - spec.lo)); // a lone atom: two fifths
           setBox([side, side, side]);
           spec.y = -side / 2 - spec.lo; world.userData.lift = spec.y;
-          if (specShadow) { // under it, as wide as it is, just above the glaze
+          if (specShadow) { // under it, as wide as it is, on the glaze (a polygon offset wins the depth test)
             const w = 2 * spec.foot * 1.35;
-            specShadow.scale.set(w, 1, w); specShadow.position.set(0, -side / 2 + side * 0.003, 0);
+            specShadow.scale.set(w, 1, w); specShadow.position.set(0, -side / 2 + side * 0.001, 0);
           }
         } else if (n === 0 || elementChanged) setBox([1200, 1200, 1200]);
       }
