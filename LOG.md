@@ -249,3 +249,7 @@
   - **Checks:** unit tests 45/45, validator ALL PASS, smoke 46/46 twice, no console errors, index.html 1,773 KB.
   - **FPS:** forge states at a 60 FPS median (load 8–9).
   - **Shots:** `/workspace/out/redesign/shared-fixes/` (12 targeted states).
+- 2026-11-21 ~11:23 (Saigon) — **Merged `view-patterns-r3`** (side by side round 3, answering `reviews/patterns-p2.md`). Clean rebase onto cf98e90; review passed (DECISIONS.md › Merge review: view-patterns-r3).
+  - **Data choices:** chlorine's 3.62 eV kept (PubChem, our rule for electron affinity); a data-computed Gallium · Mercury hook accepted for later.
+  - **Checks:** unit tests 45/45, validator ALL PASS, smoke 46/46 twice, index.html 1,778 KB.
+  - **Reshoot:** `/workspace/out/redesign/patterns-r3-merged/` (47 states).
