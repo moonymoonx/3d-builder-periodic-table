@@ -273,3 +273,6 @@
   - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48 twice, index.html 1,819 KB.
   - **FPS:** dense states at a 60 FPS median (load 7–8); the neon sweep's p95 is still 83 ms.
   - **Reshoot:** `/workspace/out/redesign/sample-r3-merged/`.
+- 2026-11-21 ~12:56 (Saigon) — **Final whole-build set** for the review: `/workspace/out/redesign/final/`.
+  - **Contents:** 142 PNG (h- 19, s- 48, p- 20, c- 25, a- 30; EN plus Vietnamese), README.txt, and a fresh fps.txt (every measured state at a 60 FPS median, load 4–7).
+  - **index.html:** rebuilt from master 7993c35. It differs from the committed build only in its data stamp (e179740 → 7993c35; code and data byte-identical), and is committed so the githack link matches the set.
