@@ -195,6 +195,14 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   atoms.count = 0;
   atoms.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   world.add(atoms);
+  // forge: a crystal we do not draw (a molecular or complex solid, radon's predicted crystal) still shows
+  // its building block: one molecule or one atom stands in the vessel as the specimen, slowly turning
+  // (elements never made in bulk keep an empty vessel: there is nothing to show)
+  const specimen = new THREE.InstancedMesh(atoms.geometry, atomMat, 8);
+  specimen.count = 0; specimen.visible = false; specimen.frustumCulled = false;
+  world.add(specimen);
+  let spec = null; // { n, T (template), bond, r, extent, y }
+  const specQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.55, 0.35, 0)), specAx = new THREE.Vector3(0.3, 1, 0.15).normalize();
   // forge: a soft incandescent glow around every hot atom, the molten pool, the glow pooling on the
   // hearth, and spokes from one atom to the neighbours it touches
   let glow = null, pool = null, decal = null, spk = null, spokeC = -1, poolK = 0;
@@ -271,6 +279,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     g.setAttribute('aHi', hiAttr);
     atoms.geometry.dispose();
     atoms.geometry = g;
+    if (specimen) specimen.geometry = g;
   }
 
   function writeMatrices() {
@@ -302,6 +311,34 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       let rmax = 0; for (let i = 0; i < n; i += 3) rmax = Math.max(rmax, Math.hypot(P[3 * i] - cx, P[3 * i + 1] - cy, P[3 * i + 2] - cz));
       glowU.uCore.value.set(cx, cy, cz); glowU.uCoreR.value = rmax + radius;
     }
+  }
+
+  /** The specimen for a crystal we do not draw (null: draw nothing, as for an element never made in bulk). */
+  function specimenFor(e, ss) {
+    if (!FORGE || ss.kind !== 'card') return null;
+    const room = stateAt(e, 293.15);
+    const measured = room.s !== 'unknown' && !room.p; // its matter is real: only its crystal is not drawn
+    if (!(ss.card === 'molecular' || ss.card === 'complex' || (ss.card === 'predicted' && measured))) return null;
+    const rc = e.f.rCov?.[0] || e.f.rVdw?.[0] * 0.6 || 120, gasN = e.ph.gas ? e.ph.gas[0] : 1;
+    if (ss.card === 'molecular' && gasN > 1) { // one molecule, as the fluid draws them
+      const T = molTemplate(gasN), bond = 2 * rc, r = rc * 0.95;
+      return { n: gasN, T, bond, r, extent: 2 * Math.max(...T.map(p => Math.hypot(p[0], p[1], p[2]))) * bond + 2 * r };
+    }
+    const rv = e.f.rVdw?.[0] || 2 * rc, r = 0.57 * (e.f.cat[0] === 'noble-gas' ? 1.6 * rv : 2.2 * rc); // one atom, the liquid's size
+    return { n: 1, T: [[0, 0, 0]], bond: 0, r, extent: 2 * r };
+  }
+  function writeSpecimen() {
+    specimen.visible = !!spec;
+    if (!spec) { specimen.count = 0; return; }
+    for (let k = 0; k < spec.n; k++) {
+      v3.set(spec.T[k][0] * spec.bond, spec.T[k][1] * spec.bond, spec.T[k][2] * spec.bond).applyQuaternion(specQ);
+      v3.y += spec.y;
+      m4.compose(v3, q, sv.set(spec.r, spec.r, spec.r));
+      specimen.setMatrixAt(k, m4);
+    }
+    specimen.count = spec.n; specimen.instanceMatrix.needsUpdate = true;
+    hiAttr.array.fill(0, 0, 8); hiAttr.needsUpdate = true; // plain beads, no unit-cell colours
+    glowU.uCore.value.set(0, spec.y, 0); glowU.uCoreR.value = 1; // no inner shading for a lone specimen
   }
 
   function setBox(L) {
@@ -564,13 +601,13 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     if (FORGE) {
       // the room dims while the metal is hot enough to glow. The glow only grows with temperature
       // (solid, liquid and the hot vapour alike): colour from Planck, brightness from the visible output.
-      const g = bb.glow, on = kind !== 'card' ? g : 0;
+      const g = bb.glow, on = kind !== 'card' || spec ? g : 0; // a hot specimen glows too
       const col = new THREE.Color().setRGB(bb.rgb[0], bb.rgb[1], bb.rgb[2], THREE.SRGBColorSpace);
       atomMat.emissiveIntensity = 0;
       glowU.uGlowCol.value.copy(col);
       glowU.uGlowK.value = kind === 'gas' ? on * 1.7 : on * 1.35;
       glowU.uHot.value = Math.min(0.9, Math.max(0, (state.T - 1500) / 1900));
-      const to = state.T > 760 && g > 0.01 && kind !== 'card' ? 1 : 0;
+      const to = state.T > 760 && g > 0.01 && (kind !== 'card' || spec) ? 1 : 0;
       if (to !== kilnTo) { kilnTo = to; if (hooks.onKiln) hooks.onKiln(!!to); }
       const k = kilnK;
       hemi.intensity = 1.0 * (1 - 0.86 * k); key.intensity = 2.0 * (1 - 0.8 * k);
@@ -617,6 +654,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     if (elementChanged) { n = 0; bain = null; current = null; morph = null; }
     if (force || key2 !== phaseKey) {
       const prevKind = lastKind, box0 = boxL[0];
+      spec = specimenFor(e, ss);
       if (ss.kind === 'solid') {
         buildSolid(e, ss.phase, !elementChanged && prevKind === 'solid');
         atoms.visible = true;
@@ -626,7 +664,12 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         atoms.visible = true;
       } else {
         atoms.visible = false; cellLines.visible = false;
-        if (n === 0 || elementChanged) setBox([1200, 1200, 1200]);
+        if (spec) { // a vessel sized to the specimen; the fluid it froze from is forgotten (a melt starts afresh)
+          n = 0;
+          const side = Math.max(600, spec.extent * 2.6); // the specimen fills about two fifths of the vessel's width
+          setBox([side, side, side]);
+          spec.y = -side / 2 + side * 0.42; world.userData.lift = spec.y;
+        } else if (n === 0 || elementChanged) setBox([1200, 1200, 1200]);
       }
       if (!elementChanged && prevKind && prevKind !== ss.kind && hooks.onEvent) hooks.onEvent(prevKind, ss.kind, e);
       if (!elementChanged && ss.kind === 'solid' && prevKind === 'solid' && current && current.phase && ss.phase && current.phase.id !== ss.phase.id && hooks.onEvent) hooks.onEvent('phase', ss.phase, e);
@@ -637,7 +680,8 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     }
     applyLook(e, ss.kind);
     writeMatrices();
-    setContinuous(CK, atoms.visible && !state.reduced || !!morph);
+    writeSpecimen();
+    setContinuous(CK, (atoms.visible || !!spec) && !state.reduced || !!morph);
     if (hooks.onState) hooks.onState(current, { dNN, n, molN });
     invalidate();
   }
@@ -702,6 +746,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         writeMatrices();
       }
       if (pool) pool.mesh.visible = false; // the melt is drawn as its atoms (continuity from solid to gas)
+      if (spec && !state.reduced) { specQ.premultiply(dq.setFromAxisAngle(specAx, dt * 0.35)); writeSpecimen(); return true; }
       return atoms.visible && !state.reduced;
     },
     current: () => current,
