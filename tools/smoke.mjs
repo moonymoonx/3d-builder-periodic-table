@@ -323,20 +323,33 @@ await step('side by side (VI): sentences use the familiar Vietnamese names; size
 // look. Needs the router lines in WIRING-sample.md.
 const holdCaption = () => page.locator('.sample-caption').textContent();
 const holdAt = async (patch, ms = 500) => { await page.evaluate(p => window.__pt.set(p), patch); await page.waitForTimeout(ms); };
-await step('sample: the nitrogen card dives into the sample place; cooled it turns liquid at −196 °C and freezes at −210 °C; back returns to the card', async () => {
+await step('sample: the nitrogen card ("cool it") dives into the sample place; knob, bulb and room mark share one scale; cooled it turns liquid at −196 °C and freezes at −210 °C into one shown molecule; back returns to the card', async () => {
   await page.evaluate(() => window.__pt.set({ view: 'table', Z: 7, card: true, hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }));
   await page.waitForTimeout(700);
-  await page.locator('.ui-door', { hasText: 'Hold a sample' }).click();
+  await page.locator('.ui-door', { hasText: 'Hold a sample · cool it' }).click();
   await page.waitForFunction(() => window.__pt.state.view === 'hold', null, { timeout: 8000 });
-  await page.waitForTimeout(1400);
+  await page.waitForTimeout(300);
+  const early = await page.evaluate(() => document.querySelector('.sample-panel').classList.contains('is-arriving')); // steps aside during the dive
+  await page.waitForFunction(() => !document.querySelector('.sample-panel').classList.contains('is-arriving'), null, { timeout: 6000 });
   const start = await holdCaption();
-  if (!/N₂ molecules/.test(start) || !/km\/h/.test(start)) throw new Error('start: ' + start);
+  if (!early || !/N₂ molecules/.test(start) || !/km\/h/.test(start)) throw new Error(`arriving ${early}: ${start}`);
+  // the knob, the bulb and the "room temperature" mark: one scale (the round-1 thumb sat ~12 px off)
+  const al = await page.evaluate(() => {
+    const tr = document.querySelector('.sample-track').getBoundingClientRect();
+    const mid = sel => { const r = document.querySelector(sel).getBoundingClientRect(); return r.left + r.width / 2 - tr.left; };
+    return { knob: mid('.sample-knob'), bulb: mid('.sample-bulb'), room: (parseFloat(document.querySelector('.sample-flag.is-room').style.left) / 100) * tr.width };
+  });
+  if (Math.abs(al.knob - al.room) > 1.5 || Math.abs(al.bulb - al.room) > 1.5) throw new Error('alignment ' + JSON.stringify(al));
   await holdAt({ T: 73 });
   const liquid = await holdCaption();
   if (!/−196\s°C/.test(liquid) || !/turns liquid/.test(liquid)) throw new Error('liquid: ' + liquid);
   await holdAt({ T: 55 });
   const frozen = await holdCaption();
-  if (!/−210\s°C/.test(frozen) || !/freezes/.test(frozen) || !/vessel stands empty/.test(frozen)) throw new Error('frozen: ' + frozen);
+  if (!/−210\s°C/.test(frozen) || !/freezes/.test(frozen) || !/One molecule is shown/.test(frozen)) throw new Error('frozen: ' + frozen);
+  // cold and frozen: the way up is the ink button, and below room temperature it reads "Warm it"
+  const ink = await page.locator('.sample-actions .ui-btn--primary').textContent();
+  const hot = await page.evaluate(() => document.querySelector('.sample-read').classList.contains('is-hot'));
+  if (!/Warm it/.test(ink) || hot) throw new Error(`ink button ${ink}, ember readout ${hot}`);
   await page.locator('[data-back=card]').click(); await page.waitForTimeout(900);
   const v = await page.evaluate(() => ({ view: window.__pt.state.view, card: window.__pt.state.card, Z: window.__pt.state.Z }));
   if (v.view !== 'table' || !v.card || v.Z !== 7) throw new Error(JSON.stringify(v));
@@ -349,13 +362,16 @@ await step('sample: mercury, a liquid at room temperature, freezes into its 6-ne
   await holdAt({ T: 230 });
   const cap = await holdCaption();
   const kind = await page.evaluate(() => window.__pt.holdView.current().kind);
-  if (!/−38\.8\s°C/.test(cap) || !/6 neighbours/.test(cap) || kind !== 'solid') throw new Error(`${kind}: ${cap}`);
+  const green = await page.locator('.sample-caption .sample-cell-word').textContent(); // the words name the green atoms
+  if (!/−38\.8\s°C/.test(cap) || !/6 neighbours/.test(green) || kind !== 'solid') throw new Error(`${kind}: ${cap}`);
   await page.getByRole('button', { name: 'Room temperature' }).click(); await page.waitForTimeout(200);
+  const roomGone = await page.getByRole('button', { name: 'Room temperature' }).count(); // nothing to return to at 20 °C
   await page.getByRole('button', { name: /Cool it/ }).click(); await page.waitForTimeout(1200);
-  const T = await page.evaluate(() => window.__pt.state.T);
+  const T = await page.evaluate(() => window.__pt.state.T), on = await holdCaption();
   await page.getByRole('button', { name: /Pause/ }).click();
-  if (!(T < 293)) throw new Error('T=' + T);
-  return `T fell to ${Math.round(T)} K`;
+  // on the way, the caption says what comes next (never a stale "at room temperature")
+  if (!(T < 293) || roomGone || !/It freezes at −38\.8\s°C/.test(on)) throw new Error(`T=${T}, room button ${roomGone}: ${on}`);
+  return `T fell to ${Math.round(T)} K: ${on}`;
 });
 await step('sample: helium never freezes: a whisker above absolute zero it is still liquid', async () => {
   await holdAt({ Z: 2, T: 3 }, 600);
@@ -363,10 +379,11 @@ await step('sample: helium never freezes: a whisker above absolute zero it is st
   const word = await page.locator('.sample-word').textContent(), cap = await holdCaption();
   if (!/liquid/.test(word) || !/never freezes/.test(cap)) throw new Error(`${word} / ${cap}`);
 });
-await step('sample: sulfur\'s crystal is an honest card (empty vessel); past 115 °C it melts into drawable S₈ molecules', async () => {
+await step('sample: sulfur\'s crystal is not drawn: one S₈ molecule turns in the vessel; past 115 °C it melts into S₈ rings', async () => {
   await holdAt({ Z: 16, T: 293.15 }, 700);
   const start = await holdCaption(), word = await page.locator('.sample-word').textContent();
-  if (!/do not draw molecular crystals/.test(start) || !/not drawn/.test(word)) throw new Error(`${word} / ${start}`);
+  const btns = await page.locator('.sample-actions .ui-btn').count();
+  if (!/S₈ molecules\. One molecule is shown/.test(start) || !/not drawn/.test(word) || btns !== 1) throw new Error(`${word} / ${start} / ${btns} buttons`);
   await holdAt({ T: 400 });
   const cap = await holdCaption(), kind = await page.evaluate(() => window.__pt.holdView.current().kind);
   if (!/115\s°C/.test(cap) || !/S₈ molecules/.test(cap) || kind !== 'liquid') throw new Error(`${kind}: ${cap}`);
@@ -391,7 +408,8 @@ await step('sample: "About this sample" shows the gas speed with its method; Esc
   const still = await page.evaluate(() => window.__pt.hold.aboutOpen());
   await page.keyboard.press('Escape'); await page.waitForTimeout(150);
   const s = await page.evaluate(() => ({ open: window.__pt.hold.aboutOpen(), view: window.__pt.state.view }));
-  if (!/511 m\/s/.test(txt) || !/3RT\/M/.test(pop) || !still || s.open || s.view !== 'hold') throw new Error(JSON.stringify({ txt, pop: pop.slice(0, 60), still, ...s }));
+  const slow = await page.locator('.sample-sheet .sample-v', { hasText: 'billion' }).count(); // a human scale first: "about 330 billion times"
+  if (!/511 m\/s/.test(txt) || !/3RT\/M/.test(pop) || !still || s.open || s.view !== 'hold' || !slow) throw new Error(JSON.stringify({ txt, pop: pop.slice(0, 60), still, slow, ...s }));
   return txt;
 });
 await step('sample: radon is drawn as a gas (only its crystal is a prediction)', async () => {
@@ -404,6 +422,9 @@ await step('sample: oganesson, never made in bulk: an honest card with sourced v
   const title = await page.locator('.sample-never__title').textContent();
   const thermo = await page.locator('.sample-track').isVisible();
   if (!/Nobody has ever held a piece of oganesson/.test(title) || thermo) throw new Error(`${title} / thermometer ${thermo}`);
+  // NUBASE2020's longest-lived oganesson: 295, 680 ± 540 ms (not a unit slip for 294's 0.7 ms)
+  const life = await page.locator('.sample-strip__cell').first().textContent();
+  if (!/680\s±\s540\smilliseconds/.test(life) || !/oganesson-295/.test(life)) throw new Error('half-life: ' + life);
   await page.locator('.sample-never .sample-v').first().click();
   const pop = await page.locator('.popover').textContent();
   await page.keyboard.press('Escape');
