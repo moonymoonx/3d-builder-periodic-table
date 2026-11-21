@@ -134,45 +134,6 @@ await step('URL hash is shareable (lens + open card)', async () => {
   if (!/lens=heat/.test(hash) || !/card=1/.test(hash) || !/el=Au/.test(hash)) throw new Error(hash);
   return hash;
 });
-await step('atom view: a door from the card, and the back link returns to the card', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'table' }));
-  await page.waitForTimeout(250); await settle(); // the previous step's lens change re-frames the table first
-  const p = await tileTop(23); await page.mouse.click(p.x, p.y); await settle();
-  await page.locator('.ui-door', { hasText: 'Look inside the atom' }).click(); await settle();
-  const v = await S();
-  if (v.view !== 'atom' || v.Z !== 23) throw new Error(JSON.stringify(v));
-  await page.locator('[data-back=card]').click(); await settle();
-  const w = await S();
-  if (w.view !== 'table' || !w.card || w.Z !== 23) throw new Error('back: ' + JSON.stringify(w));
-  await page.locator('.ui-door', { hasText: 'Look inside the atom' }).click(); await settle();
-});
-await step('atom view: + proton V -> Cr reports the 3d/4s exception', async () => {
-  await page.getByRole('button', { name: '+ proton' }).click();
-  await page.waitForTimeout(300);
-  const msg = await page.locator('.side.left .why').first().textContent();
-  if (await Z() !== 24 || !/Surprise/.test(msg)) throw new Error(`Z=${await Z()} msg=${msg}`);
-  await page.getByRole('button', { name: '+ proton' }).click(); // Mn: normal filling
-  await page.waitForTimeout(300);
-  const msg2 = await page.locator('.side.left .why').first().textContent();
-  if (!/new electron goes into 4s/.test(msg2)) throw new Error(msg2); // Mn = [Ar] 3d5 4s2
-  return msg.slice(0, 70);
-});
-await step('atom view: orbital chips and total density', async () => {
-  await page.locator('.side.left .chip', { hasText: /^3d/ }).first().click(); await settle();
-  await page.getByRole('button', { name: 'x²−y²' }).click(); await settle();
-  if (!/3d:2/.test(await page.evaluate(() => window.__pt.state.orbital))) throw new Error(await page.evaluate(() => window.__pt.state.orbital));
-  await page.getByRole('button', { name: 'All electrons' }).click(); await settle();
-  if (await page.evaluate(() => window.__pt.state.density) !== 'total') throw new Error('density mode');
-  await page.getByRole('button', { name: 'Orbitals' }).click(); await settle();
-});
-await step('atom view: tap a spectrum line shows its wavelength', async () => {
-  const box = await page.locator('.specline').first().boundingBox();
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height - 3);
-  const txt = await page.locator('.spectrum p').textContent();
-  if (!/nm/.test(txt)) throw new Error(txt);
-  return txt.slice(0, 60);
-});
-
 await step('sample view: Fe chips jump past each transition (γ-Fe, melts) and reset works', async () => {
   await page.evaluate(() => window.__pt.set({ view: 'sample', Z: 26, T: 293.15, allotrope: null }));
   await settle();
@@ -212,7 +173,7 @@ await step('sample view: "Heat it" raises the temperature', async () => {
 
 // (four legacy trends/compare steps retired at the patterns merge: the // ---- patterns ---- block covers them)
 await step('forge: the iron card door dives into the crystal; 930 °C re-stacks to 12 neighbours; back returns to the card', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 26, card: true, hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }));
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }); p.openCard(26); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
   await page.waitForTimeout(700);
   await page.locator('.ui-door', { hasText: 'Hold a piece' }).click();
   await page.waitForFunction(() => window.__pt.state.view === 'heat', null, { timeout: 8000 });
@@ -280,7 +241,7 @@ await step('patterns: "See it on the table" opens the matching lens; back from a
   await page.evaluate(() => window.__pt.set({ lens: 'families', color: 'cat', flat: true }));
 });
 await step('side by side: the iron card\'s door shows iron and gold, and says why', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 26, card: true, hideSel: false }));
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false }); p.openCard(26); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
   await page.waitForTimeout(500);
   await page.locator('.ui-door', { hasText: 'Side by side' }).click();
   await opened('.compare-sheet'); await settle();
@@ -324,7 +285,7 @@ await step('side by side (VI): sentences use the familiar Vietnamese names; size
 const holdCaption = () => page.locator('.sample-caption').textContent();
 const holdAt = async (patch, ms = 500) => { await page.evaluate(p => window.__pt.set(p), patch); await page.waitForTimeout(ms); };
 await step('sample: the nitrogen card dives into the sample place; cooled it turns liquid at −196 °C and freezes at −210 °C; back returns to the card', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'table', Z: 7, card: true, hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }));
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }); p.openCard(7); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
   await page.waitForTimeout(700);
   await page.locator('.ui-door', { hasText: 'Hold a sample' }).click();
   await page.waitForFunction(() => window.__pt.state.view === 'hold', null, { timeout: 8000 });
@@ -418,6 +379,105 @@ await step('sample (VI): the caption uses the familiar name (thuỷ ngân)', asy
   await holdAt({ lang: 'en', view: 'table', card: false, T: 293.15 }, 500);
   if (!/^Thuỷ ngân ở nhiệt độ phòng/.test(cap)) throw new Error(cap);
   return cap.slice(0, 60);
+});
+// ---- atom ----
+// "Look inside the atom" (PARALLEL.md scope 1): the porcelain place that replaces the old atom panels
+const A = () => page.evaluate(() => ({ view: window.__pt.state.view, Z: window.__pt.state.Z, orbital: window.__pt.state.orbital, card: window.__pt.state.card,
+  kiln: document.body.classList.contains('kiln'), title: document.querySelector('.atom-title')?.textContent || '', cap: document.querySelector('.atom-caption')?.textContent || '' }));
+await step('atom place: the card door dives into the atom; its own card, no legacy panels', async () => {
+  await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15, lang: 'en' }); p.openCard(26); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
+  await page.waitForTimeout(700);
+  await page.locator('.ui-door', { hasText: 'Look inside the atom' }).click();
+  await page.waitForFunction(() => window.__pt.state.view === 'atom', null, { timeout: 8000 });
+  await settle(); await page.waitForTimeout(500);
+  const a = await A();
+  const chrome = await page.evaluate(() => ({ legacy: document.body.classList.contains('legacy'), place: document.body.classList.contains('place-atom'),
+    side: !document.querySelector('.side.left') || document.querySelector('.side.left').hidden, sheet: !!document.querySelector('.atom-sheet:not([hidden])'), dots: window.__pt.E.active.info()?.mode }));
+  if (a.title !== 'Inside iron' || !/26 electrons sit in 4 shells \(2, 8, 14, 2\)/.test(a.cap) || !/newest went into a 3d cloud/.test(a.cap)) throw new Error(JSON.stringify(a));
+  if (chrome.legacy || !chrome.place || !chrome.side || !chrome.sheet || chrome.dots !== 'atom') throw new Error(JSON.stringify(chrome));
+  return a.cap.slice(0, 70);
+});
+await step('atom place: + proton makes cobalt; vanadium to chromium explains the moved electron', async () => {
+  await page.locator('.atom-step [data-step="1"]').click(); await page.waitForTimeout(400);
+  const co = await A();
+  if (co.Z !== 27 || co.title !== 'Inside cobalt' || !/\(2, 8, 15, 2\)/.test(co.cap)) throw new Error(JSON.stringify(co));
+  await page.evaluate(() => window.__pt.set({ Z: 23 })); await page.waitForTimeout(300);
+  await page.locator('.atom-step [data-step="1"]').click(); await page.waitForTimeout(400);
+  const cr = await A();
+  if (cr.Z !== 24 || !/one more moved there from 4s/.test(cr.cap)) throw new Error(JSON.stringify(cr));
+  await page.locator('.atom-step [data-step="1"]').click(); await page.waitForTimeout(400);
+  const mn = await A();
+  if (mn.Z !== 25 || !/newest went into a 4s cloud/.test(mn.cap)) throw new Error(JSON.stringify(mn));
+  return cr.cap.slice(cr.cap.indexOf('The newest'), cr.cap.indexOf('The newest') + 70);
+});
+await step('atom place: one cloud picks a subshell and a turn; the link keeps it; whole atom returns', async () => {
+  await page.evaluate(() => window.__pt.set({ Z: 26 })); await page.waitForTimeout(300);
+  await page.locator('.atom-modes [data-mode="cloud"]').click(); await page.waitForTimeout(400);
+  const a = (await A()).orbital;
+  await page.locator('.atom-pick [data-key="3p"]').click(); await page.waitForTimeout(300);
+  await page.locator('.atom-pick [data-m="1"]').click(); await page.waitForTimeout(300);
+  const b = (await A()).orbital;
+  await page.locator('.atom-pick [data-m="all"]').click(); await page.waitForTimeout(400);
+  const c = await A(); const hash = await page.evaluate(() => location.hash);
+  await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(300);
+  const d = await A();
+  if (a !== '3d:1' || b !== '3p:1' || c.orbital !== '3p:all' || !/orb=3p%3Aall|orb=3p:all/.test(hash) || d.orbital !== null || !/All 3 3p clouds/.test(c.cap)) throw new Error(JSON.stringify({ a, b, c, hash, d }));
+  return `${a} → ${b} → ${c.orbital}`;
+});
+await step('atom place: its light dims the room; the brightest line is described with its source; daylight returns', async () => {
+  await page.locator('.atom-modes [data-mode="light"]').click(); await page.waitForTimeout(800);
+  const on = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), band: !!document.querySelector('.atom-band:not([hidden]) .atom-spec__strip'), detail: document.querySelector('.atom-light__detail')?.textContent || '' }));
+  if (!on.kiln || !on.band || !/387\.9 nm: violet light/.test(on.detail)) throw new Error(JSON.stringify(on));
+  await page.locator('.atom-light__detail .atom-v').click();
+  const pop = await page.locator('.popover').textContent();
+  await page.keyboard.press('Escape');
+  if (!/NIST/.test(pop)) throw new Error('source: ' + pop.slice(0, 80));
+  await page.locator('.atom-band .atom-spec__strip').focus(); await page.keyboard.press('End'); await page.waitForTimeout(150);
+  const last = await page.locator('.atom-light__detail').textContent();
+  if (!/527\.0 nm: green light/.test(last)) throw new Error('arrow keys: ' + last);
+  await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(700);
+  const off = await page.evaluate(() => ({ kiln: document.body.classList.contains('kiln'), band: !document.querySelector('.atom-band') || document.querySelector('.atom-band').hidden }));
+  if (off.kiln || !off.band) throw new Error(JSON.stringify(off));
+  return on.detail.slice(0, 40);
+});
+await step('atom place: "About this atom" shows the arrangement and the nucleus, each value with its source', async () => {
+  await page.locator('.atom-about .ui-disclosure__summary').click(); await page.waitForTimeout(200);
+  const txt = await page.locator('.atom-facts').textContent();
+  if (!/\[Ar\] 3d⁶ 4s²/.test(txt) || !/26 protons, 30 neutrons/.test(txt) || !/iron-56/.test(txt) || !/about 5\.4 of 26 protons \(4s\)/.test(txt)) throw new Error(txt.slice(0, 160));
+  await page.locator('.atom-facts .atom-v').first().click();
+  const pop = await page.locator('.popover').textContent();
+  await page.keyboard.press('Escape');
+  if (!/Source/.test(pop)) throw new Error(pop.slice(0, 80));
+  await page.locator('.atom-about .ui-disclosure__summary').click();
+  return `${await page.locator('.atom-facts dd').count()} values`;
+});
+await step('atom place: → steps the atom, Esc returns to the card of the element on screen', async () => {
+  await page.locator('#gl').focus();
+  await page.keyboard.press('ArrowRight'); await page.waitForTimeout(400);
+  const a = await A();
+  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  const b = await A();
+  if (a.Z !== 27 || a.view !== 'atom' || b.view !== 'table' || !b.card || b.Z !== 27) throw new Error(JSON.stringify({ a, b }));
+});
+await step('atom place (VI): the familiar name, and every string translated', async () => {
+  await page.evaluate(() => window.__pt.set({ view: 'atom', Z: 26, orbital: null, lang: 'vi' })); await page.waitForTimeout(800);
+  const v = await page.evaluate(() => ({ title: document.querySelector('.atom-title').textContent, all: document.querySelector('.atom-sheet').textContent, lbls: [...document.querySelectorAll('.lbl')].filter(l => l.style.visibility === 'visible').map(l => l.textContent).join(' | ') }));
+  await page.evaluate(() => window.__pt.set({ lang: 'en' })); await page.waitForTimeout(300);
+  if (!/sắt/.test(v.title) || /atom\.[a-z]/.test(v.all + v.lbls) || !/hạt nhân/.test(v.lbls)) throw new Error(JSON.stringify(v).slice(0, 200));
+  return v.title;
+});
+await step('atom place (phone): the sheet stands under the atom, the band above it, nothing wider than the screen', async () => {
+  await page.setViewportSize({ width: 390, height: 844 }); await page.waitForTimeout(900);
+  await page.locator('.atom-modes [data-mode="light"]').click(); await page.waitForTimeout(900);
+  const m = await page.evaluate(() => {
+    const s = document.querySelector('.atom-sheet').getBoundingClientRect(), b = document.querySelector('.atom-band').getBoundingClientRect();
+    const wide = [...document.querySelectorAll('#ui *')].filter(el => el.offsetParent && el.getBoundingClientRect().right > window.innerWidth + 1).map(el => el.className).slice(0, 3);
+    return { top: Math.round(s.top), h: Math.round(s.height), bandBottom: Math.round(b.bottom), bandW: Math.round(b.width), wide, scrollW: document.documentElement.scrollWidth };
+  });
+  await page.locator('.atom-modes [data-mode="atom"]').click(); await page.waitForTimeout(300);
+  await page.setViewportSize({ width: 1600, height: 900 }); await page.waitForTimeout(500);
+  if (m.h > 844 * 0.62 || m.bandBottom > m.top || m.bandW > 390 || m.wide.length || m.scrollW > 390) throw new Error(JSON.stringify(m));
+  return `sheet ${m.h}px from ${m.top}px; band ${m.bandW}px wide`;
 });
 
 for (const [ok, name, info] of results) console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`);
