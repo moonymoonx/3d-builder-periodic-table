@@ -536,7 +536,11 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     const gasN = e.ph.gas ? e.ph.gas[0] : 1;
     const M = (e.f.aw?.[0] || e.f.massNumber?.[0] || 2 * e.Z) * gasN;
     const vrms = rmsSpeed(state.T, M, data().constants.R[0]) * SPEED_SCALE;
-    const hx = L[0] / 2 - r, hy = L[1] / 2 - r, hz = L[2] / 2 - r;
+    // the walls keep every bead inside the glass: a particle's reach is its own radius, or a molecule's
+    // outermost atom (its centre tumbles freely); the forge's glass has rounded edges, so a little more
+    // (the floor is flat: beads rest on it at their own reach)
+    const reach = FORGE && molN > 1 ? molSize / 2 : r, inset = FORGE ? reach + L[0] * 0.012 : r;
+    const hx = L[0] / 2 - inset, hy = L[1] / 2 - inset, hz = L[2] / 2 - inset, fy = L[1] / 2 - reach;
     if (kind === 'gas') {
       // ideal gas: straight lines, elastic walls; rescale speeds smoothly toward the current temperature
       let s2 = 0; for (let i = 0; i < 3 * n; i++) s2 += Vv[i] * Vv[i];
@@ -545,7 +549,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         const o = 3 * i;
         for (let k = 0; k < 3; k++) { Vv[o + k] *= f; P[o + k] += Vv[o + k] * dt; }
         if (P[o] > hx || P[o] < -hx) { P[o] = Math.max(-hx, Math.min(hx, P[o])); Vv[o] *= -1; }
-        if (P[o + 1] > hy || P[o + 1] < -hy) { P[o + 1] = Math.max(-hy, Math.min(hy, P[o + 1])); Vv[o + 1] *= -1; }
+        if (P[o + 1] > hy || P[o + 1] < -fy) { P[o + 1] = Math.max(-fy, Math.min(hy, P[o + 1])); Vv[o + 1] *= -1; }
         if (P[o + 2] > hz || P[o + 2] < -hz) { P[o + 2] = Math.max(-hz, Math.min(hz, P[o + 2])); Vv[o + 2] *= -1; }
       }
     } else {
@@ -560,16 +564,16 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         const rx = P[o] - cx, rz = P[o + 2] - cz, rr = Math.hypot(rx, rz);
         // forge look: the pool gathers what reaches the floor; a drop still in the air falls like rain
         // (pulling it in at every height drew the condensing vapour into a tall column)
-        const wy = FORGE ? Math.max(0, Math.min(1, 1 - (P[o + 1] + hy - dNN * 4) / (dNN * 3))) : 1;
+        const wy = FORGE ? Math.max(0, Math.min(1, 1 - (P[o + 1] + fy - dNN * 4) / (dNN * 3))) : 1;
         if (rr > Rp && wy > 0) { const pull = (wy * (rr - Rp) * 6 * dt) / rr; Vv[o] -= rx * pull * 4; Vv[o + 2] -= rz * pull * 4; }
         // a round pool, never the crucible's corners; only at the floor, so condensing droplets fall freely
         // and drift in (snapping them in mid-air stood them in columns on the pool's rim)
-        if (FORGE && rr > Rp * 1.02 && P[o + 1] < -hy + dNN * 3) { const f = (Rp * 1.02) / rr; P[o] = cx + rx * f; P[o + 2] = cz + rz * f; Vv[o] *= 0.5; Vv[o + 2] *= 0.5; }
+        if (FORGE && rr > Rp * 1.02 && P[o + 1] < -fy + dNN * 3) { const f = (Rp * 1.02) / rr; P[o] = cx + rx * f; P[o + 2] = cz + rz * f; Vv[o] *= 0.5; Vv[o + 2] *= 0.5; }
         if (FORGE && rr > 1 && wy > 0) { const sw = (wy * dNN * 2.2 * dt) / rr; Vv[o] -= rz * sw; Vv[o + 2] += rx * sw; } // a slow swirl, as in a stirred melt
         const damp = Math.exp(-(wy > 0 ? 4 : 1.2) * dt); // less drag in the air: the drops fall, then settle
         for (let k = 0; k < 3; k++) { Vv[o + k] *= damp; P[o + k] += Vv[o + k] * dt; }
         if (P[o] > hx || P[o] < -hx) { P[o] = Math.max(-hx, Math.min(hx, P[o])); Vv[o] *= -0.3; }
-        if (P[o + 1] < -hy) { P[o + 1] = -hy; Vv[o + 1] *= -0.2; }
+        if (P[o + 1] < -fy) { P[o + 1] = -fy; Vv[o + 1] *= -0.2; }
         if (P[o + 1] > hy) { P[o + 1] = hy; Vv[o + 1] = 0; }
         if (P[o + 2] > hz || P[o + 2] < -hz) { P[o + 2] = Math.max(-hz, Math.min(hz, P[o + 2])); Vv[o + 2] *= -0.3; }
       }
@@ -595,6 +599,10 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
             P[p] += dx * push; P[p + 1] += dy * push; P[p + 2] += dz * push;
           }
         }
+      }
+      // the push apart can carry a bead at the edge of the pool back through the glass: walls last
+      if (FORGE) for (let i = 0; i < 3 * n; i += 3) {
+        P[i] = Math.max(-hx, Math.min(hx, P[i])); P[i + 1] = Math.max(-fy, Math.min(hy, P[i + 1])); P[i + 2] = Math.max(-hz, Math.min(hz, P[i + 2]));
       }
     }
     if (molN > 1) for (let i = 0; i < n; i++) { // tumbling molecules: each spins about its own axis
