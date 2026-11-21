@@ -5,7 +5,8 @@ Who proposed each: **plan** (REDESIGN-PLAN / DESIGN-STUDY / PLAN-CRITIQUE, alrea
 session's craft call, with the reason). Review set: `/workspace/out/redesign/patterns/` (33 PNG at 1440×900 and
 390×844, `?q=med`), frame statistics in `/workspace/out/redesign/patterns/fps/fps.txt` (automatic quality path).
 Round 2 (below, after the cold review `reviews/merged-m1.md`): `/workspace/out/redesign/patterns-r2/` (44 PNG) and
-`/workspace/out/redesign/patterns-r2/fps/` (fps.txt, ripple.txt, the load average before and after).
+`/workspace/out/redesign/patterns-r2/fps/` (fps.txt, ripple.txt, the load average before and after). Round 3 (Side
+by side, after `reviews/patterns-p2.md`): `/workspace/out/redesign/patterns-r3/` (47 PNG) and its `fps/`.
 
 ## Patterns across the table (`places/patterns.js`, `places/patternSpecs.js`, `ui/trends.js`)
 - **Each chart opens with a question, then a plain answer** (plan). Twelve patterns, one per numbers lens, with the
@@ -160,6 +161,45 @@ Round 2 (below, after the cold review `reviews/merged-m1.md`): `/workspace/out/r
   of a switch: 10–27 ms of model and layout, then the SVG's first paint; 100 ms before the x-index); phone median
   16.7, p95 16.8, max 33.4.
 - Tests: 39 unit tests (6 new), smoke 32/32 (a new step: the balance's words and the atom toggle), validator passes.
+
+## Round 3: Side by side (review `reviews/patterns-p2.md`, each point checked first)
+- **Rows sliced under the compact header when the phone sheet scrolls (c16)**: real. The header covers the body's
+  top 36 px on phones (68 px on desktop), so a scroll that stops mid-row leaves the row's top half beneath it, and
+  round 2's soft edge made that cut look smeared. Now the sheet comes to rest on whole rows: CSS scroll snapping,
+  with `scroll-padding-top` = the header's overlap + 8 px; the rows, the takeaway, the hint, the All numbers summary
+  and each bar row are rest points. Its very end is padded by at most one row, so a fling to the bottom rests on a
+  whole row too. Checked headless with programmatic scrolls, slow drags and flings: every rest leaves a row's top
+  8 px under the header (Claude).
+- **Phone rail: no "Surprising pairs" label; "Pick any two…" out of view (c01–c06)**: real (round 2 dropped both on
+  phones). The label is back, and "Pick any two…" stands at the right of the rail, outside the scrolling pairs, so
+  it is always in view; the pairs scroll under a fade.
+- **"weighed on a balance" with no balance (c06)**: real. Where a weight is not in our sources, the caption says so:
+  "as they are at room temperature (20 °C); no weight known for oganesson".
+- **Dotted underlines across the whole cell on wrapped values (c03, c06)**: real (a border spans the button's box).
+  Values use a dotted text underline now, which follows each line.
+- **Chalky balance, liquids like flat discs**: agreed. The balance is glazed bone porcelain under its own small
+  studio: a tall window front-left draws one crisp catchlight down the column and the pans' walls, the long softbox
+  a sheen along the rims; the beam and its pivot are lacquered ink. A liquid reflects a window across its far half
+  (a soft-edged pane, never a spot) and deepens toward the viewer and its rim (Claude).
+- Also from the review's Side by side sections (cheap and in style):
+  - "Draw the atoms" showed on the litre stage, where it changed what was not on screen (c08): atom stage only.
+  - An atom of unknown size (oganesson, c11) is an upright dashed outline where the atom would stand, not an oval
+    on the floor.
+  - On phones the rail hides behind the picker (the stray "h", c15). On desktop the picker opened from the rail
+    stands on its chip and shrinks toward it as the results narrow, so the pan's label stays visible (c07).
+  - No sticky hover after a tap (the teal "Solid", c01): hover colours only where a pointer can hover.
+  - "Weight of one atom" says what it is weighed against: "atomic weight, against one twelfth of a carbon-12 atom".
+  - Carbon's 100 pm bar sits a little in front of the crystals, clear of graphite on phones (c05).
+- Checked and left: copper's litre is 8.9 kg because our cited source, PubChem, gives 8.933 g/cm³ (the review's
+  8.96 is another compilation's); chlorine's 3.62 eV is PubChem's 3.617 (NIST's photodetachment value rounds to
+  3.61; switching sources is a data decision, `data/**`). "Natri · Chlorine" follows GDPT-2018: the familiar name
+  for the 13 elements that keep one (natri is one), the international name for the rest.
+- Frame rate (round 3): the capture in `patterns-r3/fps/` ran while other sessions held 12 headless browsers (load
+  average 6.8 → 23.7): every state kept a 60 FPS median except carbon's crystals on desktop (30), but p95 rose to
+  33–50 ms on most stages and the baseline table landing degraded too (p95 33 ms, avg 49 FPS), so those numbers are
+  load, not the change. A clean re-measure on a quiet machine is still to do.
+- Patterns: one sentence only. "neon holds on harder than any atom except helium (21.56 eV)" read as helium's value;
+  now "neon (21.56 eV) holds on harder than any atom except helium (24.59 eV)", in both languages.
 
 ## Open questions (for the main session / moony)
 - Round 2: specimens wear their family pigment (STYLE.md: data colours only on specimens), so gold and mercury are the

@@ -146,7 +146,10 @@
    a look, then compares them in plain rows. The curated pairs are chips under the stage. */
 .compare-sheet .ui-sheet__body { padding-top: 18px; padding-bottom: 28px; }
 /* rows slide under the compact title bar through a soft paper edge, never cut mid-letter */
-.compare-sheet .ui-sheet__bar::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 14px; background: linear-gradient(var(--card), transparent); pointer-events: none; }
+/* it comes to rest on a whole row, just under the compact title bar: nothing is ever left half beneath the bar
+   (STYLE.md §5). The bar covers the body's top 68 px on desktop, 36 px on phones (under the handle). */
+.compare-sheet .ui-sheet__body { scroll-snap-type: y proximity; scroll-padding-top: 76px; }
+.compare-sheet .ui-sheet__body > *, .compare-sheet .compare-row, .compare-sheet .compare-bars, .compare-sheet .ui-disclosure__summary { scroll-snap-align: start; }
 /* phones: while the sheet peeks, its bottom edge fades too, so a row cut by the screen edge reads as "more below" */
 @media (max-width: 760px) {
   .compare-sheet.ui-sheet.has-more:not(.is-full) .ui-sheet__body { -webkit-mask: linear-gradient(#000 calc(100% - 30px), transparent); mask: linear-gradient(#000 calc(100% - 30px), transparent); }
@@ -181,11 +184,11 @@
 .compare-row__lbl { font: 400 14px/1.3 var(--font-sans); color: var(--ink-2); }
 .compare-row__lbl small { display: block; font-size: var(--t-caption); line-height: 1.3; color: var(--ink-3); }
 .compare-v { position: relative; justify-self: start; border: 0; padding: 0; background: transparent; color: var(--ink); font: 600 17px/1.3 var(--font-serif); text-align: left;
-  border-bottom: 1px dotted var(--ink-3); cursor: pointer; }
+  text-decoration: underline dotted var(--ink-3) 1px; text-underline-offset: 4px; cursor: pointer; }
 .compare-v::before { content: ""; position: absolute; inset: -12px -6px; }
-.compare-v:hover { color: var(--verdigris); border-bottom-color: var(--verdigris); }
+@media (hover: hover) { .compare-v:hover { color: var(--verdigris); text-decoration-color: var(--verdigris); } } /* a tap leaves no sticky hover */
 .compare-v.is-est { font-style: italic; }
-.compare-v.is-none { border: 0; color: var(--ink-3); font: italic 400 14px/1.3 var(--font-sans); cursor: default; }
+.compare-v.is-none { border: 0; text-decoration: none; color: var(--ink-3); font: italic 400 14px/1.3 var(--font-sans); cursor: default; }
 .compare-hint { margin: 8px 0 6px; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
 .compare-mode { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 10px; font-size: var(--t-caption); color: var(--ink-2); }
 .compare-mode .ui-seg { box-shadow: none; }
@@ -209,7 +212,10 @@
 .compare-pairsbox { position: absolute; left: 24px; right: 432px; bottom: 18px; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none !important; }
 .compare-pairsbox > * { pointer-events: auto; }
 .compare-pairs__lbl { font: italic 400 16px/1.3 var(--font-serif); color: var(--ink-2); }
-.compare-pairs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 100%; animation: patterns-rise 700ms var(--ease) both 300ms; }
+.compare-pairs__row { display: flex; align-items: center; justify-content: center; gap: 8px; max-width: 100%; animation: patterns-rise 700ms var(--ease) both 300ms; }
+.compare-pairs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; min-width: 0; }
+.compare-pairs__pick { display: flex; flex: none; }
+.compare-pairsbox.is-under { visibility: hidden; }
 .compare-pick { color: var(--verdigris); }
 /* the stage's ink labels: the element's name and its size, under each atom */
 .lbl.compare-name { font: 600 18px/1.2 var(--font-serif); color: var(--ink); text-shadow: 0 0 6px var(--paper), 0 0 2px var(--paper); }
@@ -241,8 +247,11 @@
   .compare-rows { margin-top: 10px; }
   .compare-row { padding: 7px 0; }
   .compare-v { font-size: 16px; }
-  .compare-pairsbox { left: 0; right: 0; bottom: auto; top: auto; gap: 0; }
-  .compare-pairs__lbl { display: none; }
+  .compare-pairsbox { left: 0; right: 0; bottom: auto; top: auto; gap: 2px; align-items: stretch; }
+  .compare-pairs__lbl { padding: 0 14px; font-size: 14px; line-height: 1.25; text-shadow: 0 0 6px var(--paper); }
+  .compare-pairs__row { justify-content: flex-start; gap: 0; padding-right: 10px; }
+  .compare-pairs { flex: 1 1 auto; }
+  .compare-sheet .ui-sheet__body { scroll-padding-top: 44px; }
   .compare-stage { top: 58px; left: 8px; right: 8px; gap: 2px; }
   .compare-stage .ui-seg button { padding: 0 12px; font-size: 13px; }
   .compare-stage__cap { font-size: 13px; }

@@ -80,7 +80,7 @@ export function buildPatterns(ui, hooks = {}) {
     if (pid === 'mp') p.w = v(P.top);
     if (pid === 'bp') { p.he = v(P.low); p.k = P.low ? fmtNum(P.low.y + K0, 0) : '—'; p.re = v(P.top); }
     if (pid === 'density') { p.au = v(P.au); p.he = v(P.he); p.air = `${fmtNum(AIR_G_PER_L, 2, { minDigits: 2 })}\u00a0g`; }
-    if (pid === 'ie1') { p.na = v(P.na); p.ne = v(P.ne); }
+    if (pid === 'ie1') { p.na = v(P.na); p.ne = v(P.ne); p.he = v(F.points.find(x => x.e.sym === 'He')); } // each value beside its own name
     if (pid === 'en') p.f = v(P.top);
     if (pid === 'ea') p.cl = v(P.top);
     if (pid === 'abund') { p.x = P.feGold ? big(Number(P.feGold.toPrecision(2))) : '—'; p.pct = P.pct ? `${fmtNum(P.pct, 0)}\u00a0%` : '—'; }

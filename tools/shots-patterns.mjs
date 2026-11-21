@@ -1,7 +1,7 @@
 // Review set for the "patterns" scope (PARALLEL.md): Patterns across the table and Side by side, in their key
 // states, at the sizes given (1440×900 and 390×844 for review). Loaded by tools/shots.mjs --set=patterns:
-//   node tools/shots.mjs --set=patterns --serve --desk=1440x900 --phone=390x844 --png --query=q=med --out=/workspace/out/redesign/patterns-r2
-//   node tools/shots.mjs --set=patterns --serve --desk=1440x900 --phone=390x844 --fps=4 --out=/workspace/out/redesign/patterns-r2/fps
+//   node tools/shots.mjs --set=patterns --serve --desk=1440x900 --phone=390x844 --png --query=q=med --out=/workspace/out/redesign/patterns-r3
+//   node tools/shots.mjs --set=patterns --serve --desk=1440x900 --phone=390x844 --fps=4 --out=/workspace/out/redesign/patterns-r3/fps
 const at = (page, sel) => page.evaluate(s => { const el = document.querySelector(s); if (!el) throw new Error('missing ' + s); const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, sel);
 const bead = (page, Z) => at(page, `.patterns-bead[data-z="${Z}"]`);
 const touch = (page, sel, type, x, y) => page.evaluate(([s, ty, px, py]) => {
@@ -57,6 +57,9 @@ export function cases({ SIZES }) {
     { name: 'c13-bromine-mercury-desktop', vp: D, hash: 'v=compare&el=Br&el2=Hg', settle: 2400 },
     { name: 'c14-gallium-mercury-phone', vp: P, hash: 'v=compare&el=Ga&el2=Hg', touch: true, settle: 2400 },
     { name: 'c15-pick-from-tile-phone', vp: P, hash: 'v=compare&el=Fe&el2=Au', touch: true, settle: 2200, act: async page => { await page.locator('.compare-slot').nth(1).click(); await page.locator('.compare-find').fill('mer'); } },
+    { name: 'c06-hydrogen-oganesson-phone', vp: P, hash: 'v=compare&el=H&el2=Og', touch: true, settle: 2200 },
+    { name: 'c17-sheet-to-the-end-phone', vp: P, hash: 'v=compare&el=He&el2=Os', touch: true, settle: 2200, act: async page => { await page.locator('.compare-sheet .ui-sheet__body').evaluate(el => el.scrollTo(0, el.scrollHeight)); await page.waitForTimeout(500); } },
+    { name: 'c18-all-numbers-one-atom-desktop', vp: D, hash: 'v=compare&el=Na&el2=Cs', settle: 2000, act: async page => { await page.locator('.compare-stage button', { hasText: 'One atom of each' }).click(); await page.waitForTimeout(900); await page.locator('.compare-sheet .ui-disclosure__summary').click(); await page.locator('.compare-sheet .ui-sheet__body').evaluate(el => el.scrollBy(0, 300)); await page.waitForTimeout(500); await page.mouse.move(5, 5); } },
     { name: 'c16-sheet-scrolled-phone', vp: P, hash: 'v=compare&el=Au&el2=Hg', touch: true, settle: 2200, act: async page => { await page.locator('.compare-sheet .ui-sheet__body').evaluate(el => el.scrollBy(0, 240)); await page.waitForTimeout(400); } },
     { name: 'c10-vi-iron-copper-phone', vp: P, hash: 'v=compare&el=Fe&el2=Cu&lang=vi', touch: true, settle: 2200 },
     { name: 'c10-vi-gold-mercury-desktop', vp: D, hash: 'v=compare&el=Au&el2=Hg&lang=vi', settle: 2200 },
