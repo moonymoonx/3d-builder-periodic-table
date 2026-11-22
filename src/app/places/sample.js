@@ -376,7 +376,8 @@ export function buildSample(ui, hooks = {}) {
   /** By day a solid shows its unit cell (a dark atom, its neighbours in green); in the kiln it does not. */
   const cellShown = T => blackbody(T).glow <= 0.01 || T <= 760;
   const ssAt = T => sampleStateAt(el, T, state.allotrope);
-  const sigOf = ss => `${ss.kind}|${ss.card || ''}|${ss.phase ? ss.phase.id : ''}`;
+  // (with T: which measured piece stands in the vessel, so leaving α-Mn's piece for one atom is a moment too)
+  const sigOf = (ss, T) => `${ss.kind}|${ss.card || ''}|${ss.phase ? ss.phase.id : ''}${T != null && ss.kind === 'card' ? '|' + (pieceAt(el, T)?.label || '') : ''}`;
 
   /** One sentence for the sample at T; at room temperature an invitation follows (what to do here). */
   function describe(T) {
@@ -416,6 +417,7 @@ export function buildSample(ui, hooks = {}) {
     const crossed = events.filter(x => (x.T - T0) * (x.T - T1) < 0).sort((a, b) => Math.abs(a.T - T1) - Math.abs(b.T - T1))[0];
     if (!crossed) return null;
     const at = degC(crossed.T), w = what(el, 'liquid');
+    if (crossed.key === 'pieceEnd') return up ? t(shownOf(el, ss, T1) === 'mol' ? 'sample.ev.pieceEndMol' : 'sample.ev.pieceEnd', { T: at }) : t('sample.ev.pieceBack', { T: at });
     if (crossed.key === 'trans') return ss.kind === 'solid' ? t(cellShown(T1) ? 'sample.ev.restackDay' : 'sample.ev.restack', { T: at, cn: ss.phase.cn }) : t('sample.ev.restackCard', { T: at });
     if (crossed.key === 'sub') return up ? t('sample.ev.sub', { T: at, what: what(el, 'gas') }) : t('sample.ev.deposit', { T: at });
     if (crossed.key === 'boil') return t(up ? 'sample.ev.boil' : 'sample.ev.condense', { T: at, what: whatShort(el) });
@@ -447,7 +449,11 @@ export function buildSample(ui, hooks = {}) {
     el = byZ(state.Z);
     kind = placeKind(el);
     ({ lo, hi } = rangeOf(el));
-    events = eventsOf(el).filter(x => x.T > lo && x.T < hi);
+    // where a measured piece of crystal ends below the melting point and none follows (α-Mn at 980 K, α-S at
+    // 368.3 K: RESEARCH.md, crystal pieces), the sample re-stacks into a crystal we have no piece of
+    const mp = el.ph.mp?.[0] ?? el.ph.sub?.[0] ?? Infinity;
+    const ends = (el.lat.pieces || []).filter(pc => pc.T[1] != null && pc.T[1] < mp && !pieceAt(el, pc.T[1] + 0.01)).map(pc => ({ T: pc.T[1], key: 'pieceEnd' }));
+    events = [...eventsOf(el), ...ends].sort((a, b) => a.T - b.T).filter(x => x.T > lo && x.T < hi);
     dirs = { cool: lo < ROOM - 0.5, heat: hi > ROOM + 0.5 && events.some(x => x.T > ROOM) };
     const tick = x => ({ T: x.T, key: x.key, p: x.p, num: x.p ? `≈ ${C(x.T)}` : degC(x.T), word: t(`sample.tick.${tickKey(x)}`) });
     // landmarks from our data, most useful first: room temperature (where every sample starts), liquid
@@ -486,7 +492,7 @@ export function buildSample(ui, hooks = {}) {
     thermo.show(T);
     // name the moment when the sample changes; between moments, the stretch it is on and what comes
     // next; at room temperature (not playing) the invitation returns
-    const sg = sigOf(ss), atRoom = Math.abs(T - ROOM) < 0.5;
+    const sg = sigOf(ss, T), atRoom = Math.abs(T - ROOM) < 0.5;
     if (sg !== lastSig) {
       const m = lastSig ? moment(lastT, T, ss) : null;
       if (m) say(m); else if (lastSig) say(describe(T), 'state');
@@ -725,7 +731,7 @@ export function buildSample(ui, hooks = {}) {
     never.hidden = !neverNow;
     if (neverNow) renderNever();
     lastCaption = ''; lastSig = ''; lastRead = ''; lastWord = ''; lastT = state.T;
-    lastSig = sigOf(ssAt(state.T));
+    lastSig = sigOf(ssAt(state.T), state.T);
     if (!neverNow) { say(describe(state.T), Math.abs(state.T - ROOM) < 0.5 ? 'room' : 'state'); update(); renderButtons(); }
     if (about.isOpen()) { aboutSig = ''; renderAbout(); }
   }

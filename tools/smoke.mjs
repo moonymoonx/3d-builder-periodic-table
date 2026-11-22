@@ -134,41 +134,19 @@ await step('URL hash is shareable (lens + open card)', async () => {
   if (!/lens=heat/.test(hash) || !/card=1/.test(hash) || !/el=Au/.test(hash)) throw new Error(hash);
   return hash;
 });
-await step('sample view: Fe chips jump past each transition (γ-Fe, melts) and reset works', async () => {
-  await page.evaluate(() => window.__pt.set({ view: 'sample', Z: 26, T: 293.15, allotrope: null }));
+await step('old sample links open the new places: iron the forge, nitrogen the sample place, diamond side by side', async () => {
+  const seen = [];
+  for (const [hash, view, Z2] of [['v=sample&el=Fe&T=1300', 'heat'], ['v=sample&el=N&T=300', 'hold'], ['v=sample&el=C&alt=p1', 'compare', 6]]) {
+    await page.goto('about:blank'); await page.goto(`file://${ROOT}/index.html#${hash}&lang=en`); // a fresh load, not a hash change
+    await page.waitForFunction(() => window.__pt && window.__pt.E.active, null, { timeout: 30000 });
+    const st = await page.evaluate(() => ({ view: window.__pt.state.view, Z2: window.__pt.state.Z2, T: window.__pt.state.T, legacy: document.body.classList.contains('legacy') }));
+    if (st.view !== view || st.legacy || (Z2 && st.Z2 !== Z2) || (view === 'heat' && st.T !== 293.15)) throw new Error(hash + ' -> ' + JSON.stringify(st));
+    seen.push(st.view);
+  }
+  await page.goto('about:blank'); await page.goto(`file://${ROOT}/index.html#v=table&lang=en`);
+  await page.waitForFunction(() => window.__pt && window.__pt.E.active, null, { timeout: 30000 });
   await settle();
-  await page.locator('.chip.ev', { hasText: 'γ-Fe' }).click(); await page.waitForTimeout(300);
-  const ph = await page.locator('.dock-phase').textContent();
-  if (!/γ-Fe/.test(ph)) throw new Error('phase label: ' + ph);
-  await page.locator('.chip.ev', { hasText: 'melts' }).click(); await page.waitForTimeout(300);
-  const badge = await page.locator('.dock-state').textContent();
-  if (!/liquid/i.test(badge)) throw new Error('badge: ' + badge);
-  await page.getByRole('button', { name: 'Room temperature' }).click(); await page.waitForTimeout(200);
-  if (await page.evaluate(() => window.__pt.state.T) !== 293.15) throw new Error('reset');
-  return ph;
-});
-await step('sample view: carbon graphite <-> diamond toggle', async () => {
-  await page.evaluate(() => window.__pt.set({ Z: 6, T: 293.15 }));
-  await page.waitForTimeout(300);
-  await page.locator('.side.left .seg button', { hasText: 'diamond' }).click(); await page.waitForTimeout(300);
-  const ph = await page.locator('.dock-phase').textContent();
-  if (!/diamond/i.test(ph)) throw new Error(ph);
-  await page.locator('.side.left .seg button', { hasText: 'graphite' }).click();
-});
-await step('sample view: helium stays liquid near 0 K, boils at 4.22 K', async () => {
-  await page.evaluate(() => window.__pt.set({ Z: 2, T: 2, allotrope: null })); await page.waitForTimeout(300);
-  const a = await page.locator('.dock-state').textContent();
-  await page.evaluate(() => window.__pt.set({ T: 10 })); await page.waitForTimeout(300);
-  const b = await page.locator('.dock-state').textContent();
-  if (!/liquid/i.test(a) || !/gas/i.test(b)) throw new Error(`${a} / ${b}`);
-});
-await step('sample view: "Heat it" raises the temperature', async () => {
-  await page.evaluate(() => window.__pt.set({ Z: 80, T: 293.15 })); await page.waitForTimeout(200);
-  await page.getByRole('button', { name: /Heat it/ }).click(); await page.waitForTimeout(1500);
-  const T = await page.evaluate(() => window.__pt.state.T);
-  await page.getByRole('button', { name: /Stop/ }).click();
-  if (!(T > 300)) throw new Error('T=' + T);
-  return `T rose to ${Math.round(T)} K`;
+  return seen.join(' · ');
 });
 
 await step('forge chrome as the sample place\'s: ink 20 °C, no room button there; hot: ◀ Cool it and Room temperature; About this sample with sources; Escape closes it', async () => {

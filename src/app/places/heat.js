@@ -221,11 +221,15 @@ export function buildHeat(ui, hooks) {
       const Tm = ph.mp?.[0], L = data().model.lindemann;
       if (Tm && L) row(t('forge.d.wobble'), val(t('forge.d.wobbleV', { p: fmtNum(100 * L[0] * Math.sqrt(Math.min(T, Tm) / Tm), 1) }), t('forge.d.wobble'), L));
     }
+    // the sample place's template: title with the element and temperature, one plain sentence, then the values
+    const meta = `${name(e)} · ${C(T)}`;
     replace(about.body,
-      h('h2', { class: 'heat-about__title' }, t('forge.about')),
-      h('dl', { class: 'heat-facts' }, rows),
+      h('div', { class: 'sample-d-head' }, h('h2', { class: 'sample-d-title' }, t('forge.about')), h('p', { class: 'sample-d-meta' }, meta)),
+      h('p', { class: 'sample-d-hook' }, t(`sample.d.hook.${ss.kind}`)),
       h('p', { class: 'heat-hint' }, t('card.tapSource')),
+      h('dl', { class: 'heat-facts' }, rows),
       h('p', { class: 'heat-note' }, t('forge.d.note')));
+    about.setBar(h('span', { class: 'sample-d-bar' }, h('b', null, t('forge.about')), h('span', null, meta)));
   }
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 

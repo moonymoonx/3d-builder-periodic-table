@@ -52,6 +52,7 @@ export function createEngine(canvas) {
   const soft = /swiftshader|llvmpipe|software|basic render/i.test(probeRenderer());
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: startTier !== 'low' && !(soft && state.quality === 'auto'), alpha: true, powerPreference: 'high-performance' });
   renderer.setClearColor(0x000000, 0);
+  canvas.addEventListener('webglcontextrestored', () => invalidate()); // three.js rebuilds its state; draw again
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -112,7 +113,15 @@ function adaptResolution(dt) {
   // step by about the speed-up needed (half the pixels for a 30 FPS median)
   if (slow && resSlow >= 2) { resFail = { r: E.rig.r }; next = Math.max(0.3, E.mp * Math.min(0.85, Math.max(0.45, (16 / med) ** 1.1))); }
   else if (!slow && med < 17.5 && E.mp < 0.75 && (!resFail || E.rig.r > resFail.r * 1.25)) { resFail = null; next = Math.min(0.75, E.mp / 0.7); }
-  if (next !== E.mp) { resLast = performance.now(); resSlow = 0; E.mp = next; E.renderer.setPixelRatio(pixelRatioFor(TIERS.low)); invalidate(); } // the size and the camera stay as they are
+  if (next !== E.mp) { resLast = performance.now(); resSlow = 0; E.mp = next; E.renderer.setPixelRatio(pixelRatioFor(TIERS.low)); redrawNow(); invalidate(); } // the size and the camera stay as they are
+}
+
+/** A resized canvas is blank until it is drawn again: draw it in the same task, so the browser never
+ *  shows an empty frame (a blank forge in review F3, under a slow software renderer). */
+function redrawNow() {
+  if (!E.active || !E.active.scene) return;
+  E.renderer.render(E.active.scene, E.camera);
+  if (E.active.afterRender) E.active.afterRender();
 }
 
 export function resize() {
@@ -122,6 +131,7 @@ export function resize() {
   E.camera.aspect = w / h;
   applyViewOffset();
   if (E.active && E.active.resize) E.active.resize(w, h);
+  redrawNow();
   invalidate();
 }
 

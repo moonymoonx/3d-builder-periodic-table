@@ -41,8 +41,8 @@ function hookLine(e, info) {
   if (e.Z === 118 || subs.some(s => s.n === nMax && s.l >= 2)) return { text: t('atom.hook'), src: null };
   let key;
   if (cat === 'noble-gas') key = 'atom.hook.a2';
-  else if (f > 0 && f < 14) key = 'atom.hook.a4';
-  else if (d > 0 && d < 10) key = 'atom.hook.a3';
+  else if (f > 0 && f < 14) key = k === 1 ? 'atom.hook.a4one' : 'atom.hook.a4';
+  else if (d > 0 && d < 10) key = k === 1 ? 'atom.hook.a3one' : 'atom.hook.a3';
   else key = k === 1 ? 'atom.hook.a1one' : 'atom.hook.a1';
   return { text: t(key, p), src: [VALENCE] };
 }

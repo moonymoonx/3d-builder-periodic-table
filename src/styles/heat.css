@@ -101,6 +101,8 @@ body.kiln .heat-sheet .ui-sheet__bar, body.kiln .heat-sheet .ui-sheet__foot { ba
 body.kiln .heat-sheet .ui-sheet__close { background: rgba(242, 232, 218, 0.08); color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.18); box-shadow: none; }
 body.kiln .heat-sheet .ui-sheet__handle span { background: rgba(242, 232, 218, 0.28); }
 body.kiln .heat-facts dt, body.kiln .heat-sub, body.kiln .heat-hint, body.kiln .heat-note { color: var(--kiln-text-2); }
+body.kiln .heat-sheet .sample-d-meta, body.kiln .heat-sheet .sample-d-bar { color: var(--kiln-text-2); }
+body.kiln .heat-sheet .sample-d-hook, body.kiln .heat-sheet .sample-d-bar b { color: var(--kiln-text); }
 body.kiln .heat-facts dt, body.kiln .heat-facts dd { border-color: rgba(242, 232, 218, 0.12); }
 body.kiln .heat-v { border-bottom-color: var(--kiln-text-2); }
 body.kiln .heat-v:hover { color: #F0874F; border-bottom-color: #F0874F; }

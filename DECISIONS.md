@@ -751,3 +751,9 @@ Every part scored 4 or more except Hold a sample (clarity 3.5, smoothness 3.5). 
 
 ## Vietnamese accent style, 21 Nov 2026
 - 2026-11-21 (moony): **Vietnamese accent style** — moony chose the most common modern placement: "thủy, hóa" (tone mark on the first vowel of oa/oe/uy when there is no final consonant), not "thuỷ, hoá". Applied throughout the Vietnamese strings (Q18). Syllables with a final consonant, and qu+y (quý), are unchanged.
+
+## Finishing pass 2, 22 Nov 2026
+- **The legacy sample view is retired (§5 above, unblocked):** old `v=sample` links open the forge (solid crystals at room temperature, from 20 °C), the sample place (the rest, at the linked temperature), or Side by side's two forms for a second form (`alt=p1`: carbon's graphite and diamond). Carbon's diamond lives in Side by side, not in the forge: heated at normal pressure diamond would not stay diamond, so a diamond in the furnace would mislead. The legacy code stays in the bundle, unreachable.
+- **Forge "About this sample" uses the sample place's template:** title with element and temperature, one plain sentence (the same `sample.d.hook.*` lines), then the values.
+- **A resized canvas is drawn in the same task** (engine `redrawNow`): F3's blank forge under About (not reproducible here) fits a resolution step of the software renderer landing just before the screenshot.
+- **Where a measured crystal piece ends** (α-Mn at 980 K, α-S at 368.3 K; RESEARCH.md › crystal pieces), the sample place shows a "re-stacks" tick and says that one atom (or molecule) now stands in.

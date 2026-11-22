@@ -2,8 +2,8 @@
 // Places (redesign): home = the table (places/home.js) with the element card (places/elementCard.js).
 // The card's doors lead into the deep places: the atom (places/atom.js), the forge (places/heat.js) or the
 // sample place (places/sample.js, view 'hold'), patterns and side by side (places/patterns.js, compare.js).
-// Only the legacy sample view (view 'sample') keeps its panels on a dark stage (body.legacy), until the
-// forge has carbon's graphite/diamond switch (DECISIONS.md, merge review of view-sample, §5).
+// The legacy sample view (view 'sample', dark stage, body.legacy) is no longer reachable: its links are
+// redirected at boot (below); carbon's diamond lives in Side by side (DECISIONS.md, finishing pass 2).
 import * as THREE from 'three';
 import { loadData, bySym, byZ, elements, name, altName } from './data.js';
 import { state, set, on, readHash, initHash, LAYOUTS } from './state.js';
@@ -48,6 +48,13 @@ function boot() {
   initHash(Z => byZ(Z).sym, s => bySym(s)?.Z);
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   Object.assign(state, { reduced }, readHash());
+  // the legacy sample view (dark stage) is retired: old links open the forge, the sample place, or, for a
+  // second form (carbon's diamond), the two forms side by side (DECISIONS.md, finishing pass 2)
+  if (state.view === 'sample') {
+    const e = byZ(state.Z), alt = state.allotrope;
+    Object.assign(state, alt && (e.lat.phases || []).some(p => p.id === alt && p.alt) ? { view: 'compare', Z2: e.Z }
+      : forgeable(e) ? { view: 'heat', T: 293.15 } : { view: 'hold' }, { allotrope: null });
+  }
   // the lens decides the table's colour and heights
   Object.assign(state, lensPatch(state.lens));
   if (state.card) state.hideSel = false;
