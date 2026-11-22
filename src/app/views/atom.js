@@ -650,7 +650,7 @@ export function createAtomView(hooks = {}) {
     if (mode === 'atom') labels.setText(lblCloud, named, e.Z === 1 ? t('atom.lbl.only') : t('atom.lbl.newest'));
     else labels.setText(lblCloud, named, sel.m == null ? t('atom.lbl.allOf', { k: 2 * s.l + 1 }) : turnWords(s.l, sel.m));
     hint.textContent = t(window.innerWidth <= 760 ? 'atom.hint.dragTouch' : 'atom.hint.drag');
-    rulerCap.textContent = t('atom.scale.cap');
+    rulerCap.replaceChildren(Object.assign(document.createElement('span'), { className: 'atom-ruler__long', textContent: t('atom.scale.cap') }), Object.assign(document.createElement('span'), { className: 'atom-ruler__short', textContent: t('units.pm') }));
     countsShown = '';
   }
 

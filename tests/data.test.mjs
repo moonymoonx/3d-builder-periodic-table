@@ -21,12 +21,31 @@ test('cif: symmetry operators', () => {
   assert.deepEqual(parseOp('x-y,x,z+1/6')(0.5, 0.25, 0).map(v => +v.toFixed(6)), [0.25, 0.5, 0.166667]);
 });
 
-test('cif: every committed COD file expands to its formula-unit count', () => {
+test('cif: every committed COD file expands to its formula-unit count (× the atoms in its formula: N2, S8)', () => {
   const dir = 'data/raw/cod';
   for (const f of fs.readdirSync(dir).filter(x => x.endsWith('.cif'))) {
-    const cif = parseCIF(fs.readFileSync(`${dir}/${f}`, 'utf8'));
-    assert.equal(expandSites(cif).length, cif.Z, f);
+    const text = fs.readFileSync(`${dir}/${f}`, 'utf8');
+    const cif = parseCIF(text);
+    const m = text.match(/_chemical_formula_sum\s+['"]?\s*[A-Z][a-z]?(\d*)\s*['"]?\s*$/m);
+    assert.equal(expandSites(cif).length, cif.Z * (m && m[1] ? Number(m[1]) : 1), f);
   }
+});
+
+test('crystal pieces: whole molecules only, of the right size, cut from the measured cell', async () => {
+  const { pieceAtoms, pieceAt } = await import('../src/physics/lattice.js');
+  const D = JSON.parse(fs.readFileSync('data/elements.json', 'utf8'));
+  const E = s => D.elements.find(e => e.sym === s);
+  for (const [s, per] of [['N', 2], ['Cl', 2], ['Br', 2], ['I', 2], ['S', 8], ['Mn', 1]]) {
+    const e = E(s);
+    for (const p of e.lat.pieces) {
+      const r = pieceAtoms(p, per, 1.15 * 2 * e.f.rCov[0], 200);
+      assert.ok(r.sizes.every(n => n === per), `${s} ${p.label}: molecules of ${per} (${[...new Set(r.sizes)]})`);
+      assert.ok(r.pts.length % per === 0 && r.pts.length >= 100 && r.pts.length <= 240, `${s}: ${r.pts.length} atoms`);
+    }
+  }
+  assert.equal(pieceAt(E('N'), 50).label, 'β-N₂');
+  assert.equal(pieceAt(E('N'), 20).label, 'α-N₂');
+  assert.equal(pieceAt(E('S'), 370), null); // monoclinic sulfur above 95 °C: no piece, one ring
 });
 
 test('wikitext: lattice constants in pm, nm and rhombohedral forms', () => {

@@ -31,6 +31,7 @@ function niceTicks(lo, hi, n) {
   return out;
 }
 const SUP = { '-': '⁻', 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
+const UNIT_GLOSS = { pm: 'units.pm', eV: 'units.eV' }; // plain words for a unit, shown on phones
 const sup = k => `10${String(k).split('').map(c => SUP[c]).join('')}`;
 // tick labels: plain figures where they stay short; powers of ten on phones and for the tiny ones
 const pow10 = (k, phone) => (k === 0 ? '1' : phone ? sup(k) : k > 0 && k <= 6 ? fmtNum(10 ** k, 0) : k < 0 && k >= -3 ? fmtNum(10 ** k, -k) : sup(k));
@@ -284,7 +285,9 @@ export function buildPatterns(ui, hooks = {}) {
     replace(answer, t(col ? aCol : `patterns.${pid}.a`, params(pid)), ' ', srcPill(PATTERN_REFS[pid] || []));
     const unit = unitOf(pid);
     replace(axis, h('b', null, axisName(pid)), unit ? h('span', { class: 'patterns-axis__unit' }, unit) : null,
-      h('small', null, t(`patterns.${pid}.cap`), spec(pid).scale === 'log' ? ` · ${t('patterns.logStep')}` : ''));
+      h('small', null, t(`patterns.${pid}.cap`), spec(pid).scale === 'log' ? ` · ${t('patterns.logStep')}` : ''),
+      // phones hide that caption: the unit still gets its plain words (pm, eV)
+      UNIT_GLOSS[unit] ? h('span', { class: 'patterns-axis__gloss' }, t(UNIT_GLOSS[unit])) : null);
     const ph = isPhone();
     join.hidden = spec(pid).lines === false;
     replace(join, h('span', { class: 'patterns-join__lbl' }, t('patterns.join')),

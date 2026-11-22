@@ -13,7 +13,7 @@ import { state, set } from '../state.js';
 import { byZ, bySym, name, data, stateAt, isPred, fmtTemp, propValue, structText } from '../data.js';
 import { animate } from '../engine.js';
 import { sampleStateAt, eventsOf, blackbody, SLOWDOWN } from '../views/sample.js';
-import { rmsSpeed } from '../../physics/lattice.js';
+import { rmsSpeed, pieceAt } from '../../physics/lattice.js';
 import { sheet, door } from '../ui/kit.js';
 import { showSource, closeSource } from '../ui/source.js';
 import { SAMPLE_KEYS } from '../content/strings-sample.js';
@@ -48,9 +48,11 @@ function what(e, kind) {
 }
 /** Once the molecules have been named: "molecules" or "atoms". */
 const whatShort = e => t(perParticle(e) > 1 ? 'sample.what.molShort' : 'sample.what.atoms');
-/** What a crystal we do not draw shows in its vessel (as views/sample.js specimenFor): 'mol', 'atom' or null. */
-function shownOf(e, ss) {
+/** What a crystal we do not draw as a lattice shows in its vessel (as views/sample.js specimenFor): 'piece' (a
+ *  small piece of the measured crystal), 'mol', 'atom' or null. */
+function shownOf(e, ss, T) {
   if (ss.kind !== 'card') return null;
+  if (pieceAt(e, T)) return 'piece';
   const room = stateAt(e, ROOM);
   if (!(ss.card === 'molecular' || ss.card === 'complex' || (ss.card === 'predicted' && room.s !== 'unknown' && !room.p))) return null;
   return ss.card === 'molecular' && perParticle(e) > 1 ? 'mol' : 'atom';
@@ -384,14 +386,16 @@ export function buildSample(ui, hooks = {}) {
     if (ss.kind === 'gas') s = t('sample.cap.gas', { at, what: what(el, 'gas'), v: kmh(speedOf(el, T).ms) });
     else if (ss.kind === 'liquid') s = t('sample.cap.liquid', { at, what: what(el, 'liquid') });
     else if (ss.kind === 'solid') s = t(cellShown(T) ? 'sample.cap.solidCnDay' : 'sample.cap.solidCn', { at, cn: ss.phase.cn });
-    else s = t(cardKey(ss), { at, n: el.lat.atoms, what: what(el, 'solid') });
+    else if (pieceAt(el, T) && pieceAt(el, T)[getLang()]) s = `${at}: ${pieceAt(el, T)[getLang()]} ${t('sample.cap.pieceShown')}`; // its own words (checked)
+    else s = t(cardKey(ss, T), { at, n: el.lat.atoms, what: what(el, 'solid') });
     if (!room) return s;
     const inv = kind === 'card' ? (el.ph.sub ? 'sample.invite.sub' : 'sample.invite.melt')
       : dirs.cool && dirs.heat ? 'sample.invite.both' : dirs.cool ? 'sample.invite.cool' : 'sample.invite.heat';
     return `${s} ${t(inv)}`;
   }
   /** What stands in the vessel for a solid we do not draw: one molecule, or one atom. */
-  function cardKey(ss) {
+  function cardKey(ss, T) {
+    if (pieceAt(el, T)) return ss.card === 'complex' ? 'sample.cap.pieceComplex' : 'sample.cap.piece';
     if (ss.card === 'molecular') return perParticle(el) > 1 ? 'sample.cap.molecular' : 'sample.cap.complexPlain';
     if (ss.card === 'complex') return el.lat.atoms ? 'sample.cap.complex' : 'sample.cap.complexPlain';
     if (ss.card === 'phase') return 'sample.cap.phase';
@@ -422,6 +426,7 @@ export function buildSample(ui, hooks = {}) {
       return lastSig.startsWith('card') ? t('sample.ev.meltCard', { T: at, what: w }) : t('sample.ev.melt', { T: at });
     }
     if (ss.kind === 'solid') return t(cellShown(T1) ? 'sample.ev.freezeCnDay' : 'sample.ev.freezeCn', { T: at, cn: ss.phase.cn });
+    if (pieceAt(el, T1)) return t(ss.card === 'complex' ? 'sample.ev.freezePieceComplex' : 'sample.ev.freezePiece', { T: at, what: what(el, 'solid'), n: el.lat.atoms });
     if (ss.card === 'molecular') return t(perParticle(el) > 1 ? 'sample.ev.freezeMol' : 'sample.ev.freezeComplex', { T: at, what: what(el, 'solid') });
     if (ss.card === 'complex') return t('sample.ev.freezeComplex', { T: at });
     if (ss.card === 'phase' || ss.card === 'unknown') return t('sample.ev.freezePhase', { T: at });
@@ -474,7 +479,7 @@ export function buildSample(ui, hooks = {}) {
     if (ss.kind === 'gas') wd = t('sample.word.gas', { v: kmh(speedOf(el, T).ms) });
     else if (ss.kind === 'liquid') wd = t('sample.word.liquid');
     else if (ss.kind === 'solid') wd = t('sample.word.solidCn', { cn: ss.phase.cn });
-    else if (kind !== 'never') { const sh = shownOf(el, ss); wd = t(sh === 'mol' ? 'sample.word.solidMol' : sh === 'atom' ? 'sample.word.solidAtom' : 'sample.word.solidCard'); }
+    else if (kind !== 'never') { const sh = shownOf(el, ss, T); wd = t(sh === 'piece' ? 'sample.word.solidPiece' : sh === 'mol' ? 'sample.word.solidMol' : sh === 'atom' ? 'sample.word.solidAtom' : 'sample.word.solidCard'); }
     if (wd !== lastWord) { lastWord = wd; replace(word, wd); }
     const vt = wd ? `${rd} · ${wd}` : rd; // what a screen reader says for the thermometer (not 0–1000)
     if (vt !== lastVt) { lastVt = vt; thermo.input.setAttribute('aria-valuetext', vt); }
@@ -667,8 +672,12 @@ export function buildSample(ui, hooks = {}) {
     if (ss.kind === 'card') {
       const cr = e.f.crystal;
       row(t('sample.d.crystal'), valBtn(cr && cr[0] ? structText(cr[0]) : null, t('f.crystal'), cr));
-      const sh = shownOf(e, ss), whyKey = !sh ? 'sample.d.whyEmpty' : sh === 'mol' ? 'sample.d.whyMol' : 'sample.d.why';
-      row(t(whyKey), valBtn(t('sample.d.whyV'), t(whyKey), [1, 'spec', { n: t('sample.d.whyN') }]));
+      const sh = shownOf(e, ss, T), pc = sh === 'piece' ? pieceAt(e, T) : null;
+      if (pc) row(t('sample.d.piece'), valBtn(pc.cond ? t('sample.d.pieceV', { T: degC(Number(pc.cond.replace(/[^\d.]/g, ''))) }) : t('sample.d.pieceV0'), t('sample.d.piece'), [pc.label, pc.src]));
+      else {
+        const whyKey = !sh ? 'sample.d.whyEmpty' : sh === 'mol' ? 'sample.d.whyMol' : 'sample.d.why';
+        row(t(whyKey), valBtn(t('sample.d.whyV'), t(whyKey), [1, 'spec', { n: t('sample.d.whyN') }]));
+      }
     }
     if (sp) {
       const k = data().constants.kB[0], gap = Math.cbrt((k * T) / 101325) * 1e9, rv = e.f.rVdw?.[0];

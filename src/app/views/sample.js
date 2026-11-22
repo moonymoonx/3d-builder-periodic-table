@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { E, invalidate, freeFov, tierConfig, setContinuous } from '../engine.js';
 import { state, set } from '../state.js';
 import { byZ, data, stateAt } from '../data.js';
-import { cellVectors, fracToCart, lindemannRms, rmsSpeed } from '../../physics/lattice.js';
+import { cellVectors, fracToCart, lindemannRms, rmsSpeed, pieceAt, pieceAtoms, nearestNeighbour } from '../../physics/lattice.js';
 import { cmfAt, mul3, gammaEncode } from '../../physics/color.js';
 import { CATEGORY_COLORS, CATEGORY_COLORS_CB } from '../palette.js';
 import { pigment, pigmentCB, color as TOK, light as LIGHT } from '../../design/tokens.js';
@@ -173,6 +173,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
 
   // atoms: instanced spheres; the solid vibrates in the vertex shader, liquid/gas positions are CPU-driven
   const MAX = 3200;
+  const PIECE_MAX = 400; // the beads of a piece of crystal (a specimen: drawn, never simulated)
   const atomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: FORGE ? 0.24 : 0.38, metalness: FORGE ? 0 : 0.15 });
   const uni = { uTime: { value: 0 }, uAmp: { value: 0 } };
   const glowU = { uGlowCol: { value: new THREE.Color() }, uGlowK: { value: 0 }, uHot: { value: 0 }, uGlaze: { value: 0.8 }, uBody: { value: 1 }, uMirror: { value: 0 },
@@ -243,10 +244,11 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   // its building block: one molecule or one atom rests on the hearth in a vessel sized to it, slowly
   // turning about the vertical, with a soft contact shadow (elements never made in bulk keep an empty
   // vessel: there is nothing to show)
-  const specimen = new THREE.InstancedMesh(atoms.geometry, atomMat, 8);
+  const specimen = new THREE.InstancedMesh(atoms.geometry, atomMat, PIECE_MAX);
   specimen.count = 0; specimen.visible = false; specimen.frustumCulled = false;
   world.add(specimen);
-  let spec = null; // { n, T (template, resting), bond, r, foot, lo, hi, y, yaw }
+  let spec = null; // { n, T (template, resting), bond, r, foot, lo, hi, y, yaw, piece }
+  const pieceCache = new Map();
   const specQ = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0);
   const specShadow = FORGE ? new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
     new THREE.MeshBasicMaterial({ color: TOK.shadow, map: contactShadowTexture(), transparent: true, opacity: 0.4, depthWrite: false, ...ON_TOP })) : null;
@@ -334,6 +336,10 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
 
   function writeMatrices() {
     if (FORGE) updateCluster();
+    // a fluid's beads are drawn inside the glass even in the frame the vessel changes size (condensing neon
+    // once showed a bead outside the wall: final review F2); the same inset as stepFluid
+    const fl = !morph && current && (current.kind === 'liquid' || current.kind === 'gas');
+    const ins = FORGE ? radius + boxL[0] * 0.025 : radius, bx = boxL[0] / 2 - ins, by = boxL[1] / 2 - ins, bz = boxL[2] / 2 - ins, bf = boxL[1] / 2 - radius;
     for (let i = 0; i < n; i++) {
       if (molN > 1) { // a molecule's atoms sit side by side in the list, around its centre, as it tumbles
         c3.set(P[3 * i], P[3 * i + 1], P[3 * i + 2]); q4.fromArray(Qr, 4 * i);
@@ -345,6 +351,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         continue;
       }
       v3.set(P[3 * i], P[3 * i + 1], P[3 * i + 2]);
+      if (fl) v3.set(Math.max(-bx, Math.min(bx, v3.x)), Math.max(-bf, Math.min(by, v3.y)), Math.max(-bz, Math.min(bz, v3.z)));
       const sc = occl[i] ? 0 : radius;
       m4.compose(v3, q, sv.set(sc, sc, sc));
       atoms.setMatrixAt(i, m4);
@@ -371,7 +378,13 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
     if (!(ss.card === 'molecular' || ss.card === 'complex' || (ss.card === 'predicted' && measured))) return null;
     const rc = e.f.rCov?.[0] || e.f.rVdw?.[0] * 0.6 || 120, gasN = e.ph.gas ? e.ph.gas[0] : 1;
     let sp;
-    if (ss.card === 'molecular' && gasN > 1) { // one molecule, as the fluid draws them, at rest: a pair lying
+    const pc = pieceAt(e, state.T);
+    if (pc) { // a small piece of its measured crystal (COD): whole molecules, at the liquid's scale (no jump on freezing)
+      const perMol = ss.card === 'complex' ? 1 : gasN, want = tierConfig().points >= 0.7 ? 300 : 170, key = `${e.Z}|${pc.src}|${want}`;
+      if (!pieceCache.has(key)) pieceCache.set(key, pieceAtoms(pc, perMol, 1.15 * 2 * rc, want).pts);
+      const pts = pieceCache.get(key).slice(0, PIECE_MAX);
+      sp = { n: pts.length, T: pts, bond: 1, r: perMol > 1 ? rc * molR(perMol) : 0.46 * nearestNeighbour(pc.cell, pc.sites), piece: pc };
+    } else if (ss.card === 'molecular' && gasN > 1) { // one molecule, as the fluid draws them, at rest: a pair lying
       // down, the tetrahedron on a face, a ring standing on its rim (lying flat, seen from above the hearth,
       // its far atoms hid its hole); the turning shows the ring face-on, then its crown edge-on
       let T = molTemplate(gasN), q0 = null;
@@ -401,7 +414,7 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
       specimen.setMatrixAt(k, m4);
     }
     specimen.count = spec.n; specimen.instanceMatrix.needsUpdate = true;
-    hiAttr.array.fill(0, 0, 8); hiAttr.needsUpdate = true; // plain beads, no unit-cell colours
+    hiAttr.array.fill(0, 0, Math.max(8, spec.n)); hiAttr.needsUpdate = true; // plain beads, no unit-cell colours
     glowU.uCore.value.set(0, spec.y, 0); glowU.uCoreR.value = 1; // no inner shading for a lone specimen
   }
 
@@ -746,7 +759,8 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
   function sync(force = false) {
     const e = byZ(state.Z);
     const ss = sampleStateAt(e, state.T, state.allotrope);
-    const key2 = `${e.Z}|${ss.kind}|${ss.phase ? ss.phase.id : ''}|${ss.card || ''}|${E.tier}`;
+    const pcK = ss.kind === 'card' ? (pieceAt(e, state.T)?.src || '') : '';
+    const key2 = `${e.Z}|${ss.kind}|${ss.phase ? ss.phase.id : ''}|${ss.card || ''}|${pcK}|${E.tier}`;
     const elementChanged = element !== e.Z;
     if (elementChanged) { n = 0; bain = null; current = null; morph = null; }
     if (force || key2 !== phaseKey) {
@@ -767,7 +781,8 @@ export function createSampleView(hooks, { look = 'legacy' } = {}) {
         if (spec) { // a vessel sized to the specimen; the fluid it froze from is forgotten (a melt starts afresh)
           n = 0;
           // about half the vessel's width, like an object in a museum case; it rests on the hearth
-          const side = Math.max((spec.n === 1 ? 5 : 4) * spec.foot, 1.9 * (spec.hi - spec.lo)); // a lone atom: two fifths
+          const side = spec.piece ? Math.max(2.3 * spec.foot, 1.5 * (spec.hi - spec.lo)) // a piece of crystal fills more of it
+            : Math.max((spec.n === 1 ? 5 : 4) * spec.foot, 1.9 * (spec.hi - spec.lo)); // a lone atom: two fifths
           setBox([side, side, side]);
           spec.y = -side / 2 - spec.lo; world.userData.lift = spec.y;
           if (specShadow) { // under it, as wide as it is, on the glaze (a polygon offset wins the depth test)

@@ -6,3 +6,6 @@ claude-sessions/
 ref/*.mp4
 ref/*.webp
 ref/*.png
+
+# prompt log (private)
+prompts/

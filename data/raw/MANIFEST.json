@@ -165,6 +165,18 @@
    "element": "Pu",
    "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
   },
+  "cod/4511285.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/4511285.cif",
+   "accessed": "2026-11-22T08:39:02.579Z",
+   "bytes": 9334,
+   "sha256": "66df6f952074c947a569dbb2ce2010e0e3138ec22d749a4074ab07fd8cbe2a82",
+   "element": "I",
+   "phase": "solid iodine (a piece of the crystal, sample view)",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "reason": "picked for a piece of the crystal (data/curated/crystal-pieces.json), checked by Gemini"
+  },
   "cod/7040217.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/7040217.cif",
@@ -314,6 +326,18 @@
    "phase": "alpha-Sn (grey)",
    "reason": "pinned (fact-check); sg F d -3 m :1 (#227); T=n/a K; Wyckoff, R. W. G. 1963; 1 candidates"
   },
+  "cod/9008571.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9008571.cif",
+   "accessed": "2026-11-22T08:39:02.579Z",
+   "bytes": 2419,
+   "sha256": "e4fceae81f794ca559f95a9dcc079313f2be800d6f510f56cb62f60e7da4a99f",
+   "element": "N",
+   "phase": "α-N₂ (a piece of the crystal, sample view)",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "reason": "picked for a piece of the crystal (data/curated/crystal-pieces.json), checked by Gemini"
+  },
   "cod/9008584.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/9008584.cif",
@@ -419,6 +443,30 @@
    "phase": "diamond-cubic Ge",
    "reason": "sg F d -3 m :1 (#227); T=297.75 K; Cooper, A. S. 1962; 8 candidates"
   },
+  "cod/9011108.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9011108.cif",
+   "accessed": "2026-11-22T08:39:02.579Z",
+   "bytes": 2906,
+   "sha256": "64ffb281f1ceb698f96440861bce4793e7732b7dcf66d1030122cceca80b7438",
+   "element": "Mn",
+   "phase": "α-Mn (a piece of the crystal, sample view)",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "reason": "picked for a piece of the crystal (data/curated/crystal-pieces.json), checked by Gemini"
+  },
+  "cod/9011362.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9011362.cif",
+   "accessed": "2026-11-22T09:32:17.049Z",
+   "bytes": 3449,
+   "sha256": "5512a9d82bb3d5c7a1e03d974fa55d3fffc2d8ac492f2c63db38b09d5fb41bde",
+   "element": "S",
+   "phase": "α-S (rhombic) (a piece of the crystal, sample view)",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "reason": "picked for a piece of the crystal (data/curated/crystal-pieces.json), checked by Gemini"
+  },
   "cod/9011577.cif": {
    "source": "cod",
    "url": "https://www.crystallography.net/cod/9011577.cif",
@@ -454,6 +502,18 @@
    "element": "Si",
    "phase": "diamond-cubic Si",
    "reason": "sg F d -3 m :1 (#227); T=298.15 K; Hom, T.; Kiszenick, W.; Post, B. 1975; 15 candidates"
+  },
+  "cod/9012476.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9012476.cif",
+   "accessed": "2026-11-22T08:39:02.579Z",
+   "bytes": 2531,
+   "sha256": "c1bae956ec04070696962f7e2c4ecd1a2328f27b91081b92536ba74a72f1e96c",
+   "element": "N",
+   "phase": "β-N₂ (a piece of the crystal, sample view)",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "reason": "picked for a piece of the crystal (data/curated/crystal-pieces.json), checked by Gemini"
   },
   "cod/9012710.cif": {
    "source": "cod",
@@ -510,6 +570,30 @@
    "committed": true,
    "element": "Co",
    "phase": "high-temperature phase (RESEARCH.md Answers Q8)"
+  },
+  "cod/9013119.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9013119.cif",
+   "accessed": "2026-11-22T08:39:02.579Z",
+   "bytes": 2724,
+   "sha256": "48ab8cb222395806481094ef52a5b8686cb011f3831e725fcf8b5b2495821fa9",
+   "element": "Br",
+   "phase": "solid bromine (a piece of the crystal, sample view)",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "reason": "picked for a piece of the crystal (data/curated/crystal-pieces.json), checked by Gemini"
+  },
+  "cod/9013123.cif": {
+   "source": "cod",
+   "url": "https://www.crystallography.net/cod/9013123.cif",
+   "accessed": "2026-11-22T08:39:02.579Z",
+   "bytes": 2729,
+   "sha256": "acefe002ac18e1d4c022bfd56b6c7c989e28889caba1079486c43ebcd73065c1",
+   "element": "Cl",
+   "phase": "solid chlorine (a piece of the crystal, sample view)",
+   "licence": "Crystallography Open Database: data dedicated to the public domain (CC0) per COD; cite the original paper of each entry (recorded per file).",
+   "committed": true,
+   "reason": "picked for a piece of the crystal (data/curated/crystal-pieces.json), checked by Gemini"
   },
   "cod/9013487.cif": {
    "source": "cod",

@@ -31,12 +31,14 @@ const curated = f => JSON.parse(fs.readFileSync(path.join(ROOT, 'data/curated', 
 const placeholders = curated('placeholders.json');
 const FIX = curated('factcheck-fixes.json');
 const LINES = curated('element-lines.json').lines;
+const PIECES = curated('crystal-pieces.json').pieces; // a piece of molecular and complex crystals (sample view)
 const HIT = curated('phases-highT.json');
 const TENTATIVE = curated('tentative-isotopes.json').entries;
 // lines whose eye-mix fails the lamp check (Wikipedia "Gas-discharge lamp", oldid 1351286820): krypton comes out
 // magenta (lamps: grey off-white to green), xenon too saturated a blue (lamps: grey or blue-grey dim white).
 // Real tubes are not in equilibrium and their ion lines are not in our data, so no glow is drawn for them.
 const GLOW_FAILS = new Set(['Kr', 'Xe']);
+const LAMP = curated('lamp-glow.json'); // their glow: a real tube's colour, rendered from sourced descriptions
 const EA_UNBOUND = new Set(curated('ea-unbound.json').symbols); // adding an electron releases no energy (electron affinity ≤ 0) // NUBASE entries not yet confirmed: never the longest-lived kind
 const warnings = [];
 const warn = (...a) => warnings.push(a.join(' '));
@@ -736,7 +738,7 @@ for (const Z of ZS) {
 
   // ---- spectrum (a handful of NIST lines)
   const ln = linesFor(Z, sym, NIST_IE.get(Z)?.get(0)?.ie ?? null);
-  const lines = ln.none ? { none: ln.none } : clean({ basis: ln.basis, n: ln.total, used: ln.used, ex: ln.dropped || undefined, glow: ln.glow, v: ln.v });
+  const lines = ln.none ? { none: ln.none } : clean({ basis: ln.basis, n: ln.total, used: ln.used, ex: ln.dropped || undefined, glow: ln.glow || (LAMP[sym] && LAMP[sym].xy), lamp: LAMP[sym] ? 1 : undefined, v: ln.v });
 
   // the element card's first line: our own words, checked against the Wikipedia lead (REDESIGN-PLAN §2, QUESTIONS Q17)
   const ln1 = LINES[sym];
@@ -758,6 +760,17 @@ function codById(id) {
   if (cif.sgNumber >= 143 && cif.sgNumber <= 167 && Math.abs(cell.gamma - 120) > 1e-3 && Math.abs(cell.alpha - cell.beta) < 1e-6) ({ cell, sites } = rhombToHex(cell, sites));
   const pm = Object.fromEntries(Object.entries({ a: cell.a * 100, b: cell.b * 100, c: cell.c * 100, alpha: cell.alpha, beta: cell.beta, gamma: cell.gamma }).map(([k, v]) => [k, round(v, 6)]));
   return { cell: pm, sites: sites.map(p => p.map(v => round(v, 5))), T: cif.T, sgNumber: cif.sgNumber, sg: cif.sg, key: addCodSource(id, cif) };
+}
+// A small piece of a molecular or complex crystal (data/curated/crystal-pieces.json): the COD cell and every
+// atom of its conventional cell; the sample view cuts whole molecules from a block of these cells.
+function piecesFor(sym) {
+  const list = PIECES[sym];
+  if (!list) return undefined;
+  return list.map(p => {
+    if (!fs.existsSync(RAW(`cod/${p.cod}.cif`))) { warn('COD CIF missing (crystal piece)', p.cod); return null; }
+    const c = codById(p.cod);
+    return { label: p.label, T: p.T, cell: c.cell, sites: c.sites, src: c.key, cond: c.T ? `${c.T} K` : null, en: p.en, vi: p.vi };
+  }).filter(Boolean);
 }
 /** Pearson symbol from the space group (number + Hermann–Mauguin centring letter) and the atom count. */
 function pearsonOf(sgNumber, sg, n) {
@@ -801,8 +814,8 @@ function buildLattice({ Z, sym, structs }) {
   const mainS = structs[0];
   const structure = mainS ? structName(mainS.proto, mainS.pearson) : null;
   if (Z === 2) return { out: { kind: 'nosolid', structure: structName('hcp'), src: 'wpa' } };
-  if (MOLECULAR.includes(sym)) return { out: { kind: 'molecular', structure, src: 'spec' } };
-  if (COMPLEX.includes(sym)) return { out: { kind: 'complex', structure, atoms: mainS?.pearson ? Number((mainS.pearson.match(/\d+/) || [])[0]) : null, src: 'spec' } };
+  if (MOLECULAR.includes(sym)) return { out: clean({ kind: 'molecular', structure, src: 'spec', pieces: piecesFor(sym) }) };
+  if (COMPLEX.includes(sym)) return { out: clean({ kind: 'complex', structure, atoms: mainS?.pearson ? Number((mainS.pearson.match(/\d+/) || [])[0]) : null, src: 'spec', pieces: piecesFor(sym) }) };
   if (Z >= 100 || !mainS || mainS.predicted) return { out: { kind: 'predicted', structure, src: Z >= 100 ? 'fc' : 'wp' } };
 
   const cod = COD.get(sym) || [];

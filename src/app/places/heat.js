@@ -13,6 +13,7 @@ import { sheet } from '../ui/kit.js';
 import { showSource, closeSource } from '../ui/source.js';
 import { animate } from '../engine.js';
 import { sampleStateAt, eventsOf } from '../views/sample.js';
+import { rmsSpeed } from '../../physics/lattice.js';
 
 const ROOM = 293.15;
 const C = K => `${fmtNum(K - 273.15, 0)} °C`.replace(/^-/, '−');
@@ -57,7 +58,8 @@ export function buildHeat(ui, hooks) {
   const fromV = v => lo + (v / 1000) * (hi - lo);
   const pct = T => `${Math.max(0, Math.min(100, ((T - lo) / (hi - lo)) * 100)).toFixed(2)}%`;
   function setT(T) { set({ T: Math.round(Math.max(lo, Math.min(hi, T)) * 100) / 100 }); }
-  function say(text) { if (text && text !== lastCaption) { lastCaption = text; replace(caption, text); caption.classList.remove('is-new'); void caption.offsetWidth; caption.classList.add('is-new'); } }
+  // [[…]] marks words coloured like the part of the sample they name (STYLE §2), as in the sample place
+  function say(text) { if (text && text !== lastCaption) { lastCaption = text; replace(caption, text.split(/\[\[(.+?)\]\]/).map((part, i) => (i % 2 ? h('span', { class: 'sample-cell-word' }, part) : part))); caption.classList.remove('is-new'); void caption.offsetWidth; caption.classList.add('is-new'); } }
 
   function startCaption() {
     const ss = sampleStateAt(el, ROOM, null);
@@ -135,7 +137,9 @@ export function buildHeat(ui, hooks) {
     const rd = C(state.T);
     if (rd !== lastRead) { lastRead = rd; replace(read, rd); read.classList.toggle('is-hot', state.T > ROOM + 0.5); } // ink at 20 °C, ember once heated
     const ss = sampleStateAt(el, state.T, null);
-    const wd = ss.kind === 'card' ? '' : ss.kind === 'solid' && ss.phase && ss.phase.cn ? t('forge.solidCn', { cn: ss.phase.cn }) : t('state.' + ss.kind);
+    // a gas gives its typical speed, as in the sample place (√(3RT/M), R from CODATA)
+    const gasV = () => { const ms = rmsSpeed(state.T, el.f.aw?.[0] || 2 * el.Z, data().constants.R[0]); return `${fmtNum(Number((ms * 3.6).toPrecision(3)), 0)}\u00A0km/h`; };
+    const wd = ss.kind === 'card' ? '' : ss.kind === 'solid' && ss.phase && ss.phase.cn ? t('forge.solidCn', { cn: ss.phase.cn }) : ss.kind === 'gas' ? t('forge.gas', { v: gasV() }) : t('state.' + ss.kind);
     if (wd !== lastWord) { lastWord = wd; replace(word, wd); }
     // the thermometer fills up to the temperature, coloured like heated metal along the way
     const clip = `inset(0 ${(100 - parseFloat(pct(state.T))).toFixed(1)}% 0 0 round 6px)`;
@@ -151,14 +155,15 @@ export function buildHeat(ui, hooks) {
    *  once there is somewhere to cool to; the main action is heating until the top of the scale, then cooling. */
   function renderButtons() {
     const atRoom = state.T <= lo + 0.5, top = state.T >= hi - 1, phone = isPhone();
-    const key = `${dir}|${atRoom}|${top}|${phone}|${getLang()}`;
+    const gas = sampleStateAt(el, state.T, null).kind === 'gas'; // boiled: cooling is the way on (as mercury in the sample place)
+    const key = `${dir}|${atRoom}|${top}|${gas}|${phone}|${getLang()}`;
     if (key === lastBtn) return;
     lastBtn = key;
     replace(play, dir > 0 ? t('forge.pause') : top ? t('forge.again') : t('forge.play'));
     replace(cool, dir < 0 ? t('forge.pause') : t('forge.cool'));
     replace(room, phone ? t('forge.roomShort', { T: C(ROOM) }) : t('forge.room'));
     room.setAttribute('aria-label', t('forge.room'));
-    const coolMain = dir < 0 || (top && dir === 0);
+    const coolMain = dir < 0 || ((top || gas) && dir === 0);
     play.classList.toggle('ui-btn--primary', !coolMain); play.classList.toggle('ui-btn--secondary', coolMain);
     cool.classList.toggle('ui-btn--primary', coolMain); cool.classList.toggle('ui-btn--secondary', !coolMain);
     const keep = [atRoom ? null : cool, atRoom ? null : room, play].filter(Boolean);

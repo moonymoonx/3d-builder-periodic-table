@@ -335,6 +335,18 @@ async function viGdpt2() {
   });
 }
 
+// ---- 9c. COD entries for a small piece of molecular and complex crystals (data/curated/crystal-pieces.json) ----
+async function codPieces() {
+  const { pieces } = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/curated/crystal-pieces.json'), 'utf8'));
+  for (const [sym, list] of Object.entries(pieces)) for (const p of list) {
+    await fetchTo('cod', `cod/${p.cod}.cif`, `https://www.crystallography.net/cod/${p.cod}.cif`, {
+      timeout: 120000, validate: b => (b.toString('utf8').includes('_cell_length_a') ? null : 'not a CIF'),
+      extra: { element: sym, phase: `${p.label} (a piece of the crystal, sample view)` },
+    });
+    await sleep(300);
+  }
+}
+
 // ---- 10. Wikipedia lead sections (plain text) for the elements with a hand-written card line ----
 // Used only to check our own one-line descriptions (data/curated/element-lines.json); no text is copied.
 export const LINE_TITLES = ['Hydrogen', 'Helium', 'Lithium', 'Carbon', 'Nitrogen', 'Oxygen', 'Fluorine', 'Neon', 'Sodium', 'Magnesium',
@@ -358,7 +370,7 @@ async function wikipediaIntros() {
 // ---- run ----------------------------------------------------------------------------------
 const steps = [['pubchem', pubchem], ['ciaaw', ciaaw], ['nist-ie', nistIE], ['nist-lines', nistLines], ['wikipedia', wikipedia],
   ['codata', codata], ['colour', colour], ['vi-gdpt', viGdpt], ['wikidata', wikidata], ['mendeleev', mendeleev], ['nubase', nubase], ['cod', cod], ['cod-hiT', codHighT], ['vi-gdpt2', viGdpt2],
-  ['wikipedia-intros', wikipediaIntros], ['iaea-radii', iaeaRadii]];
+  ['wikipedia-intros', wikipediaIntros], ['iaea-radii', iaeaRadii], ['cod-pieces', codPieces]];
 fs.mkdirSync(RAW, { recursive: true });
 for (const [id, fn] of steps) {
   if (!want(id)) continue;

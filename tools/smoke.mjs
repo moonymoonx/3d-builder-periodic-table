@@ -327,7 +327,7 @@ await step('side by side (VI): sentences use the familiar Vietnamese names; size
 // look. Needs the router lines in WIRING-sample.md.
 const holdCaption = () => page.locator('.sample-caption').textContent();
 const holdAt = async (patch, ms = 500) => { await page.evaluate(p => window.__pt.set(p), patch); await page.waitForTimeout(ms); };
-await step('sample: the nitrogen card ("cool it") dives into the sample place; knob, bulb and room mark share one scale; cooled it turns liquid at −196 °C and freezes at −210 °C into one shown molecule; back returns to the card', async () => {
+await step('sample: the nitrogen card ("cool it") dives into the sample place; knob, bulb and room mark share one scale; cooled it turns liquid at −196 °C and freezes at −210 °C into a piece of its measured crystal; back returns to the card', async () => {
   await page.evaluate(() => { const p = window.__pt; p.set({ view: 'table', hideSel: false, lens: 'families', color: 'cat', flat: true, T: 293.15 }); p.openCard(7); }); // the router's own way: a set({ card: true }) alone opens no card unless the view changes
   await page.waitForTimeout(700);
   await page.locator('.ui-door', { hasText: 'Hold a sample · cool it' }).click();
@@ -351,7 +351,7 @@ await step('sample: the nitrogen card ("cool it") dives into the sample place; k
   await holdAt({ T: 55 });
   const frozen = await holdCaption();
   const frozenWord = await page.locator('.sample-word').textContent();
-  if (!/−210\s°C/.test(frozen) || !/freezes/.test(frozen) || !/One of them is shown/.test(frozen) || !/one molecule shown/.test(frozenWord)) throw new Error(`frozen: ${frozen} / ${frozenWord}`);
+  if (!/−210\s°C/.test(frozen) || !/freezes/.test(frozen) || !/each in its measured place/.test(frozen) || !/a piece of its crystal/.test(frozenWord)) throw new Error(`frozen: ${frozen} / ${frozenWord}`);
   // cold and frozen: the way up is the ink button, and below room temperature it reads "Warm it"
   const ink = await page.locator('.sample-actions .ui-btn--primary').textContent();
   const hot = await page.evaluate(() => document.querySelector('.sample-read').classList.contains('is-hot'));
@@ -388,11 +388,11 @@ await step('sample: helium never freezes: a whisker above absolute zero it is st
   const word = await page.locator('.sample-word').textContent(), cap = await holdCaption();
   if (!/liquid/.test(word) || !/never freezes/.test(cap)) throw new Error(`${word} / ${cap}`);
 });
-await step('sample: sulfur\'s crystal is not drawn: one ring of 8 atoms rests in its vessel; past 115 °C it melts into rings', async () => {
+await step('sample: sulfur shows a piece of its measured crystal (whole rings of 8 atoms) in its vessel; past 115 °C it melts into rings', async () => {
   await holdAt({ Z: 16, T: 293.15 }, 700);
   const start = await holdCaption(), word = await page.locator('.sample-word').textContent();
   const btns = await page.locator('.sample-actions .ui-btn').count();
-  if (!/rings of 8 sulfur atoms \(S₈\)\. One of them is shown/.test(start) || !/one molecule shown/.test(word) || btns !== 1) throw new Error(`${word} / ${start} / ${btns} buttons`);
+  if (!/eight-atom rings/.test(start) || !/A small piece is shown/.test(start) || !/a piece of its crystal/.test(word) || btns !== 1) throw new Error(`${word} / ${start} / ${btns} buttons`);
   await holdAt({ T: 400 });
   const cap = await holdCaption(), kind = await page.evaluate(() => window.__pt.holdView.current().kind);
   if (!/115\s°C/.test(cap) || !/rings of 8 sulfur atoms \(S₈\)/.test(cap) || kind !== 'liquid') throw new Error(`${kind}: ${cap}`);

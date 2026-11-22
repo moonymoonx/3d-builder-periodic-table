@@ -90,3 +90,74 @@ export function lindemannRms(T, Tm, dNN, ratio = 0.1) {
 
 /** Root-mean-square speed of a gas particle, sqrt(3RT/M), M in g/mol -> m/s. R passed in (CODATA). */
 export const rmsSpeed = (T, M, R) => Math.sqrt((3 * R * T) / (M / 1000));
+
+// ---- a small piece of a molecular or complex crystal (sample view) ---------------------------------------
+/** The piece (lat.pieces, from a COD entry) shown at temperature T in kelvin, or null. A piece's T is
+ *  [from, to]; to = null runs up to the melting point. */
+export function pieceAt(e, T) {
+  const list = e.lat && e.lat.pieces;
+  if (!list || !list.length || T == null) return null;
+  return list.find(p => T >= p.T[0] && (p.T[1] == null || T < p.T[1])) || null;
+}
+
+/**
+ * Whole molecules (perMol atoms each; 1 = single atoms) cut from a block of cells, nearest the centre first
+ * (in the cube sense), so the piece is a rough cube of about `want` atoms. Molecules are found once in the
+ * cell, with periodic images: atoms closer than `cut` (pm) belong to one molecule. Returns positions in pm,
+ * centred, with the crystal's z axis as the scene's up (as the lattices are drawn), and the molecules' size.
+ */
+export function pieceAtoms(piece, perMol, cut, want) {
+  const V = cellVectors(piece.cell), S = piece.sites;
+  const cart = f => fracToCart(V, f);
+  // 1. molecules in one cell: lists of [site, image offset]; each site belongs to one molecule
+  const mols = [], used = new Array(S.length).fill(false);
+  for (let s0 = 0; s0 < S.length; s0++) {
+    if (used[s0]) continue;
+    used[s0] = true;
+    const mol = [[s0, [0, 0, 0]]];
+    for (let q = 0; q < mol.length && perMol > 1; q++) {
+      const [s, o] = mol[q];
+      for (let j = 0; j < S.length; j++) {
+        if (used[j]) continue;
+        let hit = null;
+        for (let a = -1; a <= 1 && !hit; a++) for (let b = -1; b <= 1 && !hit; b++) for (let c = -1; c <= 1 && !hit; c++) {
+          const d = cart([S[j][0] + a - S[s][0], S[j][1] + b - S[s][1], S[j][2] + c - S[s][2]]);
+          if (Math.hypot(d[0], d[1], d[2]) < cut) hit = [o[0] + a, o[1] + b, o[2] + c];
+        }
+        if (hit) { used[j] = true; mol.push([j, hit]); }
+      }
+    }
+    // its centre back inside the cell
+    const fc = [0, 1, 2].map(k => mol.reduce((t, [j, o]) => t + S[j][k] + o[k], 0) / mol.length);
+    const sh = fc.map(Math.floor);
+    mols.push({ atoms: mol.map(([j, o]) => [0, 1, 2].map(k => S[j][k] + o[k] - sh[k])), fc: fc.map((v, k) => v - sh[k]) });
+  }
+  const sizes = mols.map(m => m.atoms.length);
+  // 2. tile the cell's molecules over a block large enough for a cube of `want` atoms
+  const vol = Math.abs(V[0][0] * (V[1][1] * V[2][2] - V[1][2] * V[2][1]) - V[0][1] * (V[1][0] * V[2][2] - V[1][2] * V[2][0]) + V[0][2] * (V[1][0] * V[2][1] - V[1][1] * V[2][0]));
+  const L = Math.cbrt((want * vol) / S.length);
+  const m = V.map(v => Math.ceil(L / Math.hypot(...v)) + 1);
+  const o = cart([0.5, 0.5, 0.5]);
+  const all = [];
+  for (let i = -m[0]; i < m[0]; i++) for (let j = -m[1]; j < m[1]; j++) for (let k = -m[2]; k < m[2]; k++) {
+    for (const ml of mols) {
+      const c = cart([ml.fc[0] + i, ml.fc[1] + j, ml.fc[2] + k]);
+      all.push({ ml, t: [i, j, k], d: Math.max(Math.abs(c[0] - o[0]), Math.abs(c[1] - o[1]), Math.abs(c[2] - o[2])) });
+    }
+  }
+  all.sort((p, q) => p.d - q.d);
+  // whole shells only (every molecule as near as the farthest one kept, within 1 pm): a clean cube with no
+  // stragglers sticking out of one face; stop at about `want` atoms (at most 20 % over)
+  let cnt = 0, k = 0;
+  while (k < all.length) {
+    let j = k, c = cnt;
+    while (j < all.length && all[j].d - all[k].d < 1) { c += all[j].ml.atoms.length; j++; }
+    if (c > want * 1.2 && cnt > 0) break;
+    k = j; cnt = c;
+    if (cnt >= want) break;
+  }
+  const pts = [];
+  for (const { ml, t } of all.slice(0, k)) for (const f of ml.atoms) { const p = cart([f[0] + t[0], f[1] + t[1], f[2] + t[2]]); pts.push([p[0], p[2], p[1]]); }
+  const cen = [0, 1, 2].map(q => pts.reduce((s, p) => s + p[q], 0) / pts.length);
+  return { pts: pts.map(p => p.map((v, q) => v - cen[q])), sizes };
+}

@@ -22,6 +22,7 @@
 .patterns-axis b { font: 600 15px/20px var(--font-sans); }
 .patterns-axis__unit { margin-left: 6px; font: 400 14px/20px var(--font-sans); color: var(--ink-2); }
 .patterns-axis small { display: block; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
+.patterns-axis__gloss { display: none; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--ink-2); }
 .patterns-figctl { display: flex; align-items: center; gap: 10px; flex: none; }
 .patterns-join { display: flex; align-items: center; gap: 8px; }
 .patterns-join__lbl { font-size: var(--t-caption); color: var(--ink-2); }
@@ -123,6 +124,7 @@
   .patterns-fighead { align-items: center; }
   .patterns-axis b { font-size: 14px; }
   .patterns-axis small { display: none; }
+  .patterns-axis__gloss { display: block; }
   .patterns-join__lbl, .patterns-totable { display: none; }
   .patterns-join .ui-seg button { padding: 0 9px; font-size: 13px; }
   .patterns-plot { min-height: 180px; }

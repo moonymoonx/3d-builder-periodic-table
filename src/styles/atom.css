@@ -34,7 +34,9 @@ body.diving .atom-leaders { opacity: 0; }
   font: 400 13px/1.3 var(--font-sans); color: var(--ink-2); white-space: nowrap; pointer-events: none; transition: opacity var(--d-card-out) var(--ease); }
 .atom-hint-drag.is-gone { opacity: 0; }
 body.diving .atom-ruler, body.diving .atom-hint-drag { opacity: 0; }
-@media (max-width: 760px) { .atom-ruler small { display: none; } .atom-legend { margin-left: 14px; } .atom-hint-drag { max-width: calc(100vw - 130px); overflow: hidden; text-overflow: ellipsis; } }
+/* phones: the scale bar keeps a short gloss of its unit */
+.atom-ruler__short { display: none; }
+@media (max-width: 760px) { .atom-ruler small { font-size: 12px; } .atom-ruler__long { display: none; } .atom-ruler__short { display: inline; } .atom-legend { margin-left: 14px; } .atom-hint-drag { max-width: calc(100vw - 130px); overflow: hidden; text-overflow: ellipsis; } }
 
 /* ---- the card (kit sheet) ---------------------------------------------------------------------------- */
 .atom-sheet { transition: opacity var(--d-card-in) var(--ease), transform var(--d-card-in) var(--ease), background-color var(--d-kiln) var(--ease-in-out), color var(--d-kiln) var(--ease-in-out); }
@@ -157,7 +159,7 @@ body.kiln .atom-src:hover, body.kiln .atom-v:hover { color: #F0874F; border-colo
 body.kiln .atom-v { border-bottom-color: var(--kiln-text-2); }
 body.kiln .atom-sheet .ui-chip { background: transparent; color: var(--kiln-text-2); border-color: rgba(242, 232, 218, 0.26); }
 body.kiln .atom-sheet .ui-chip:hover { color: var(--kiln-text); border-color: var(--kiln-text-2); }
-body.kiln .atom-sheet .ui-chip[aria-pressed="true"] { background: rgba(242, 232, 218, 0.14); border-color: var(--kiln-text); color: var(--kiln-text); }
+body.kiln .atom-sheet .ui-chip[aria-pressed="true"] { background: var(--kiln-text); border-color: var(--kiln-text); color: var(--kiln); } /* the chosen view reads at a glance in the dark too */
 body.kiln .atom-sheet .ui-disclosure__summary { color: var(--kiln-text); }
 body.kiln .atom-sheet .ui-disclosure__chev { color: var(--kiln-text-2); }
 body.kiln .atom-sheet .ui-btn--primary { background: var(--kiln-text); color: var(--kiln); }
@@ -187,3 +189,6 @@ body.kiln .atom-sheet :focus-visible { outline-color: #F0874F; }
   .atom-band .atom-spec__strip { height: 60px; }
   .atom-light__detail { font-size: 15px; }
 }
+
+/* the hook's sources: a small inline pill after the line, as on the element card and in Patterns */
+.atom-hook .atom-src { margin-left: 2px; padding: 0 8px; border: 1px solid currentColor; border-radius: 999px; font: 600 12px/20px var(--font-sans); vertical-align: 2px; white-space: nowrap; }

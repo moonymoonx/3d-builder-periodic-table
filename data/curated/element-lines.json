@@ -1,264 +1,312 @@
 {
- "_note": "Our own one-line descriptions for the element card (REDESIGN-PLAN §2). Each was written from and checked against the Wikipedia lead section saved in data/raw/wikipedia/intros-*.json (revision given). Vietnamese is a draft for moony. QUESTIONS Q17: independent check pending.",
+ "_note": "Our own one-line descriptions for the element card (REDESIGN-PLAN §2). Each was written from and checked against the Wikipedia lead section saved in data/raw/wikipedia/intros-*.json (revision given). Vietnamese is a draft for moony. QUESTIONS Q17: every line checked by Gemini on 2026-11-22 against its cited lead (quote in \"support\"); corrected lines keep their earlier wording in \"was\".",
  "lines": {
   "H": {
    "en": "The lightest element, and about three-quarters of all ordinary matter in the universe.",
    "vi": "Nguyên tố nhẹ nhất, chiếm khoảng ba phần tư lượng vật chất thông thường trong vũ trụ.",
    "wiki": "Hydrogen",
    "rev": 1386699448,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "It is the lightest and most abundant chemical element in the universe, constituting about 75% of all normal matter."
   },
   "He": {
    "en": "Named after the Sun: it was first spotted in sunlight, during an eclipse in 1868.",
    "vi": "Được đặt theo tên Mặt Trời: người ta nhận ra nó lần đầu trong ánh sáng Mặt Trời, khi có nhật thực năm 1868.",
    "wiki": "Helium",
    "rev": 1385904773,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "Helium was first detected as an unknown, yellow spectral line signature in sunlight during a solar eclipse in 1868; only Lockyer proposed that the line was due to a new element, which he named after the Sun."
   },
   "Li": {
    "en": "The lightest metal of all; batteries use more than three-quarters of the lithium produced.",
    "vi": "Kim loại nhẹ nhất; pin dùng hơn ba phần tư lượng lithium được sản xuất.",
    "wiki": "Lithium",
    "rev": 1384415425,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "Under standard conditions, it is the least dense metal and the least dense solid element due to its low atomic mass and large atomic radius.; Batteries alone consume more than three-quarters of lithium production."
   },
   "C": {
    "en": "The common element of all known life; diamond and graphite are both pure carbon.",
    "vi": "Nguyên tố chung của mọi sự sống đã biết; kim cương và than chì đều là carbon tinh khiết.",
    "wiki": "Carbon",
    "rev": 1382887589,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "enables it to serve as the common element of all known life.; The atoms of carbon can bond together in diverse ways, resulting in various allotropes of carbon. Well-known allotropes include graphite, diamond, amorphous carbon, and fullerenes."
   },
   "N": {
    "en": "About 78 % of the air you breathe.",
    "vi": "Chiếm khoảng 78 % không khí bạn hít thở.",
    "wiki": "Nitrogen",
    "rev": 1382698290,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "N2 forms about 78% of Earth's atmosphere, making it the most abundant chemical species in air."
   },
   "O": {
-   "en": "The gas in every breath, and almost half of Earth’s crust.",
-   "vi": "Khí trong mỗi hơi thở, và chiếm gần một nửa vỏ Trái Đất.",
+   "en": "About 21 % of the air, needed in every breath, and almost half of Earth’s crust.",
+   "vi": "Chiếm khoảng 21 % không khí, cần cho mỗi hơi thở, và chiếm gần một nửa vỏ Trái Đất.",
    "wiki": "Oxygen",
    "rev": 1382172978,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: Calling oxygen \"the gas in every breath\" is misleading because air is mostly nitrogen (~78 %) and only about 21 % oxygen, which is the part needed for respiration.",
+   "was": "The gas in every breath, and almost half of Earth’s crust.",
+   "support": "Dioxygen gas currently constitutes approximately 20.95% molar fraction of the Earth's atmosphere; Aerobic respiration in cells extracts chemical energy by the reaction of oxygen with organic molecules derived from food; Oxygen is the most abundant element in Earth's crust, making up almost half of the Earth's crust in the form of various oxides"
   },
   "F": {
    "en": "So reactive it combines with almost every other element; as fluoride, it protects teeth.",
    "vi": "Phản ứng mạnh đến mức kết hợp với gần như mọi nguyên tố khác; ở dạng fluoride, nó bảo vệ răng.",
    "wiki": "Fluorine",
    "rev": 1385401167,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "Fluorine is extremely reactive as it reacts with all other elements except for the light noble gases.; The fluoride ion from dissolved fluoride salts inhibits dental cavities and so finds use in toothpaste and water fluoridation."
   },
   "Ne": {
    "en": "The reddish-orange glow of neon signs.",
    "vi": "Ánh sáng đỏ cam của biển hiệu đèn neon.",
    "wiki": "Neon",
    "rev": 1386652904,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "neon advertising signs, where it emits a distinct reddish-orange glow."
   },
   "Na": {
    "en": "A soft, highly reactive metal; joined with chlorine, it becomes table salt.",
    "vi": "Kim loại mềm, phản ứng rất mạnh; kết hợp với chlorine, nó thành muối ăn.",
    "wiki": "Sodium",
    "rev": 1384983594,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "It is a soft, silvery-white, highly reactive metal.; sodium and chlorine are the most common dissolved elements by weight in the oceans.; sodium chloride (edible salt) is a de-icing agent and a nutrient for animals including humans."
   },
   "Mg": {
    "en": "A light metal that burns with a brilliant white light.",
    "vi": "Kim loại nhẹ, cháy với ánh sáng trắng chói lọi.",
    "wiki": "Magnesium",
    "rev": 1382020134,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "It is a shiny gray metal having a low density, low melting point, and high chemical reactivity.; The free metal burns with a brilliant-white light."
   },
   "Al": {
-   "en": "Shines like silver, yet a block of it weighs only a third as much as the same block of steel.",
-   "vi": "Sáng như bạc, nhưng một khối nhôm chỉ nặng bằng một phần ba khối thép cùng cỡ.",
+   "en": "Shines like silver, yet a block of it weighs about a third as much as a same-sized block of steel.",
+   "vi": "Sáng như bạc, nhưng một khối nhôm nặng bằng khoảng một phần ba khối thép cùng cỡ.",
    "wiki": "Aluminium",
    "rev": 1386723999,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: The source specifies \"about one-third that of steel\" rather than \"only a third\", and \"the same block of steel\" was clarified to \"a same-sized block of steel\".",
+   "was": "Shines like silver, yet a block of it weighs only a third as much as the same block of steel.",
+   "support": "It visually resembles silver, both in its color and in its great ability to reflect light.; It has a density lower than other common metals, about one-third that of steel."
   },
   "Si": {
    "en": "The semiconductor at the heart of computer chips and solar cells.",
    "vi": "Chất bán dẫn ở trung tâm của chip máy tính và pin mặt trời.",
    "wiki": "Silicon",
    "rev": 1386715773,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "Silicon is widely used as a semiconductor material in various electrical devices such as transistors, solar cells, and integrated circuits. It dominates semiconductor applications; essential to the transistors and integrated circuit chips used in most modern technology such as smartphones and other computers."
   },
   "P": {
    "en": "First isolated in 1669; its name means “light-bearer”, for the faint glow of white phosphorus.",
    "vi": "Được tách ra lần đầu năm 1669; tên của nó nghĩa là “mang ánh sáng”, vì phosphorus trắng phát sáng mờ.",
    "wiki": "Phosphorus",
    "rev": 1386072599,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "The isolation of white phosphorus in 1669 by Hennig Brand marked the scientific community's first discovery of an element since antiquity.; The name phosphorus is derived from the Greek phōsphoros (Φωσφόρος) 'light-bearer', referring to Phosphorus, the god of the planet Venus, and inspired by the faint glow of white phosphorus when exposed to oxygen."
   },
   "S": {
    "en": "Bright yellow crystals; a sulfur compound gives rotten eggs their smell.",
    "vi": "Tinh thể màu vàng tươi; một hợp chất của lưu huỳnh tạo nên mùi trứng thối.",
    "wiki": "Sulfur",
    "rev": 1386783085,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "Elemental sulfur is a bright yellow, crystalline solid at room temperature.; Hydrogen sulfide gives the characteristic odor to rotting eggs and other biological processes."
   },
   "Cl": {
    "en": "A yellow-green gas; joined with sodium, it becomes table salt.",
    "vi": "Chất khí màu vàng lục; kết hợp với natri, nó thành muối ăn.",
    "wiki": "Chlorine",
    "rev": 1384241911,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "Chlorine is a yellow-green gas at room temperature.; sodium chloride (table salt)"
   },
   "K": {
    "en": "Named after potash, the ashes of plants; your nerves need it to send signals.",
    "vi": "Được đặt tên theo bồ tạt (potash), tro của thực vật; dây thần kinh cần nó để truyền tín hiệu.",
    "wiki": "Potassium",
    "rev": 1380812822,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "It was first isolated from potash, the ashes of plants, from which its name derives.; The transfer of potassium ions across nerve cell membranes is necessary for normal nerve transmission"
   },
   "Ca": {
-   "en": "Your bones need it; as calcium carbonate, it is limestone.",
-   "vi": "Xương của bạn cần nó; ở dạng calcium carbonate, nó là đá vôi.",
+   "en": "Your bones need it; as calcium carbonate, it is found in limestone.",
+   "vi": "Xương của bạn cần nó; ở dạng calcium carbonate, nó có trong đá vôi.",
    "wiki": "Calcium",
    "rev": 1380108526,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: The source says calcium carbonate is \"found in limestone\", whereas \"it is limestone\" overstates the compound as identical to the rock.",
+   "was": "Your bones need it; as calcium carbonate, it is limestone.",
+   "support": "Calcium ions outside cells are important for maintaining the potential difference across excitable cell membranes, protein synthesis, and bone formation.; The most common calcium compound on Earth is calcium carbonate, found in limestone and the fossils of early sea life"
   },
   "Ti": {
    "en": "Light, strong and corrosion-resistant: jet engines and bone implants.",
    "vi": "Nhẹ, bền và chống ăn mòn: dùng trong động cơ phản lực và cấy ghép xương.",
    "wiki": "Titanium",
    "rev": 1384300593,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "low density, and high strength that is resistant to corrosion in sea water, aqua regia, and chlorine.; The resulting titanium alloys are strong, lightweight, and versatile, with applications including aerospace (jet engines, missiles, and spacecraft); leading to a range of medical applications including prostheses, orthopedic implants, dental implants, and surgical instruments."
   },
   "Fe": {
    "en": "The metal of steel, and of the haemoglobin that carries oxygen in your blood.",
    "vi": "Kim loại của thép, và của hemoglobin vận chuyển oxy trong máu bạn.",
    "wiki": "Iron",
    "rev": 1385905612,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "\"It is a metal\"; \"iron alloys, such as steel, stainless steel, cast iron and special steels, are by far the most common industrial metals\"; \"The body of an adult human contains about 4 grams (0.005% body weight) of iron, mostly in hemoglobin and myoglobin. These two proteins play essential roles in oxygen transport by blood and oxygen storage in muscles.\""
   },
   "Cu": {
    "en": "Pinkish-orange, and a superb carrier of heat and electricity.",
    "vi": "Màu cam hồng, dẫn nhiệt và dẫn điện rất tốt.",
    "wiki": "Copper",
    "rev": 1385901401,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "\"It is a soft, malleable, and ductile metal with very high thermal and electrical conductivity. A freshly exposed surface of pure copper has a pinkish-orange color. Copper is used as a conductor of heat and electricity\""
   },
   "Zn": {
-   "en": "Mostly used to coat iron and steel so they do not rust (galvanising).",
-   "vi": "Chủ yếu được dùng để mạ lên sắt thép cho khỏi gỉ (mạ kẽm).",
+   "en": "Its main use is coating iron against corrosion (galvanising).",
+   "vi": "Ứng dụng chính của nó là mạ lên sắt để chống ăn mòn (mạ kẽm).",
    "wiki": "Zinc",
    "rev": 1386002101,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: The lead calls plating zinc on iron \"the major application\", not \"mostly\", and does not mention steel.",
+   "was": "Mostly used to coat iron and steel so they do not rust (galvanising).",
+   "support": "\"Plating of corrosion-resistant zinc on iron, achieved by a process named hot-dip galvanization, is the major application for zinc.\""
   },
   "Ga": {
    "en": "A metal that melts in your hand, at 29.76 °C.",
    "vi": "Kim loại tan chảy trong lòng bàn tay, ở 29,76 °C.",
    "wiki": "Gallium",
    "rev": 1385890117,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "\"elemental gallium is a soft, silvery metal\"; \"The melting point of gallium, 29.7646 °C (85.5763 °F; 302.9146 K), is used as a temperature reference point.\"; \"gallium will melt in a person's hands at normal human body temperature of 37 °C (99 °F).\""
   },
   "Br": {
    "en": "A red-brown liquid at room temperature: with mercury, one of only two liquid elements.",
    "vi": "Chất lỏng màu nâu đỏ ở nhiệt độ phòng: cùng với thủy ngân, là một trong hai nguyên tố duy nhất ở thể lỏng.",
    "wiki": "Bromine",
    "rev": 1380933663,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "\"It is a volatile red-brown liquid at room temperature\"; \"At standard conditions for temperature and pressure it is a liquid; the only other element that is liquid is mercury.\""
   },
   "Sr": {
    "en": "Named after Strontian, a village in Scotland; its flame burns crimson red.",
    "vi": "Được đặt theo tên Strontian, một ngôi làng ở Scotland; ngọn lửa của nó có màu đỏ thẫm.",
    "wiki": "Strontium",
    "rev": 1383415235,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "\"Both strontium and strontianite are named after Strontian, a village in Scotland\"; \"It was identified as a new element the next year from its crimson-red flame test color.\""
   },
   "Ag": {
    "en": "Of all metals, the best at carrying electricity and heat, and the most reflective.",
    "vi": "Trong mọi kim loại, bạc dẫn điện và dẫn nhiệt tốt nhất, và phản chiếu ánh sáng tốt nhất.",
    "wiki": "Silver",
    "rev": 1382710933,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "\"it exhibits the highest electrical conductivity, thermal conductivity and reflectivity of any metal.\""
   },
   "Sn": {
    "en": "Soft enough to bend by hand; mixed with copper, it makes bronze, used since about 3000 BC.",
    "vi": "Mềm đến mức bẻ cong được bằng tay; trộn với đồng, nó tạo thành đồng thiếc (bronze), được dùng từ khoảng năm 3000 TCN.",
    "wiki": "Tin",
    "rev": 1382716511,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "tin is soft enough to be cut with little force, and a bar of tin can be bent by hand with little effort. ... The first tin alloy used on a large scale was bronze, made of 1⁄8 tin and 7⁄8 copper (12.5% and 87.5% respectively), from as early as 3000 BC."
   },
   "I": {
    "en": "Your thyroid needs it to make its hormones.",
    "vi": "Tuyến giáp của bạn cần nó để tạo hormone.",
    "wiki": "Iodine",
    "rev": 1386246064,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "As the heaviest essential mineral nutrient, iodine is required for the synthesis of thyroid hormones."
   },
   "Cs": {
-   "en": "The atom of atomic clocks: since 1967, the second has been defined by caesium.",
-   "vi": "Nguyên tử của đồng hồ nguyên tử: từ năm 1967, giây được định nghĩa dựa trên caesium.",
+   "en": "Widely used in atomic clocks: since 1967, the second has been defined using caesium.",
+   "vi": "Được dùng rộng rãi trong đồng hồ nguyên tử: từ năm 1967, giây được định nghĩa dựa trên caesium.",
    "wiki": "Caesium",
    "rev": 1384245169,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: Calling caesium 'the atom of atomic clocks' overstates exclusivity, since the lead only says it is widely used in atomic clocks (other elements are also used).",
+   "was": "The atom of atomic clocks: since 1967, the second has been defined by caesium.",
+   "support": "Caesium is widely used in highly accurate atomic clocks. In 1967, the International System of Units began using a specific hyperfine transition of neutral caesium-133 atoms to define the basic unit of time, the second."
   },
   "Nd": {
-   "en": "The key to strong, small magnets in speakers, hard drives and electric-car motors.",
-   "vi": "Thành phần chính của những nam châm nhỏ mà mạnh trong loa, ổ cứng và động cơ xe điện.",
+   "en": "Used in strong, small magnets for audio equipment, hard drives and electric vehicle motors.",
+   "vi": "Được dùng trong nam châm nhỏ mà mạnh cho thiết bị âm thanh, ổ cứng và động cơ xe điện.",
    "wiki": "Neodymium",
    "rev": 1386702698,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: The lead says 'audio equipment' and 'electric vehicle motors' rather than 'speakers' and 'electric-car motors', and the Vietnamese 'Thành phần chính' wrongly implies neodymium is the main ingredient of Nd–Fe–B magnets.",
+   "was": "The key to strong, small magnets in speakers, hard drives and electric-car motors.",
+   "support": "Neodymium is used in neodymium–iron–boron magnets, which produce strong magnetic fields from small, lightweight components. These permanent magnets are used in audio equipment, computer hard disk drives, electric vehicle motors and the generators of some wind turbines."
   },
   "W": {
-   "en": "The highest melting point of any element (3,422 °C): once the glowing wire in light bulbs.",
-   "vi": "Có nhiệt độ nóng chảy cao nhất trong các nguyên tố (3.422 °C): từng là dây tóc phát sáng trong bóng đèn.",
+   "en": "Highest melting point of any element at normal pressure (3,422 °C): used for glowing wires in light bulbs.",
+   "vi": "Nhiệt độ nóng chảy cao nhất trong các nguyên tố ở áp suất thường (3.422 °C): dùng làm dây tóc bóng đèn.",
    "wiki": "Tungsten",
    "rev": 1385406139,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: The lead qualifies tungsten's melting-point record as 'at standard pressure' (carbon melts higher under pressure) and describes incandescent light bulb filaments in the present tense rather than saying 'once'.",
+   "was": "The highest melting point of any element (3,422 °C): once the glowing wire in light bulbs.",
+   "support": "it has the highest melting point of all known elements, at 3,422 °C (6,192 °F; 3,695 K) at standard pressure. ... Tungsten occurs in many alloys, which have numerous applications, including incandescent light bulb filaments"
   },
   "Pt": {
-   "en": "A rare, highly unreactive precious metal: a key part of car catalytic converters.",
-   "vi": "Kim loại quý hiếm, rất trơ: thành phần quan trọng của bộ chuyển đổi xúc tác trên ô tô.",
+   "en": "A rare, highly unreactive precious metal: a key part of catalytic converters.",
+   "vi": "Kim loại quý hiếm, rất trơ: thành phần quan trọng của bộ chuyển đổi xúc tác.",
    "wiki": "Platinum",
    "rev": 1385958347,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: The source lead states that platinum is a key component in catalytic converters without mentioning cars specifically, so 'car' is removed to match the lead.",
+   "was": "A rare, highly unreactive precious metal: a key part of car catalytic converters.",
+   "support": "It is a dense, malleable, ductile, highly unreactive, precious, silverish-white transition metal. ... It is one of the rarer elements in Earth's crust ... Platinum is a key component in catalytic converters"
   },
   "Au": {
    "en": "Bright yellow and almost untouched by corrosion: coins and jewellery throughout recorded history.",
-   "vi": "Vàng óng và gần như không bị ăn mòn: dùng làm tiền xu và trang sức suốt lịch sử loài người.",
+   "vi": "Vàng óng và gần như không bị ăn mòn: dùng làm tiền xu và trang sức suốt lịch sử được ghi chép.",
    "wiki": "Gold",
    "rev": 1382997983,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: The English line is fully supported by the lead, but the Vietnamese draft broadened 'recorded history' to 'lịch sử loài người' ('human history'), which includes prehistory.",
+   "was": "Bright yellow and almost untouched by corrosion: coins and jewellery throughout recorded history.",
+   "support": "In its pure form, it is a bright-metallic-yellow, dense, soft, malleable, and ductile metal. ... gold is a precious metal that has been used for coinage, jewelry, and other works of art throughout recorded history. ... Gold's high malleability, ductility, resistance to corrosion and most other chemical reactions"
   },
   "Hg": {
-   "en": "The only metal that is liquid at room temperature.",
-   "vi": "Kim loại duy nhất ở thể lỏng ở nhiệt độ phòng.",
+   "en": "The only metal known to be liquid at standard temperature and pressure.",
+   "vi": "Kim loại duy nhất được biết là ở thể lỏng ở nhiệt độ và áp suất tiêu chuẩn.",
    "wiki": "Mercury (element)",
    "rev": 1382286341,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: The lead specifies 'known to be liquid at standard temperature and pressure' rather than 'at room temperature', since warm room temperatures can melt caesium or gallium and copernicium's state is unconfirmed.",
+   "was": "The only metal that is liquid at room temperature.",
+   "support": "A heavy, silvery d-block element, mercury is the only metallic element that is known to be liquid at standard temperature and pressure."
   },
   "Pb": {
-   "en": "Soft and heavy: once in pipes, paint and petrol, until its toxicity was widely recognised.",
-   "vi": "Mềm và nặng: từng có trong ống nước, sơn và xăng, cho đến khi độc tính của nó được thừa nhận rộng rãi.",
+   "en": "Soft and heavy: it was widely used in plumbing, paint and petrol, though it damages the nervous system.",
+   "vi": "Mềm và nặng: từng được dùng rộng rãi trong ống nước, sơn và xăng, nhưng gây hại cho hệ thần kinh.",
    "wiki": "Lead",
    "rev": 1385895330,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17); corrected: The lead does not say those uses ended when lead's toxicity was widely recognised, and that chronology is wrong because wide recognition occurred in the late 19th century while leaded petrol was introduced decades later in the 1920s.",
+   "was": "Soft and heavy: once in pipes, paint and petrol, until its toxicity was widely recognised.",
+   "support": "It is a heavy metal, meaning it is denser than most common materials. Lead is malleable and soft ... resulted in its extensive use in construction, plumbing, batteries, bullets, shots (pellets), weights, solders, pewter, fusible alloys, lead paints, leaded gasoline, and radiation shielding. Lead is a neurotoxin that accumulates in soft tissues and bones. It damages the nervous system ... Lead's toxicity was noted by Ancient Greek and Roman writers, but became widely recognized in Europe in the late 19th century."
   },
   "U": {
    "en": "Its uranium-235 can split in a chain reaction: the fuel of nuclear power stations.",
    "vi": "Đồng vị uranium-235 của nó có thể phân hạch dây chuyền: nhiên liệu của các nhà máy điện hạt nhân.",
    "wiki": "Uranium",
    "rev": 1386491364,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "Uranium is used in nuclear power plants and nuclear weapons because it is the only naturally occurring element with a fissile isotope – uranium-235 – present in non-trace amounts. ... In sufficient concentration, these isotopes maintain a sustained nuclear chain reaction. This generates the heat in nuclear power reactors ... led to its use as a fuel in the nuclear power industry"
   },
   "Pu": {
    "en": "First made in 1940–41 by bombarding uranium; its heat powers some spacecraft.",
    "vi": "Được tạo ra lần đầu năm 1940–41 bằng cách bắn phá uranium; nhiệt của nó cấp điện cho một số tàu vũ trụ.",
    "wiki": "Plutonium",
    "rev": 1383149198,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "Plutonium was first synthesized and isolated in late 1940 and early 1941, by deuteron bombardment of uranium-238 ... Plutonium-238 has a half-life of 87.7 years and emits alpha particles. It is a heat source in radioisotope thermoelectric generators, which are used to power some spacecraft."
   },
   "Og": {
    "en": "The heaviest element known, named in 2016 after the nuclear physicist Yuri Oganessian.",
    "vi": "Nguyên tố nặng nhất đã biết, được đặt tên năm 2016 theo nhà vật lý hạt nhân Yuri Oganessian.",
    "wiki": "Oganesson",
    "rev": 1386316120,
-   "check": "pending"
+   "check": "checked 2026-11-22 by Gemini against the cited Wikipedia lead (QUESTIONS Q17)",
+   "support": "It was formally named on 28 November 2016. The name honors the nuclear physicist Yuri Oganessian, who played a leading role in the discovery of the heaviest elements in the periodic table. Oganesson has the highest atomic number and highest atomic mass of all known elements."
   }
  }
 }

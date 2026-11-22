@@ -1,0 +1,11 @@
+{
+ "_note": "The glow colour of a real low-pressure discharge tube for elements whose neutral-line mix fails the lamp check (tools/build-data.mjs GLOW_FAILS). No source gives a measured chromaticity, so these CIE 1931 (x, y) are faithful renderings of the sourced descriptions (Gemini, 2026-11-22; RESEARCH.md › Answers, lamp colours). Why the line mix differs: a glow discharge is not in thermal equilibrium, and its ion lines (Kr II, Xe II) and the tube's pressure and current change the line strengths (NIST ASD line help).",
+ "Kr": { "xy": [0.3051, 0.3228], "basis": "rendering of descriptions", "sources": [
+  "https://www.britannica.com/science/krypton — \"a bluish white light is emitted\"",
+  "https://en.wikipedia.org/wiki/Krypton — \"A krypton-filled discharge tube glowing white.\"",
+  "https://en.wikipedia.org/w/index.php?title=Gas-discharge_lamp&oldid=1351286820 — \"Grey off-white to green. At high peak currents, bright blue-white.\"" ] },
+ "Xe": { "xy": [0.2819, 0.2971], "basis": "rendering of descriptions", "sources": [
+  "https://www.britannica.com/science/xenon — \"the gas emits a beautiful blue color\"",
+  "https://www.rsc.org/periodic-table/element/54/xenon — \"It produces a beautiful blue glow when excited by an electrical discharge.\"",
+  "https://en.wikipedia.org/wiki/Xenon — \"xenon emits a blue or lavenderish glow when excited by electrical discharge\"" ] }
+}

@@ -290,3 +290,19 @@
 - **Direct access to paywalled/Cloudflare-gated journal PDFs:** DOIs for Cordero 2008, Alvarez 2013, Clementi 1963/1967, Prohaska 2022, Zhang 2011, and NUBASE2020 were verified to resolve to their real publisher URLs (`HTTP 302` → publisher), though publisher WAF/Cloudflare challenges returned `HTTP 403` to `curl`, so full PDF texts were not opened directly.
 - **Individual lattice parameter verification against Arblaster (2018) print book:** For the 84-element crystal structure table in §3.1, values for the 24 COD elements + Ra/Cm/Bk/Cf/Es/Th/Ce/Be were cross-checked directly against COD CIFs, WebElements, and Wikipedia articles; the remaining ~55 standard BCC/FCC/HCP metallic lattice constants (pm) in §3.1 were taken from the repo's Wikipedia/Arblaster-sourced `data/elements.json` without opening Arblaster's copyrighted print book.
 - **`sael.net/periodic-table` interactive UI and X-post stats:** Intentionally not inspected beyond the public HTML header notice, and X metrics are behind authentication.
+
+## Q17 — element lines checked against their cited leads (2026-11-22)
+
+All 37 lines checked by Gemini against the cited Wikipedia revisions. Corrections applied (old → new):
+
+- **O:** “The gas in every breath, and almost half of Earth’s crust.” → “About 21 % of the air, needed in every breath, and almost half of Earth’s crust.”
+- **Al:** “Shines like silver, yet a block of it weighs only a third as much as the same block of steel.” → “Shines like silver, yet a block of it weighs about a third as much as a same-sized block of steel.”
+- **Ca:** “Your bones need it; as calcium carbonate, it is limestone.” → “Your bones need it; as calcium carbonate, it is found in limestone.”
+- **Zn:** “Mostly used to coat iron and steel so they do not rust (galvanising).” → “Its main use is coating iron against corrosion (galvanising).”
+- **Cs:** “The atom of atomic clocks: since 1967, the second has been defined by caesium.” → “Widely used in atomic clocks: since 1967, the second has been defined using caesium.”
+- **Nd:** “The key to strong, small magnets in speakers, hard drives and electric-car motors.” → “Used in strong, small magnets for audio equipment, hard drives and electric vehicle motors.”
+- **W:** “The highest melting point of any element (3,422 °C): once the glowing wire in light bulbs.” → “Highest melting point of any element at normal pressure (3,422 °C): used for glowing wires in light bulbs.”
+- **Pt:** “A rare, highly unreactive precious metal: a key part of car catalytic converters.” → “A rare, highly unreactive precious metal: a key part of catalytic converters.”
+- **Au:** “Bright yellow and almost untouched by corrosion: coins and jewellery throughout recorded history.” → “Bright yellow and almost untouched by corrosion: coins and jewellery throughout recorded history.”
+- **Hg:** “The only metal that is liquid at room temperature.” → “The only metal known to be liquid at standard temperature and pressure.”
+- **Pb:** “Soft and heavy: once in pipes, paint and petrol, until its toxicity was widely recognised.” → “Soft and heavy: it was widely used in plumbing, paint and petrol, though it damages the nervous system.”

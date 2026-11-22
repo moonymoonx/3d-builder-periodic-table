@@ -1,0 +1,14 @@
+{
+ "_note": "A small piece of the real crystal for solids the sample view does not draw as a lattice (molecular and complex solids). Atom positions come from the COD entry (its CIF expanded by tools/lib/cif.mjs). T = [from, to] in kelvin at 1 atm where the piece is shown; to = null means up to the melting point. Outside every range the view keeps one molecule or one atom. Picks, ranges and captions checked by Gemini (RESEARCH.md › Answers, crystal pieces): N α–β 35.62 K (Lipiński et al. 2007), S α–β 368.3 K (NIST-JANAF), Mn α–β 980 K (NIST-JANAF; Desai 1987). Captions continue \"<Element> at <T>: …\".",
+ "pieces": {
+  "N": [
+   { "cod": "9012476", "label": "β-N₂", "T": [35.62, null], "en": "its pairs pack in hexagonal layers; in the real crystal each pair also tumbles in place.", "vi": "các cặp xếp thành lớp lục giác; trong tinh thể thật, mỗi cặp còn quay tại chỗ." },
+   { "cod": "9008571", "label": "α-N₂", "T": [0, 35.62], "en": "its pairs lock into place, pointing along a cube’s diagonals.", "vi": "các cặp khóa chặt vị trí, hướng dọc theo các đường chéo của hình lập phương." }
+  ],
+  "Cl": [ { "cod": "9013123", "label": "solid chlorine", "T": [0, null], "en": "its pairs line up in herringbone layers, just like bromine’s.", "vi": "các cặp xếp thành lớp hình xương cá, giống bromine." } ],
+  "Br": [ { "cod": "9013119", "label": "solid bromine", "T": [0, null], "en": "its pairs line up in herringbone layers, just like iodine’s.", "vi": "các cặp xếp thành lớp hình xương cá, giống iodine." } ],
+  "I": [ { "cod": "4511285", "label": "solid iodine", "T": [0, null], "en": "its pairs line up in flat herringbone sheets, stacked in layers.", "vi": "các cặp xếp thành những lớp phẳng hình xương cá, chồng lên nhau." } ],
+  "S": [ { "cod": "9011362", "label": "α-S (rhombic)", "T": [0, 368.3], "en": "its eight-atom rings, shaped like tiny crowns, tuck together in tight rows.", "vi": "các vòng tám nguyên tử hình vương miện xếp khít nhau thành hàng." } ],
+  "Mn": [ { "cod": "9011108", "label": "α-Mn", "T": [0, 980], "en": "its atoms pack in an unusually intricate pattern that repeats every 58 atoms.", "vi": "các nguyên tử xếp theo một kiểu rất phức tạp, cứ 58 nguyên tử lại lặp lại." } ]
+ }
+}

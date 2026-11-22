@@ -110,7 +110,10 @@ body.kiln .heat-v:hover { color: #F0874F; border-bottom-color: #F0874F; }
   .heat-panel { width: calc(100% - 16px); bottom: calc(8px + env(safe-area-inset-bottom)); padding: 12px 14px 10px; border-radius: 16px; gap: 6px; }
   .heat-caption { font-size: 16px; min-height: 4.4em; }
   .heat-row { grid-template-columns: 1fr; gap: 2px; }
-  .heat-readline { display: flex; align-items: baseline; gap: 10px; }
+  /* as in the sample place: the readout and its state on the left, "About this sample" on the right */
+  .heat-readbox { flex-direction: row; align-items: center; justify-content: space-between; gap: var(--s3); min-width: 0; }
   .heat-read { font-size: 30px; }
+  .heat-word { margin-top: 0; white-space: nowrap; }
+  .heat-about { margin: 0; align-self: center; }
   .heat-track { margin: 0 6px; }
 }

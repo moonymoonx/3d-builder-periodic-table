@@ -24,8 +24,28 @@ const NIST_ASD = ['NIST Atomic Spectra Database (Kramida, Ralchenko, Reader and 
 const HOOK_SOURCES = {
   clouds: [['Wikipedia: Atomic orbital', 'https://en.wikipedia.org/wiki/Atomic_orbital'], ['Wikipedia: Chemical bond', 'https://en.wikipedia.org/wiki/Chemical_bond']],
   light: [NIST_ASD, ['Wikipedia: Astronomical spectroscopy', 'https://en.wikipedia.org/wiki/Astronomical_spectroscopy'],
-    ['Wikipedia: Helium (first seen as a yellow line in sunlight, 1868)', 'https://en.wikipedia.org/wiki/Helium']],
+    ['Wikipedia: Helium (first seen as a yellow line in sunlight, 1868)', 'https://en.wikipedia.org/wiki/Helium'],
+    ['Britannica: Krypton and Xenon (the colours of their glowing tubes)', 'https://www.britannica.com/science/krypton'], ['RSC: Xenon (its blue glow)', 'https://www.rsc.org/periodic-table/element/54/xenon']],
 };
+// the headline's own sources: an element's checked line (RESEARCH.md › Answers, atom headlines), else the rule
+const HOOK_EL = {"H": [["Wikipedia: Hydrogen", "https://en.wikipedia.org/wiki/Hydrogen"], ["Wikipedia: Hydrogen atom", "https://en.wikipedia.org/wiki/Hydrogen_atom"]], "C": [["Wikipedia: Carbon", "https://en.wikipedia.org/wiki/Carbon"]], "O": [["Wikipedia: Oxygen", "https://en.wikipedia.org/wiki/Oxygen"], ["Wikipedia: Electronegativity", "https://en.wikipedia.org/wiki/Electronegativity"]], "Na": [["Wikipedia: Sodium", "https://en.wikipedia.org/wiki/Sodium"], ["Wikipedia: Alkali metal", "https://en.wikipedia.org/wiki/Alkali_metal"]], "Cl": [["Wikipedia: Chlorine", "https://en.wikipedia.org/wiki/Chlorine"], ["Wikipedia: Sodium chloride", "https://en.wikipedia.org/wiki/Sodium_chloride"]], "Fe": [["Wikipedia: Iron", "https://en.wikipedia.org/wiki/Iron"]], "Cu": [["Wikipedia: Copper", "https://en.wikipedia.org/wiki/Copper"]], "Au": [["Wikipedia: Relativistic quantum chemistry", "https://en.wikipedia.org/wiki/Relativistic_quantum_chemistry"]], "Hg": [["Wikipedia: Relativistic quantum chemistry", "https://en.wikipedia.org/wiki/Relativistic_quantum_chemistry"], ["Wikipedia: Mercury (element)", "https://en.wikipedia.org/wiki/Mercury_(element)"]]};
+const VALENCE = ['Wikipedia: Valence electron', 'https://en.wikipedia.org/wiki/Valence_electron'];
+/** One line on why this atom's clouds matter: its own checked line, or one built from its configuration. */
+function hookLine(e, info) {
+  if (HOOK_EL[e.sym]) return { text: t('atom.hook.el.' + e.sym), src: [...HOOK_EL[e.sym], VALENCE] };
+  const subs = info.subs, nMax = Math.max(...subs.map(s => s.n));
+  const occ = (n, l) => subs.filter(s => s.n === n && (l == null || s.l === l)).reduce((a, s) => a + s.occ, 0);
+  const k = occ(nMax), d = occ(nMax - 1, 2), f = occ(nMax - 2, 3), cat = e.f.cat[0];
+  const Name = cap(inName(e)), p = { Name, k, n: nMax, n1: nMax - 1, n2: nMax - 2, d, f };
+  // the rule does not fit palladium (no electron in shell 5) or oganesson (its chemistry is only predicted)
+  if (e.Z === 118 || subs.some(s => s.n === nMax && s.l >= 2)) return { text: t('atom.hook'), src: null };
+  let key;
+  if (cat === 'noble-gas') key = 'atom.hook.a2';
+  else if (f > 0 && f < 14) key = 'atom.hook.a4';
+  else if (d > 0 && d < 10) key = 'atom.hook.a3';
+  else key = k === 1 ? 'atom.hook.a1one' : 'atom.hook.a1';
+  return { text: t(key, p), src: [VALENCE] };
+}
 const SUP = d => String(d).split('').map(c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[c]).join('');
 /** "[Ar] 3d6 4s2" -> "[Ar] 3d⁶ 4s²" */
 export const prettyCfg = s => String(s).replace(/([spdf])(\d+)/g, (_, l, n) => l + SUP(n));
@@ -73,9 +93,9 @@ export function buildAtom(ui, hooks) {
   const head = h('div', { class: 'atom-head' }, tile, h('div', { class: 'atom-head__text' }, title, counts));
   const hookText = h('span');
   const hookSrc = h('button', { type: 'button', class: 'atom-src', onclick: ev => openHookSources(ev.currentTarget) });
-  const hook = h('p', { class: 'atom-hook' }, hookText);
+  const hook = h('p', { class: 'atom-hook' }, hookText, ' ', hookSrc); // the line, then its Source pill (as on the card)
   const tipText = h('span');
-  const tip = h('p', { class: 'atom-tip' }, tipText, hookSrc); // "Tap underlined values for sources" · the hook's own sources
+  const tip = h('p', { class: 'atom-tip' }, tipText); // "Tap underlined values for sources"
   const modeBtns = {};
   for (const id of ['atom', 'cloud', 'light']) modeBtns[id] = chip({ label: '', onClick: () => setMode(id), attrs: { 'data-mode': id } });
   const modes = h('div', { class: 'atom-modes', role: 'group' }, Object.values(modeBtns));
@@ -95,6 +115,7 @@ export function buildAtom(ui, hooks) {
   const band = h('div', { class: 'atom-band', hidden: true });
   ui.append(band);
 
+  let hookNow = null; // the headline shown now, with its sources
   let shown = false, light = false, aboutOpen = false, pending = false, picked = null;
 
   // ---- the hook's sources: a small popover (one at a time with the value sources) ---------------------
@@ -102,7 +123,7 @@ export function buildAtom(ui, hooks) {
   function closeHookSources() { if (pop) { pop.remove(); pop = null; } }
   function openHookSources(anchor) {
     closeSource(); closeHookSources();
-    const list = HOOK_SOURCES[light ? 'light' : 'clouds'];
+    const list = light ? HOOK_SOURCES.light : [...((hookNow && hookNow.src) || []), ...HOOK_SOURCES.clouds].filter((x, i, a) => a.findIndex(y => y[1] === x[1]) === i);
     pop = h('div', { class: 'popover atom-pop', role: 'dialog', 'aria-label': t('atom.sources') },
       h('button', { type: 'button', class: 'close', 'aria-label': t('sh.close'), onclick: closeHookSources }, '×'),
       h('h4', null, t('atom.why')), h('p', null, hookText.textContent),
@@ -261,8 +282,9 @@ export function buildAtom(ui, hooks) {
     const glow = glowRGB(e), shown = shownRGB(e);
     const dh = glow && shown ? Math.abs(((hueOf(glow) - hueOf(shown) + 540) % 360) - 180) : 0;
     // the glow mixes all the lines in our source; when that differs from the 8 shown, say why in one line
-    const why = dh > 40 ? h('p', { class: 'atom-caption__quiet' }, t('atom.light.why', { word: t('atom.col.' + hueWord(glow)), n: fmtNum(e.lines.used || e.lines.n, 0) })) : null;
-    return [why, h('p', { class: 'atom-caption__quiet' }, glow ? t('atom.light.glow') : null),
+    const why = !e.lines.lamp && dh > 40 ? h('p', { class: 'atom-caption__quiet' }, t('atom.light.why', { word: t('atom.col.' + hueWord(glow)), n: fmtNum(e.lines.used || e.lines.n, 0) })) : null;
+    return [why, h('p', { class: 'atom-caption__quiet' }, glow ? (e.lines.lamp ? t('atom.light.glowLamp', { name: inName(e) }) : t('atom.light.glow')) : null),
+      h('p', { class: 'atom-caption__quiet' }, t('units.nm')),
       e.lines.basis === 'gA' ? h('p', { class: 'atom-caption__quiet' }, t('atom.light.gA')) : null];
   }
   /** The band spans the free stage: beside the card on desktop, just above the sheet on phones. */
@@ -326,9 +348,10 @@ export function buildAtom(ui, hooks) {
     tile.style.background = pal[e.f.cat[0]];
     replace(title, t('atom.inside', { name: inName(e) }));
     replace(counts, e.Z === 1 ? t('atom.counts1') : t('atom.counts', { p: fmtNum(e.Z, 0), e: fmtNum(e.Z, 0) }));
-    replace(hookText, t(md === 'light' ? 'atom.light.hook' : 'atom.hook'));
+    hookNow = md === 'light' ? { text: t('atom.light.hook'), src: null } : hookLine(e, info);
+    replace(hookText, hookNow.text);
     replace(tipText, t('atom.tip'));
-    replace(hookSrc, t('atom.hookSrc'));
+    replace(hookSrc, t('atom.source'));
     hookSrc.setAttribute('aria-label', `${t('atom.source')}: ${t('atom.why')}`);
     for (const [id, b] of Object.entries(modeBtns)) { replace(b.lastChild, t('atom.mode.' + id)); b.setAttribute('aria-pressed', String(id === md)); }
     modes.setAttribute('aria-label', t('atom.modes'));
