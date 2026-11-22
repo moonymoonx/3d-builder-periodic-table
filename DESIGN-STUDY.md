@@ -13,7 +13,7 @@
 - **What you're invited to do:** Hover over columns for live value tooltips, drag to orbit, or click a column to dive straight into the Atom view. The top-right control cluster invites switching `HEIGHT` (plain-worded: *Ionisation, Size, Pull, Melting, Density*) and `VIEW` (*Table / Atom / Sample / Demo*), while an element slider (`1–118`) and "each click adds a proton" affordance encourage tactile stepping (`ref/VIDEO_NOTES.md`).
 
 ### Motion and Camera
-- Columns smoothly animate height when switching properties; clicking an element triggers a dramatic camera dive from table scale into atomic scale (`ref/VIDEO_NOTES.md`).
+- Columns smoothly animate height when switching properties; clicking an element triggers a dramatic camera dive and glowing from table scale into atomic scale (`ref/VIDEO_NOTES.md`).
 - Cinematic camera presets (`C`) add documentary polish, and the Sample view animates solid → liquid → gas transitions continuously as you scrub a temperature slider (`ref/VIDEO_NOTES.md`).
 
 ### Density of Text
