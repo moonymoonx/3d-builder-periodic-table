@@ -28,7 +28,7 @@ export class OrbitRig {
       this.tween = null;
       if (this.pointers.size === 1) {
         down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0, button: e.button, shift: e.shiftKey, scrub: false };
-        if (this.scrub && e.pointerType === 'touch') { down.scrub = true; this.scrub.start(e.clientX, e.clientY); }
+        if (this.scrub && e.pointerType === 'touch') { if (this.touchPan && this.touchPan()) down.pan = true; else { down.scrub = true; this.scrub.start(e.clientX, e.clientY); } }
       }
       if (this.pointers.size === 2) { if (down && down.scrub && this.scrub) this.scrub.cancel(); pinch = this._pinchState(); down = null; }
     });
@@ -40,7 +40,7 @@ export class OrbitRig {
       if (this.pointers.size === 1 && down) {
         down.moved += Math.abs(dx) + Math.abs(dy);
         if (down.scrub) { this.scrub.move(e.clientX, e.clientY); return; }
-        if (down.button === 2 || down.shift) this.pan(dx, dy); else this.rotate(dx, dy);
+        if (down.button === 2 || down.shift || down.pan) this.pan(dx, dy); else this.rotate(dx, dy);
       } else if (this.pointers.size === 2 && pinch) {
         const s = this._pinchState();
         if (s.dist > 0 && pinch.dist > 0) this.zoom(pinch.dist / s.dist);
@@ -121,6 +121,7 @@ export class OrbitRig {
     const right = new THREE.Vector3().setFromMatrixColumn(this.camera.matrix, 0);
     const upv = new THREE.Vector3().setFromMatrixColumn(this.camera.matrix, 1);
     this.target.addScaledVector(right, v.px * dt).addScaledVector(upv, v.py * dt);
+    if (this.bounds) this.bounds(this.target, v); // a view may keep the target over its scene
     for (const k of ['theta', 'phi', 'px', 'py']) v[k] *= decay;
     this.apply();
     return true;

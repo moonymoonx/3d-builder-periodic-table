@@ -349,7 +349,7 @@ export function createTableView(hooks) {
   // dur 0 while a glide is under way (e.g. the card sheet settling and changing the free area) moves
   // the glide's goal instead of jumping, so the glide still lands smoothly
   const fly = (goal, dur) => (dur > 0 ? E.rig.flyTo(goal, dur) : E.rig.retarget(goal));
-  function frame(dur = motion.glide, keepCamera = false) {
+  function frame(dur = motion.glide, keepCamera = false, whole = false) {
     const fov = freeFov();
     const portrait = fov.aspect < 0.8;
     if (state.layout === 'helix') {
@@ -371,7 +371,22 @@ export function createTableView(hooks) {
     E.rig.lim = { rMin: 6.5, rMax: 140, phiMin: 0.08, phiMax: 1.35 };
     overview = { target: new THREE.Vector3(0, tall * 0.35, s32 ? 0.1 : 0.15), r, theta: 0, phi };
     E.homeR = r; // the engine lowers a software renderer's resolution early when the camera gets much closer
-    if (!keepCamera) fly(overview, state.reduced ? 0 : dur);
+    if (whole) band = false;
+    if (!keepCamera) fly(portrait && !s32 && band && phoneNow() ? bandGoal(fov, phi, tall, rD) : overview, state.reduced ? 0 : dur);
+  }
+  // portrait phones (F4): all 18 columns squeezed to the width made a thin strip of ~20 px tiles between bands
+  // of empty paper. The landing fills the free height instead, about ten columns across (tiles ~37 px, easy
+  // to read and to tap), from the left edge as a page is read; a one-finger drag pans along the rows, and
+  // "⌂ Whole table" shows all 18 columns (where the thumb's loupe takes over). After a card, the band
+  // comes back where the camera was.
+  let band = true, bandFresh = true;
+  const phoneNow = () => !!(hooks.isPhone && hooks.isPhone());
+  const bandMaxX = r => Math.max(0, 9.4 - r * Math.tan(freeFov().h / 2));
+  function bandGoal(fov, phi, tall, rD) {
+    const r = Math.max(rD * 1.03, 5.2 / Math.tan(fov.h / 2)), m = bandMaxX(r);
+    const x = bandFresh ? -m : THREE.MathUtils.clamp(E.rig.target.x, -m, m);
+    bandFresh = false;
+    return { target: new THREE.Vector3(x, tall * 0.35, 0.15), r, theta: 0, phi };
   }
   /** Has the user zoomed or turned the table away from its home framing? (shows "Whole table") */
   let away = false, diving = false;
@@ -455,13 +470,22 @@ export function createTableView(hooks) {
     enter() {
       diving = false;
       labels.enabled = true;
+      band = bandFresh = true;
+      // phones: while the tiles are big enough to tap, a drag pans (kept on the table); zoomed out, the loupe
+      E.rig.touchPan = () => phoneNow() && !state.card && !!overview && E.rig.r < overview.r * 0.8;
+      E.rig.bounds = (t, v) => {
+        if (!phoneNow() || state.card || state.layout === 'helix') return;
+        const m = bandMaxX(E.rig.r), x = THREE.MathUtils.clamp(t.x, -m, m);
+        if (x !== t.x) { t.x = x; v.px = 0; }
+        t.z = THREE.MathUtils.clamp(t.z, -5.5, 5.8);
+      };
       key.castShadow = tierConfig().shadows;
       frame(state.reduced ? 0 : 0.8);
       E.rig.parallaxOn = !hooks.isPhone || !hooks.isPhone();
       E.rig.scrub = hooks.isPhone && hooks.isPhone() ? scrub : null;
       writeColours(); setLiftTargets(); invalidate();
     },
-    exit() { labels.enabled = false; labels.hideAll(); E.rig.parallaxOn = false; E.rig.scrub = null; E.rig.parallax(0, 0, 0); setHover(0); },
+    exit() { E.rig.touchPan = E.rig.bounds = null; labels.enabled = false; labels.hideAll(); E.rig.parallaxOn = false; E.rig.scrub = null; E.rig.parallax(0, 0, 0); setHover(0); },
     onTier(tier, cfg) { key.castShadow = cfg.shadows; atlas.tex.anisotropy = aniso(tier); atlas.tex.needsUpdate = true; mat.needsUpdate = true; invalidate(); },
     resize() {
       if (!view.ready) return;

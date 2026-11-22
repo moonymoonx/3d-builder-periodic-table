@@ -114,7 +114,7 @@ function boot() {
     onPick: e => { firstTouch(); if (state.view === 'trends' || state.view === 'compare') set({ Z: e.Z }); else openCard(e.Z, true); },
     onBack: () => goBack(),
     onInteract: firstTouch,
-    onReset: () => table.frame(),
+    onReset: () => table.frame(undefined, false, true),
     openModal: k => shell.openModal(k),
   });
   const card = buildElementCard(ui, {
