@@ -372,7 +372,7 @@ export function createTableView(hooks) {
     overview = { target: new THREE.Vector3(0, tall * 0.35, s32 ? 0.1 : 0.15), r, theta: 0, phi };
     E.homeR = r; // the engine lowers a software renderer's resolution early when the camera gets much closer
     if (whole) band = false;
-    if (!keepCamera) fly(portrait && !s32 && band && phoneNow() ? bandGoal(fov, phi, tall, rD) : overview, state.reduced ? 0 : dur);
+    if (!keepCamera) fly(!s32 && band && phoneNow() && window.innerHeight > window.innerWidth ? bandGoal(fov, phi, tall, rD) : overview, state.reduced ? 0 : dur);
   }
   // portrait phones (F4): all 18 columns squeezed to the width made a thin strip of ~20 px tiles between bands
   // of empty paper. The landing fills the free height instead, about ten columns across (tiles ~37 px, easy

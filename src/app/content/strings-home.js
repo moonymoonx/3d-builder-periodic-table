@@ -6,7 +6,7 @@ import { STRINGS } from '../i18n.js';
 const EN = {
   'home.word': 'Periodic Table', 'home.wordSub': '',
   'home.prompt': 'Everything you have ever touched is made of atoms — and every atom is one of these 118 kinds.',
-  'home.tap': 'Tap one to look inside.', 'home.tapAgain': 'Tap any element to look inside.', 'home.tapPhone': 'Touch and slide across the table — lift to open.',
+  'home.tap': 'Tap one to look inside.', 'home.tapAgain': 'Tap any element to look inside.', 'home.tapPhone': 'Tap a tile to look inside; drag to see the rest of the table.',
   'home.try': 'Try {name}', 'home.find': 'Find an element', 'home.findShort': 'Find', 'home.menu': 'Menu', 'home.lenses': 'Ways to look at the table',
   'home.loading': 'Setting out the elements…',
 
@@ -119,7 +119,7 @@ const EN = {
 const VI = {
   'home.word': 'Bảng tuần hoàn', 'home.wordSub': '',
   'home.prompt': 'Mọi thứ bạn từng chạm vào đều được tạo nên từ nguyên\u00a0tử — và mỗi nguyên\u00a0tử là một trong 118 loại này.',
-  'home.tap': 'Chạm vào một ô để nhìn vào bên trong.', 'home.tapAgain': 'Chạm vào bất kì nguyên tố nào để xem bên trong.', 'home.tapPhone': 'Chạm vào bảng rồi trượt: nhấc ngón tay để mở.',
+  'home.tap': 'Chạm vào một ô để nhìn vào bên trong.', 'home.tapAgain': 'Chạm vào bất kì nguyên tố nào để xem bên trong.', 'home.tapPhone': 'Chạm vào một ô để nhìn vào bên trong; kéo để xem phần còn lại của bảng.',
   'home.try': 'Thử {name}', 'home.find': 'Tìm nguyên tố', 'home.findShort': 'Tìm', 'home.menu': 'Menu', 'home.lenses': 'Các cách nhìn bảng',
   'home.loading': 'Đang bày các nguyên tố…',
 
