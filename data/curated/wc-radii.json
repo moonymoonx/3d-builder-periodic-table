@@ -1,0 +1,4 @@
+{
+ "_note": "Radius of the outermost orbital's principal maximum, in ångström: J. T. Waber & D. T. Cromer (1965), Orbital radii of atoms and ions, J. Chem. Phys. 42, 4116 (relativistic Dirac–Slater), https://doi.org/10.1063/1.1695904; values as transcribed in HORTON's open data/elements.csv (column P, wc_radius), found by Gemini 2026-11-22 (RESEARCH.md › Answers, heavy-atom clouds). Used for Z ≥ 87, where Clementi–Raimondi give no effective charges.",
+ "r": { "Fr": 2.447, "Ra": 2.042, "Ac": 1.895, "Th": 1.788, "Pa": 1.804, "U": 1.775, "Np": 1.741, "Pu": 1.784, "Am": 1.757, "Cm": 1.657, "Bk": 1.626, "Cf": 1.598, "Es": 1.576, "Fm": 1.557, "Md": 1.527, "No": 1.581 }
+}

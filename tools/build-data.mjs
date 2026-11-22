@@ -38,7 +38,9 @@ const TENTATIVE = curated('tentative-isotopes.json').entries;
 // magenta (lamps: grey off-white to green), xenon too saturated a blue (lamps: grey or blue-grey dim white).
 // Real tubes are not in equilibrium and their ion lines are not in our data, so no glow is drawn for them.
 const GLOW_FAILS = new Set(['Kr', 'Xe']);
-const LAMP = curated('lamp-glow.json'); // their glow: a real tube's colour, rendered from sourced descriptions
+const LAMP = curated('lamp-glow.json');
+const WC = curated('wc-radii.json').r; // outermost-orbital radii, Z 87–102 (Waber & Cromer 1965)
+const WC_TAIL = []; // the factor of the last three (Fm, Md, No), for the elements beyond // their glow: a real tube's colour, rendered from sourced descriptions
 const EA_UNBOUND = new Set(curated('ea-unbound.json').symbols); // adding an electron releases no energy (electron affinity ≤ 0) // NUBASE entries not yet confirmed: never the longest-lived kind
 const warnings = [];
 const warn = (...a) => warnings.push(a.join(' '));
@@ -97,6 +99,7 @@ const SOURCES = {
   model: { name: 'Modelling assumption of this app (stated in the note)', url: '', licence: 'n/a' },
   sym: { name: 'Atomic positions fixed by space-group symmetry (no measured parameter needed)', url: '', licence: 'n/a' },
   spec: { name: 'Project scope decision (SPEC.md §5: molecular and complex solids later)', url: '', licence: 'n/a' },
+  wc65: { name: 'Waber & Cromer (1965), Orbital radii of atoms and ions, J. Chem. Phys. 42, 4116 (relativistic Dirac–Slater radius of the outermost orbital; values as transcribed in HORTON data/elements.csv), converted to an effective charge as Clementi–Raimondi values relate to Slater-type orbitals: Z_eff = n(n−1) / r_max (bohr)', url: 'https://doi.org/10.1063/1.1695904', licence: 'numbers cited from the paper' },
   lines: { name: 'Our own one-line descriptions (data/curated/element-lines.json), each checked against the Wikipedia lead section of the element (revision in the note); Vietnamese drafted for moony', url: 'https://en.wikipedia.org/', accessed: accessedOf('wikipedia/intros'), licence: 'our text; facts from CC BY-SA 4.0 pages (no text copied)' },
   placeholder: { name: 'PLACEHOLDER — unverified value awaiting a source (see QUESTIONS.md)', url: '', licence: 'n/a' },
   none: { name: 'No value in our sources (reason given)', url: '', licence: 'n/a' },
@@ -685,6 +688,18 @@ for (const Z of ZS) {
     const key = subshellName(s.n, s.l);
     if (sc && sc.has(key)) zeff[key] = V(round(Z - sc.get(key), 5), 'mdl-clementi', { n: Z <= 36 ? 'Clementi & Raimondi 1963' : 'Clementi, Raimondi & Reinhardt 1967' });
     else zeff[key] = V(round(slaterZeff(Z, subs, s.n, s.l), 4), 'calc', { n: "Slater's rules (Slater 1930)", p: 1 });
+  }
+  // Z ≥ 87: Clementi–Raimondi give no values, and Slater's rules with the true n drew the outer clouds several
+  // times too large (uranium's 7s at 1,755 pm, caesium's 6s at 612 pm). The outermost s cloud takes Waber & Cromer's
+  // radius instead, converted as Clementi–Raimondi's values relate to Slater-type orbitals (r_max = n(n−1)/Z_eff
+  // bohr: this gives caesium's and barium's 6s within 2 % of Clementi's); the equally screened valence clouds
+  // (Slater Z_eff < 6 in shell 7, and 6d with them) take the same factor. Beyond nobelium the factor of Fm–No, flagged an estimate.
+  if (Z >= 87 && zeff['7s']) {
+    const s7 = zeff['7s'][0], r = WC[sym];
+    const f = r ? (7 * 6) / (r / 0.529177) / s7 : WC_TAIL.reduce((a, b) => a + b, 0) / WC_TAIL.length;
+    if (r && Z >= 100) WC_TAIL.push(f);
+    const note = r ? { n: `from the outermost radius ${r} Å (Waber & Cromer 1965): Slater's value × ${round(f, 3)}` } : { n: `Slater's value × ${round(f, 3)}, the factor of Fm–No (Waber & Cromer 1965)`, p: 1 };
+    for (const [k2, v] of Object.entries(zeff)) if ((k2[0] === '7' && v[0] < 6) || (k2 === '6d' && s7 < 6)) zeff[k2] = V(round(v[0] * f, 4), 'wc65', note);
   }
 
   // ---- crystal structures (Wikipedia numbers) and the sample-view lattice

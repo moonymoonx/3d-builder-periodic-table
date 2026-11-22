@@ -288,3 +288,9 @@
   - **Checks:** unit tests 47/47, validator ALL PASS, smoke 48/48.
   - **Reshoot:** `final/s-19-phosphorus-room-desktop.png`.
 - 2026-11-21 15:23 (Saigon) — **Vietnamese accent style** set to the common modern placement ("thủy, hóa"), as moony chose. Open oa/oe/uy syllables in the Vietnamese strings now carry the tone mark on the first vowel (hoá→hóa, thuỷ→thủy, thuỳ→thùy, toả→tỏa, hoà→hòa; quý unchanged). build-data.mjs normalises familiar Vietnamese names the same way so a data rebuild keeps the style.
+- 2026-11-22 (Saigon) — **Finishing pass (Claude via API, Opus 5.5)**. Details in prompts/api-run/RESULT.md (private) and RESEARCH.md › Finishing pass answers.
+  - **Q17:** all 37 element lines checked by Gemini against their cited leads; 11 corrected.
+  - **Sample:** a piece of the measured crystal (COD) for N, Cl, Br, I, S and Mn instead of one molecule or atom; iron's phone header as the others; iron's green neighbours named; boiled metals give their gas speed; Cool it leads once boiled; condensing beads drawn inside the glass.
+  - **Atom:** element-specific headlines; an inline Source pill; filled active tab in the dark; krypton and xenon glow in a real lamp's colour; Z ≥ 87 outer clouds from Waber & Cromer (uranium's 7s r90 1,755 → 420 pm).
+  - **Units:** pm and eV glossed on phones (charts, scale bar); nm in Its light.
+  - **FPS (headless SwiftShader, tools/shots.mjs --fps=4):** every view at a 16.7 ms median on desktop 1440×900 and phone 390×844 (load 0.6); p95 16.7–16.8 ms except the table landing (33.4 ms) and sample states (33.3 ms) on desktop, the same for the old build in an A/B at load 7 (no regression). A real-device check will be done by moony later.
