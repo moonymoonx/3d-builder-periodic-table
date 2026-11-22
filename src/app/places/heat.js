@@ -197,8 +197,8 @@ export function buildHeat(ui, hooks) {
   // ---- "About this sample": the science one tap deeper, every value with its source ---------------------
   let aboutSig = '';
   function toggleAbout() { if (about.isOpen()) closeAbout(); else openAbout(); }
-  function openAbout() { aboutSig = ''; renderAbout(); about.open(); aboutBtn.setAttribute('aria-expanded', 'true'); hooks.onLayout && hooks.onLayout(); }
-  function closeAbout() { closeSource(); about.close(); aboutBtn.setAttribute('aria-expanded', 'false'); hooks.onLayout && hooks.onLayout(); }
+  function openAbout() { aboutSig = ''; renderAbout(); about.open(); panel.classList.add('is-beside'); aboutBtn.setAttribute('aria-expanded', 'true'); hooks.onLayout && hooks.onLayout(); }
+  function closeAbout() { closeSource(); about.close(); panel.classList.remove('is-beside'); aboutBtn.setAttribute('aria-expanded', 'false'); hooks.onLayout && hooks.onLayout(); }
   function renderAbout() {
     const e = el, T = state.T, ss = sampleStateAt(e, T, null), st = stateAt(e, T), ph = e.ph;
     const sig = `${e.Z}|${getLang()}|${ss.kind}|${ss.phase ? ss.phase.id : ''}|${C(T)}`;

@@ -16,7 +16,10 @@ body.kiln .ui-back span:first-child { color: #F0A070; }
 
 .heat-panel { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(860px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 8px;
   padding: 14px 22px 12px; border-radius: var(--r-card); background: var(--card); color: var(--ink); box-shadow: var(--elev-float); border: 1px solid transparent;
-  transition: background 600ms var(--ease-in-out), color 600ms var(--ease-in-out), border-color 600ms var(--ease-in-out); }
+  transition: background 600ms var(--ease-in-out), color 600ms var(--ease-in-out), border-color 600ms var(--ease-in-out), left var(--d-card-in) var(--ease), width var(--d-card-in) var(--ease); }
+/* desktop: while "About this sample" is open the drawer holds the right side and the thermometer centres in
+   what is left, as the sample place's panel does (F4: the drawer covered the boiling mark) */
+@media (min-width: 761px) { .heat-panel.is-beside { left: calc((100% - 420px) / 2); width: min(860px, calc(100% - 452px)); } }
 body.kiln .heat-panel { background: rgba(30, 23, 17, 0.88); color: var(--kiln-text); border-color: rgba(242, 232, 218, 0.1); box-shadow: none; }
 .heat-caption { margin: 0; min-height: 2.9em; font: 400 18px/1.45 var(--font-serif); text-wrap: balance; }
 .heat-caption.is-new { animation: heat-say 420ms var(--ease) both; }
