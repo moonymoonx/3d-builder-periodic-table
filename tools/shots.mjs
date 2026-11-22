@@ -170,7 +170,7 @@ for (const c of cases.filter(c => !only || c.name.includes(only))) {
   if (c.act && c.clockAt != null) { // pause time, act, advance exactly clockAt ms, shoot
     await page.waitForTimeout(c.settle || 400);
     const now = await page.evaluate(() => Date.now());
-    await page.clock.pauseAt(now + 50);
+    await page.clock.pauseAt(now + 50).catch(() => {}); // a date in the past: run on
     await c.act(page).catch(e => logs.push('act failed: ' + e.message));
     await page.clock.runFor(c.clockAt);
   } else if (c.act) { // scripted steps: a function of the page (Playwright API) or a string run in the page
