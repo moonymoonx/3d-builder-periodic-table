@@ -230,7 +230,7 @@ const STIPPLE_FS = `uniform float uAlpha;
 varying float vA; varying vec3 vCol; varying float vSize;
 void main() {
   float d = length(gl_PointCoord - 0.5) * 2.0;
-  float aa = 2.4 / max(vSize, 1.0);
+  float aa = min(0.8, 1.8 / max(vSize, 1.0)); // a soft edge that never eats a small dot's ink
   float a = 1.0 - smoothstep(1.0 - aa, 1.0, d);
   if (a * vA * uAlpha <= 0.002) discard;
   gl_FragColor = vec4(vCol, min(1.0, a * uAlpha * vA));
@@ -829,7 +829,11 @@ export function createAtomView(hooks = {}) {
     const d = cam.position.length(); // the nucleus sits at the origin
     const pxAt = depth => (2 * tanH * depth) / H; // scene units per CSS pixel at a depth
     const dpr = E.renderer.getPixelRatio();
-    for (const L of [layers, ...fading.map(f => f.L)]) for (const o of [L.ink, L.orb]) if (o) { const u = o.material.uniforms; u.uPx.value = 1.9 * dpr; u.uFocus.value = d; }
+    // dots at least ~2.4 device pixels, and a little bigger where the atom has more room (a desktop draws the
+    // same dots over several times the area of a phone, so the cloud would read paler: review F3)
+    const sa = E.safe, room = Math.min(window.innerWidth - (sa.left || 0) - (sa.right || 0), H - (sa.top || 0) - (sa.bottom || 0));
+    const dot = Math.max(2.4, 1.9 * dpr * Math.min(1.45, Math.max(1, Math.sqrt(room / 400))));
+    for (const L of [layers, ...fading.map(f => f.L)]) for (const o of [L.ink, L.orb]) if (o) { const u = o.material.uniforms; u.uPx.value = dot; u.uFocus.value = d; }
     right.setFromMatrixColumn(cam.matrixWorld, 0); up.setFromMatrixColumn(cam.matrixWorld, 1);
     camDir.copy(cam.position).normalize();
     // its light: the glow and the ripple face the camera on the glowing sphere's silhouette (as the shells do)

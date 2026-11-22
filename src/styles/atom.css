@@ -36,7 +36,7 @@ body.diving .atom-leaders { opacity: 0; }
 body.diving .atom-ruler, body.diving .atom-hint-drag { opacity: 0; }
 /* phones: the scale bar keeps a short gloss of its unit */
 .atom-ruler__short { display: none; }
-@media (max-width: 760px) { .atom-ruler small { font-size: 12px; } .atom-ruler__long { display: none; } .atom-ruler__short { display: inline; } .atom-legend { margin-left: 14px; } .atom-hint-drag { max-width: calc(100vw - 130px); overflow: hidden; text-overflow: ellipsis; } }
+@media (max-width: 760px) { .atom-ruler small { font-size: 12px; } .atom-ruler__long { display: none; } .atom-ruler__short { display: inline; } .atom-ruler { flex-wrap: wrap; row-gap: 4px; } .atom-legend { flex-basis: 100%; margin-left: 0; } /* the shell count under the scale bar, never past the edge (F3) */ .atom-hint-drag { max-width: calc(100vw - 130px); overflow: hidden; text-overflow: ellipsis; } }
 
 /* ---- the card (kit sheet) ---------------------------------------------------------------------------- */
 .atom-sheet { transition: opacity var(--d-card-in) var(--ease), transform var(--d-card-in) var(--ease), background-color var(--d-kiln) var(--ease-in-out), color var(--d-kiln) var(--ease-in-out); }
