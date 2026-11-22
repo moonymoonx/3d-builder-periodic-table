@@ -297,3 +297,4 @@
   - **Final review F3 (Gemini, cold):** overall clarity 4.0, ease 4.0, beauty 4.5, smoothness 4.5, delight 4.5; under 4: table smoothness 3.5, atom clarity 3.5, sample clarity 3.5 and ease 3.5 (reviews/final-f3.md). Not fixed in this pass (budget): the legacy `v=sample` route (old dark sample view, still reachable by URL, shot by `--set=views`), iron's About drawer hiding the crystal on desktop, and the other items listed there.
   - **Tooling:** tools/shots.mjs tolerates a clock pause in the past (Playwright "Cannot fast-forward to the past").
 - 2026-11-22 (finishing pass 2, Claude Opus 5.5): legacy sample view retired (old links redirected); forge About template = sample place's; canvas redrawn in the same task on resize; manganese/sulfur piece ends announced. See DECISIONS.md › Finishing pass 2.
+- 2026-11-22: final review F4 (Gemini, cold) after finishing pass 2: reviews/final-f4.md.
