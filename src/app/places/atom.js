@@ -390,10 +390,20 @@ export function buildAtom(ui, hooks) {
     const last = md === 'cloud' ? (pre.querySelector('.atom-pick') || modes)
       : md === 'light' ? (pre.querySelector('.atom-light__how') || pre.firstChild || modes)
         : (aboutSlot.querySelector('.ui-disclosure__summary') || modes);
-    const top = last.getBoundingClientRect().bottom - sh.body.getBoundingClientRect().top + sh.body.scrollTop;
+    const y0 = sh.body.getBoundingClientRect().top - sh.body.scrollTop, top = last.getBoundingClientRect().bottom - y0;
     const bar = sh.el.querySelector('.ui-sheet__handle');
-    const want = top + 18 + foot.offsetHeight + (bar ? bar.offsetHeight : 0);
-    sh.setPeek(Math.min(window.innerHeight * 0.6, want));
+    const chrome = foot.offsetHeight + (bar ? bar.offsetHeight : 0), cap = window.innerHeight * 0.6;
+    let want = top + 18 + chrome;
+    // more than fits (One cloud on small phones): the sheet ends in the gap after the last whole row that
+    // fits, never through a row of chips (F4); the rest scrolls, and the sheet drags up to show it all
+    if (want > cap) {
+      const rows = [...sh.body.querySelectorAll('p, .atom-modes, .atom-pick__row, .atom-pick__turns, .ui-disclosure')]
+        .map(n => n.getBoundingClientRect()).filter(b => b.height > 0).map(b => ({ t: b.top - y0, b: b.bottom - y0 }));
+      const fit = Math.max(0, ...rows.filter(r => r.b + 10 + chrome <= cap).map(r => r.b));
+      const next = Math.min(Infinity, ...rows.filter(r => r.t > fit - 1).map(r => r.t));
+      if (fit) want = Math.min(fit + 18, next - 2) + chrome;
+    }
+    sh.setPeek(Math.min(cap, want));
   }
   const schedule = () => { if (!pending) { pending = true; queueMicrotask(() => { pending = false; render(); }); } };
 

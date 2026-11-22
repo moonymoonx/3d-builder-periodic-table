@@ -333,7 +333,7 @@ const easeInOut = x => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
 const TONE_OUT = 0.4, TONE_MIN = 0.07; // ink strength of the outermost shell's dots; the floor for dense inner shells
 const SHELL_ALPHA = 1;
 /** The strip the place keeps free under the atom for the scale bar (and the shells' legend), px. */
-export const STAGE_FOOT = { desk: 54, phone: 30 };
+export const STAGE_FOOT = { desk: 54, phone: 46 }; // phones: the ruler's two short lines (atom.css) and a gap above them
 const quad = new THREE.PlaneGeometry(2, 2);
 
 export function createAtomView(hooks = {}) {
@@ -910,7 +910,7 @@ export function createAtomView(hooks = {}) {
       if (rulerText.textContent !== txt) rulerText.textContent = txt;
       const list = hidden.length && info.mode === 'atom' ? info.shells.map(s => fmtNum(s.occ, 0)).join(' · ') : '';
       if (list !== countsShown || legend.dataset.phone !== String(phone)) { countsShown = list; legend.dataset.phone = String(phone); legend.textContent = list ? t(phone ? 'atom.lbl.legendShort' : 'atom.lbl.legend', { list }) : ''; }
-      legend.style.display = list ? '' : 'none';
+      legend.style.display = list && !phone ? '' : 'none'; // phones: the card's first line already lists the shells
       if (!hintShown) {
         if (!hintTimer) hintTimer = setTimeout(dropHint, 12000); // it also goes by itself after a while
         // beside the back link, in the top bar's row

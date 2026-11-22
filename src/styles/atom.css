@@ -38,6 +38,18 @@ body.diving .atom-ruler, body.diving .atom-hint-drag { opacity: 0; }
 .atom-ruler__short { display: none; }
 @media (max-width: 760px) { .atom-ruler small { font-size: 12px; } .atom-ruler__long { display: none; } .atom-ruler__short { display: inline; } .atom-ruler { flex-wrap: wrap; row-gap: 4px; } .atom-legend { flex-basis: 100%; margin-left: 0; } /* the shell count under the scale bar, never past the edge (F3) */ .atom-hint-drag { max-width: calc(100vw - 130px); overflow: hidden; text-overflow: ellipsis; } }
 
+/* phones (F4): the ruler stands in its own strip under the atom (STAGE_FOOT.phone), never over the cloud:
+   the bar and its length, then the unit's short gloss across the strip (the shells are the card's first line) */
+@media (max-width: 760px) {
+  .atom-ruler { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 2px; max-width: calc(100vw - 32px); }
+  .atom-ruler__txt { display: contents; }
+  .atom-ruler small { grid-column: 1 / -1; white-space: normal; line-height: 15px; }
+}
+/* One cloud (F4): on desktop the card may use the full height (this place keeps the top right empty), so the
+   rows and the explanation clear the stepper; on phones the stepper keeps clear of the home indicator */
+@media (min-width: 761px) { .ui-sheet.atom-sheet { top: 16px; max-height: calc(100% - 32px); } }
+@media (max-width: 760px) { .ui-sheet.atom-sheet .ui-sheet__foot { padding-bottom: calc(6px + env(safe-area-inset-bottom)); } }
+
 /* ---- the card (kit sheet) ---------------------------------------------------------------------------- */
 .atom-sheet { transition: opacity var(--d-card-in) var(--ease), transform var(--d-card-in) var(--ease), background-color var(--d-kiln) var(--ease-in-out), color var(--d-kiln) var(--ease-in-out); }
 /* once the card scrolls, the rows fade out just under the compact title bar instead of being cut mid-line
