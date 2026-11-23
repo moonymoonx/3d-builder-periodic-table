@@ -4,6 +4,7 @@
   padding: 14px 16px; pointer-events: none !important; }
 .hero-top > * { pointer-events: auto; }
 .hero-top__left, .hero-top__right { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hero-backslot:empty { display: none; } /* no back link: no phantom gap beside the wordmark */
 .hero-word { display: flex; flex-direction: column; line-height: 1.15; padding: 2px 4px; user-select: none; text-shadow: 0 0 8px var(--paper), 0 0 2px var(--paper); }
 .hero-word b { font: 600 22px/1.15 var(--font-serif); letter-spacing: 0.005em; }
 .hero-word span { font: 500 12px/1.4 var(--font-sans); color: var(--ink-2); letter-spacing: 0.06em; text-transform: uppercase; }
@@ -109,3 +110,5 @@ body.legacy .hero-word span { color: var(--muted); }
   .hero-lenses::-webkit-scrollbar { display: none; }
   .hero-banner .ui-banner__title { font-size: 15px; line-height: 1.4; }
 }
+/* 360 px phones: wordmark + find + EN|VI + menu fit with the round buttons kept whole */
+@media (max-width: 374px) { .hero-top__right { gap: 8px; } }

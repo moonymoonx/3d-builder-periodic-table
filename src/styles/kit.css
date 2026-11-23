@@ -14,8 +14,8 @@
 .ui-btn--quiet:hover { background: var(--verdigris-soft); }
 .ui-btn__icon { font-size: 1.1em; line-height: 1; }
 
-/* round icon button */
-.ui-icon { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink); display: inline-grid; place-items: center;
+/* round icon button: never squeezed by a crowded flex row (a true circle at every width) */
+.ui-icon { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink); display: inline-grid; place-items: center;
   font: 600 18px/1 var(--font-sans); box-shadow: var(--elev-paper); transition: transform var(--d-tap) var(--ease), border-color var(--d-hover) var(--ease); }
 .ui-icon:hover { border-color: var(--line-strong); }
 .ui-icon:active { transform: scale(0.94); }
