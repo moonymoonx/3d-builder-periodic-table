@@ -42,7 +42,8 @@ export function buildHome(ui, hooks) {
   const bottom = h('div', { class: 'hero-bottom' }, legend, prompt, reset, bannerSlot, chips);
   const head = h('div', { class: 'hero-head' }); // phones: the prompt sits under the top bar, like a page heading
   const loupe = h('div', { class: 'hero-loupe', hidden: true, 'aria-hidden': 'true' });
-  const scrims = [h('div', { class: 'hero-scrim is-top', 'aria-hidden': 'true' }), h('div', { class: 'hero-scrim is-bottom', 'aria-hidden': 'true' })];
+  const scrims = [h('div', { class: 'hero-scrim is-top', 'aria-hidden': 'true' }), h('div', { class: 'hero-scrim is-bottom', 'aria-hidden': 'true' }),
+    h('div', { class: 'hero-scrim is-left', 'aria-hidden': 'true' }), h('div', { class: 'hero-scrim is-right', 'aria-hidden': 'true' })]; // phones: more table that way
   ui.prepend(...scrims);
   ui.append(top, head, bottom, loupe);
   let isAway = false;

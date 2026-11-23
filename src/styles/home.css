@@ -103,12 +103,21 @@ body.legacy .hero-word span { color: var(--muted); }
   .hero-bottom { bottom: calc(10px + env(safe-area-inset-bottom)); width: calc(100% - 20px); gap: 10px; }
   .hero-prompt__line { font-size: 17px; line-height: 25px; }
   .hero-prompt__tap { font-size: 14px; }
-  /* phones: every lens chip in view (two rows), nothing cut mid-word */
-  .hero-lenses { flex-wrap: wrap; justify-content: center; gap: 6px; width: 100%; padding: 2px 0 2px; -webkit-mask: none; mask: none; }
-  .hero-lenses .ui-chip { padding: 0 11px; }
+  /* phones: the lens chips are one row from edge to edge that scrolls sideways and fades on the side with
+     more chips (classes from home.js), so the table keeps the height; centred whenever the row fits */
+  .hero-lenses { flex-wrap: nowrap; justify-content: flex-start; gap: 6px; width: calc(100% + 20px); margin-inline: -10px; padding: 2px 10px;
+    overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .hero-lenses > :first-child { margin-left: auto; }
+  .hero-lenses > :last-child { margin-right: auto; }
+  .hero-lenses .ui-chip { flex: none; white-space: nowrap; padding: 0 11px; }
   body.has-card .hero-scrim.is-top { height: 92px; background: linear-gradient(var(--paper) 58%, rgba(245, 240, 230, 0)); }
   .hero-lenses::-webkit-scrollbar { display: none; }
   .hero-banner .ui-banner__title { font-size: 15px; line-height: 1.4; }
 }
+/* phones: the table goes on past this edge (body classes from views/table.js) */
+.hero-scrim.is-left, .hero-scrim.is-right { top: 0; bottom: 0; width: 30px; opacity: 0; transition: opacity var(--d-card-in) var(--ease); }
+.hero-scrim.is-left { right: auto; background: linear-gradient(90deg, var(--paper) 15%, rgba(245, 240, 230, 0)); }
+.hero-scrim.is-right { left: auto; background: linear-gradient(270deg, var(--paper) 15%, rgba(245, 240, 230, 0)); }
+body.pan-l .hero-scrim.is-left, body.pan-r .hero-scrim.is-right { opacity: 1; }
 /* 360 px phones: wordmark + find + EN|VI + menu fit with the round buttons kept whole */
 @media (max-width: 374px) { .hero-top__right { gap: 8px; } }

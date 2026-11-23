@@ -372,7 +372,11 @@ export function createTableView(hooks) {
     overview = { target: new THREE.Vector3(0, tall * 0.35, s32 ? 0.1 : 0.15), r, theta: 0, phi };
     E.homeR = r; // the engine lowers a software renderer's resolution early when the camera gets much closer
     if (whole) band = false;
-    if (!keepCamera) fly(!s32 && band && phoneNow() && window.innerHeight > window.innerWidth ? bandGoal(fov, phi, tall, rD) : overview, state.reduced ? 0 : dur);
+    if (!keepCamera) {
+      const goal = !s32 && band && phoneNow() && window.innerHeight > window.innerWidth ? bandGoal(fov, phi, tall, rD) : overview;
+      fly(goal, state.reduced ? 0 : dur);
+      if (goal !== overview) panCue(state.reduced ? 0 : dur);
+    }
   }
   // portrait phones (F4): all 18 columns squeezed to the width made a thin strip of ~20 px tiles between bands
   // of empty paper. The landing fills the free height instead, about ten columns across (tiles ~37 px, easy
@@ -385,8 +389,37 @@ export function createTableView(hooks) {
   function bandGoal(fov, phi, tall, rD) {
     const r = Math.max(rD * 1.03, 5.2 / Math.tan(fov.h / 2)), m = bandMaxX(r);
     const x = bandFresh ? -m : THREE.MathUtils.clamp(E.rig.target.x, -m, m);
+    if (bandFresh) cueDue = true;
     bandFresh = false;
     return { target: new THREE.Vector3(x, tall * 0.35, 0.15), r, theta: 0, phi };
+  }
+  // the band's pan cue (pass 4): a soft paper fade at each screen edge with more table beyond it, and on a
+  // phone's first landing one slow look along the rows and back (once per device; never with reduced motion,
+  // never once the reader is already moving, and not in automated screenshot runs, which must be repeatable)
+  let cueDue = false, edgeL = false, edgeR = false;
+  function panCue(dur) {
+    if (!cueDue) return;
+    cueDue = false;
+    let seen = true;
+    try { seen = localStorage.getItem('pt.panCue') === '1'; } catch { /* storage off: skip */ }
+    if (seen || state.reduced || navigator.webdriver) return;
+    setTimeout(() => { // measured when it plays: the landing has settled into the measured chrome by then
+      const m = bandMaxX(E.rig.r), x = E.rig.target.x;
+      if (E.active !== view || state.card || E.rig.tween || E.rig.moving || !(E.rig.touchPan && E.rig.touchPan()) || m < 0.5) return;
+      try { localStorage.setItem('pt.panCue', '1'); } catch { /* fine */ }
+      // two soft flicks of the rig's own inertia, as a finger would (a view re-frame cannot cut them short):
+      // about one column the way there is more table, then back to where the reader landed
+      const s = x + 1.2 <= m ? 1 : -1, flick = d => { E.rig.v.px = d * 1.2 * E.rig.damping; invalidate(); };
+      flick(s);
+      setTimeout(() => { if (E.active === view && !state.card && !E.rig.tween && !E.rig.pointers.size) flick(-s); }, 1100);
+    }, dur * 1000 + 1400);
+  }
+  function edges() {
+    const on = E.active === view && phoneNow() && !state.card && state.layout !== 'helix';
+    const m = on ? bandMaxX(E.rig.r) : 0, x = E.rig.target.x;
+    const l = m > 0.3 && x > -m + 0.3, r = m > 0.3 && x < m - 0.3;
+    if (l !== edgeL) document.body.classList.toggle('pan-l', (edgeL = l));
+    if (r !== edgeR) document.body.classList.toggle('pan-r', (edgeR = r));
   }
   /** Has the user zoomed or turned the table away from its home framing? (shows "Whole table") */
   let away = false, diving = false;
@@ -485,7 +518,7 @@ export function createTableView(hooks) {
       E.rig.scrub = hooks.isPhone && hooks.isPhone() ? scrub : null;
       writeColours(); setLiftTargets(); invalidate();
     },
-    exit() { E.rig.touchPan = E.rig.bounds = null; labels.enabled = false; labels.hideAll(); E.rig.parallaxOn = false; E.rig.scrub = null; E.rig.parallax(0, 0, 0); setHover(0); },
+    exit() { E.rig.touchPan = E.rig.bounds = null; edgeL = edgeR = false; document.body.classList.remove('pan-l', 'pan-r'); labels.enabled = false; labels.hideAll(); E.rig.parallaxOn = false; E.rig.scrub = null; E.rig.parallax(0, 0, 0); setHover(0); },
     onTier(tier, cfg) { key.castShadow = cfg.shadows; atlas.tex.anisotropy = aniso(tier); atlas.tex.needsUpdate = true; mat.needsUpdate = true; invalidate(); },
     resize() {
       if (!view.ready) return;
@@ -498,6 +531,7 @@ export function createTableView(hooks) {
     },
     update(dt) {
       let busy = false;
+      edges();
       // lifts are springs: a picked tile rises with a small overshoot and settles (like lifting a
       // piece from a tray); everything else (hover, landing, reduced motion) is critically damped
       let moved = false;
