@@ -183,8 +183,12 @@ body.kiln .atom-sheet :focus-visible { outline-color: #F0874F; }
 
 @media (max-width: 760px) {
   .atom-sheet { transition: opacity var(--d-card-in) var(--ease), transform var(--d-card-in) var(--ease), max-height var(--d-card-in) var(--ease), background-color var(--d-kiln) var(--ease-in-out), color var(--d-kiln) var(--ease-in-out); }
-  .atom-sheet.is-scrolled .ui-sheet__body, .atom-sheet.is-scrolled.has-more .ui-sheet__body { -webkit-mask: linear-gradient(transparent 0, transparent 36px, #000 58px); mask: linear-gradient(transparent 0, transparent 36px, #000 58px); }
-  .atom-sheet.has-more:not(.is-scrolled) .ui-sheet__body { -webkit-mask: none; mask: none; }
+  /* the text never meets the footer edge-on: while more lies below, its last visible line fades softly into
+     the card (the cue to scroll); at the end there is a clear strip of card above the footer */
+  .atom-sheet .ui-sheet__body { padding-bottom: 28px; }
+  .atom-sheet.is-scrolled .ui-sheet__body { -webkit-mask: linear-gradient(transparent 0, transparent 36px, #000 58px); mask: linear-gradient(transparent 0, transparent 36px, #000 58px); }
+  .atom-sheet.is-scrolled.has-more .ui-sheet__body { -webkit-mask: linear-gradient(transparent 0, transparent 36px, #000 58px, #000 calc(100% - 34px), transparent); mask: linear-gradient(transparent 0, transparent 36px, #000 58px, #000 calc(100% - 34px), transparent); }
+  .atom-sheet.has-more:not(.is-scrolled) .ui-sheet__body { -webkit-mask: linear-gradient(#000 calc(100% - 34px), transparent); mask: linear-gradient(#000 calc(100% - 34px), transparent); }
   .atom-head { grid-template-columns: 44px 1fr; gap: 12px; padding-right: 0; }
   .atom-tile { width: 44px; height: 44px; font-size: 19px; border-radius: 10px; }
   .atom-title { font-size: var(--t-title-phone); line-height: var(--lh-title-phone); }
